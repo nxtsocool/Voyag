@@ -1,0 +1,6 @@
+- Flug hinflug rückflug
+- Ausgaben bearbeiten und Löschen
+- Reise wird hinzugefügt bei eigenem EInladungscode
+- Karten für einzelne Teilnehmer mit Notizfenster
+- Notizfenster für ReiseInfo
+- Kosten und Teilnehmer werden nur bei dem Nutzer angezeigt der sie hinzufügt
