@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
 import laender from '../data/laender'
-import { Plane, Info, Users, CheckSquare, Wallet, StepBack } from 'lucide-react'
+import { Plane, Info, Users, CheckSquare, Wallet, StepBack, Rocket, PartyPopper  } from 'lucide-react'
 
 function TripHome() {
   const { id } = useParams()
@@ -54,8 +54,15 @@ function TripHome() {
   const heute = new Date()
   const tage = Math.ceil((start - heute) / (1000 * 60 * 60 * 24))
 
-  if (tage === 0) return 'Heute geht es los! 🚀'
-  if (tage < 0) return 'Reise läuft gerade oder abgeschlossen 🎉'
+  if (tage === 0) return 
+    <span style={{ color: '#c9a84c', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px' }}>
+      Heute geht's los! <Rocket size={18} />
+    </span>
+  if (tage < 0) return (
+    <span style={{ color: '#c9a84c', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px' }}>
+      Reise läuft oder abgeschlossen! <PartyPopper size={18} />
+    </span>
+  )
   return `Noch ${tage} Tage`
   }
 
@@ -65,12 +72,13 @@ function TripHome() {
   if (laden) return <p style={{ color: '#fff', padding: '20px' }}>Lädt...</p>
 
   return (
-    <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto', paddingBottom: '40px' }}>
+    <div style={{ padding: 'clamp(14px, 4vw, 20px)', maxWidth: '600px', margin: '0 auto', paddingBottom: '40px', boxSizing: 'border-box' }}>
 
       {/* Zurück Button */}
       <button onClick={() => navigate('/')} style={{
         background: 'none', border: 'none', color: '#c9a84c',
-        fontSize: '1rem', cursor: 'pointer', marginBottom: '20px', padding: '0',
+        fontSize: '1rem', cursor: 'pointer', marginBottom: '12px',
+        padding: '10px 0', minHeight: '44px',
         display: 'flex', alignItems: 'center', gap: '6px',
       }}><StepBack size={20} /> Zurück</button>
 
@@ -79,13 +87,17 @@ function TripHome() {
         backgroundColor: '#111827',
         borderRadius: '20px',
         border: '1px solid rgba(201,168,76,0.3)',
-        padding: '24px',
+        padding: 'clamp(18px, 5vw, 24px)',
         marginBottom: '20px',
+        boxSizing: 'border-box',
       }}>
         <p style={{ color: '#8892a4', fontSize: '0.85rem', margin: '0 0 4px' }}>
           {laender.find(l => l.code === trip.land_code)?.name}
         </p>
-        <h1 style={{ fontSize: '1.8rem', fontWeight: '700', margin: '0 0 4px', letterSpacing: '-0.5px' }}>
+        <h1 style={{
+          fontSize: 'clamp(1.4rem, 6vw, 1.8rem)', fontWeight: '700', margin: '0 0 4px',
+          letterSpacing: '-0.5px', overflowWrap: 'break-word', wordBreak: 'break-word',
+        }}>
           {trip.name}
         </h1>
         <p style={{ color: '#8892a4', margin: '0 0 16px', fontSize: '0.9rem' }}>
@@ -109,7 +121,7 @@ function TripHome() {
       <div style={{
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
-        gap: '12px',
+        gap: 'clamp(8px, 3vw, 12px)',
       }}>
 
         {/* Info */}
@@ -151,8 +163,10 @@ const kachelStyle = {
   backgroundColor: '#111827',
   borderRadius: '16px',
   border: '1px solid rgba(201,168,76,0.15)',
-  padding: '20px',
+  padding: 'clamp(14px, 4vw, 20px)',
+  minHeight: '44px',
   cursor: 'pointer',
+  boxSizing: 'border-box',
 }
 
 const kachelIconStyle = {
@@ -161,16 +175,20 @@ const kachelIconStyle = {
 }
 
 const kachelTitelStyle = {
-  fontSize: '1rem',
+  fontSize: 'clamp(0.9rem, 3.5vw, 1rem)',
   fontWeight: '600',
   margin: '0 0 4px',
   color: '#ffffff',
+  overflowWrap: 'break-word',
+  wordBreak: 'break-word',
 }
 
 const kachelSubStyle = {
-  fontSize: '0.8rem',
+  fontSize: 'clamp(0.75rem, 3vw, 0.8rem)',
   color: '#8892a4',
   margin: 0,
+  overflowWrap: 'break-word',
+  wordBreak: 'break-word',
 }
 
 export default TripHome

@@ -119,42 +119,59 @@ function TripsOverview() {
 
   // Einer Reise per Einladungscode beitreten
   const reiseBeitreten = async () => {
-    if (!einladungsCode) return
+  if (!einladungsCode) return
 
-    // Trip mit diesem Code suchen
-    const { data: trip, error } = await supabase
-      .from('trips')
-      .select('*')
-      .eq('invite_code', einladungsCode.toUpperCase())
-      .single()
+  // Trip mit diesem Code suchen
+  const { data: trip, error } = await supabase
+    .from('trips')
+    .select('*')
+    .eq('invite_code', einladungsCode.toUpperCase())
+    .single()
 
-    if (error || !trip) {
-      alert('Code nicht gefunden – bitte prüfe den Code!')
-      return
-    }
+  if (error || !trip) {
+    alert('Code nicht gefunden – bitte prüfe den Code!')
+    return
+  }
 
-    // User holen
-    const { data: authData } = await supabase.auth.getUser()
-    const user = authData.user
+  // User holen
+  const { data: authData } = await supabase.auth.getUser()
+  const user = authData.user
 
-    // Als Mitglied hinzufügen
-    await supabase.from('trip_members').insert([{
-      trip_id: trip.id,
-      user_id: user.id,
-    }])
+  // Prüfen ob User der Besitzer ist
+  if (trip.user_id === user.id) {
+    alert('Das ist deine eigene Reise!')
+    return
+  }
 
-    // Land automatisch auf der Karte markieren
-    await supabase.from('visited_countries').insert([{
-      user_id: user.id,
-      country_code: trip.land_code,
-      trip_id: trip.id,
-    }])
+  // Prüfen ob User bereits Mitglied ist
+  const { data: bereitsVorhanden } = await supabase
+    .from('trip_members')
+    .select('*')
+    .eq('trip_id', trip.id)
+    .eq('user_id', user.id)
+    .single()
 
-    setEinladungsCode('')
-    setBeitretenOffen(false)
+  if (bereitsVorhanden) {
+    alert('Du bist dieser Reise bereits beigetreten!')
+    return
+  }
 
-    // Liste automatisch neu laden
-    await tripsLaden()
+  // Als Mitglied hinzufügen
+  await supabase.from('trip_members').insert([{
+    trip_id: trip.id,
+    user_id: user.id,
+  }])
+
+  // Land automatisch auf der Karte markieren
+  await supabase.from('visited_countries').insert([{
+    user_id: user.id,
+    country_code: trip.land_code,
+    trip_id: trip.id,
+  }])
+
+  setEinladungsCode('')
+  setBeitretenOffen(false)
+  await tripsLaden()
   }
 
   // Eigene Reise + alle zugehörigen Daten löschen
@@ -168,7 +185,7 @@ function TripsOverview() {
   const { error } = await supabase.from('trips').delete().eq('id', tripId)
   if (error) console.error('Fehler:', error)
   else setTrips(trips.filter(t => t.id !== tripId))
-  }
+}
 
   // Beigetretene Reise verlassen
   const reiseVerlassen = async (tripId) => {
@@ -190,25 +207,32 @@ function TripsOverview() {
   if (laden) return <p style={{ color: '#fff', padding: '20px' }}>Lädt...</p>
 
   return (
-    <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto', minHeight: '100vh' }}>
+    <div style={{ padding: 'clamp(14px, 4vw, 20px)', maxWidth: '600px', margin: '0 auto', minHeight: '100vh', boxSizing: 'border-box' }}>
 
       {/* Header mit Logo und Buttons */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-        <h1 style={{ fontSize: '2rem', fontWeight: '700', letterSpacing: '-0.5px', margin: 0 }}>
+      <div style={{
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        flexWrap: 'wrap', gap: '12px', marginBottom: '8px',
+      }}>
+        <h1 style={{ fontSize: 'clamp(1.5rem, 6vw, 2rem)', fontWeight: '700', letterSpacing: '-0.5px', margin: 0 }}>
           Voy<span style={{ color: '#c9a84c' }}>ag</span>
+          <p style={{
+            fontSize: '11px', fontWeight: '600', letterSpacing: '0.1em',
+            color: '#8892a4', marginBottom: '16px',
+          }}>plan&travel</p>
         </h1>
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           <button onClick={() => setBeitretenOffen(true)} style={{
             backgroundColor: 'transparent', color: '#c9a84c',
-            border: '1px solid #c9a84c', padding: '8px 16px',
-            borderRadius: '12px', cursor: 'pointer',
-            fontSize: '0.9rem', fontWeight: '600',
+            border: '1px solid #c9a84c', padding: '12px 18px', minHeight: '44px',
+            borderRadius: '12px', cursor: 'pointer', boxSizing: 'border-box',
+            fontSize: '0.9rem', fontWeight: '600', whiteSpace: 'nowrap',
           }}>Beitreten</button>
           <button onClick={() => setFormularOffen(true)} style={{
             backgroundColor: '#c9a84c', color: '#0a0f1e',
-            border: 'none', padding: '8px 16px',
-            borderRadius: '12px', cursor: 'pointer',
-            fontSize: '0.9rem', fontWeight: '600',
+            border: 'none', padding: '12px 18px', minHeight: '44px',
+            borderRadius: '12px', cursor: 'pointer', boxSizing: 'border-box',
+            fontSize: '0.9rem', fontWeight: '600', whiteSpace: 'nowrap',
           }}>+ Neu</button>
         </div>
       </div>
@@ -219,7 +243,7 @@ function TripsOverview() {
         color: '#8892a4', textTransform: 'uppercase', marginBottom: '16px',
       }}>Meine Reisen</p>
 
-      <div style={{ paddingBottom: '90px' }}>
+      <div style={{ paddingBottom: 'calc(90px + env(safe-area-inset-bottom))' }}>
 
         {/* Beitreten Formular */}
         {beitretenOffen && (
@@ -329,13 +353,20 @@ function TripsOverview() {
               style={{
                 backgroundColor: '#111827', borderRadius: '15px',
                 border: '1px solid rgba(201,168,76,0.3)',
-                padding: '20px', marginBottom: '12px', cursor: 'pointer',
+                padding: '20px', paddingRight: '52px', marginBottom: '12px', cursor: 'pointer',
+                boxSizing: 'border-box',
               }}
             >
-              <h2 style={{ margin: '0 0 4px', fontSize: '1.1rem', fontWeight: '600' }}>
+              <h2 style={{
+                margin: '0 0 4px', fontSize: '1.1rem', fontWeight: '600',
+                overflowWrap: 'break-word', wordBreak: 'break-word',
+              }}>
                 {trip.name}
               </h2>
-              <p style={{ color: '#8892a4', margin: '0 0 8px', fontSize: '0.9rem' }}>
+              <p style={{
+                color: '#8892a4', margin: '0 0 8px', fontSize: '0.9rem',
+                overflowWrap: 'break-word', wordBreak: 'break-word',
+              }}>
                 {laender.find(l => l.code === trip.land_code)?.name || trip.ort} · {trip.datum}
               </p>
 
@@ -367,7 +398,9 @@ function TripsOverview() {
               <button
                 onClick={(e) => { e.stopPropagation(); reiseEntfernen(trip.id) }}
                 style={{
-                  position: 'absolute', top: '12px', right: '12px',
+                  position: 'absolute', top: '6px', right: '6px',
+                  minWidth: '40px', minHeight: '40px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
                   backgroundColor: 'transparent', border: 'none',
                   color: '#8892a4', padding: '4px', cursor: 'pointer',
                 }}
@@ -378,9 +411,11 @@ function TripsOverview() {
               <button
                 onClick={(e) => { e.stopPropagation(); reiseVerlassen(trip.id) }}
                 style={{
-                  position: 'absolute', top: '12px', right: '12px',
+                  position: 'absolute', top: '6px', right: '6px',
+                  minHeight: '40px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
                   backgroundColor: 'transparent', border: 'none',
-                  color: '#8892a4', padding: '4px', cursor: 'pointer',
+                  color: '#8892a4', padding: '4px 10px', cursor: 'pointer',
                   fontSize: '0.75rem', fontWeight: '600',
                 }}
               >
@@ -402,6 +437,8 @@ function TripsOverview() {
             </p>
           </div>
         )}
+
+        
 
       </div>
     </div>

@@ -1,0 +1,22 @@
+1. Git – Versionskontrolle
+Git ist ein Tool das alle Änderungen an deinem Code trackt. Wie ein "Speicherpunkt" System.
+
+git init → Git im Projektordner aktivieren
+git add . → alle Dateien zum "Speicherpunkt" hinzufügen
+git commit -m "..." → Speicherpunkt erstellen
+git push → Code zu GitHub hochladen
+
+
+2. GitHub – Code in der Cloud
+GitHub ist wie ein Google Drive für Code. Dein Code liegt dort sicher online und kann von anderen Tools wie Vercel abgerufen werden.
+
+Repository erstellt → ein Ordner auf GitHub für dein Projekt
+Code gepusht → dein lokaler Code wurde zu GitHub hochgeladen
+
+
+3. Vercel – Hosting
+Vercel nimmt deinen Code von GitHub, baut ihn und macht ihn öffentlich im Internet erreichbar.
+
+GitHub verknüpft → Vercel hat Zugriff auf dein Repository
+Environment Variables → deine geheimen Supabase Keys sicher hinterlegt
+Deploy → Vercel baut die App und gibt ihr eine öffentliche URL

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { supabase } from '../supabase'
 import TripNav from '../components/TripNav'
-import { Wallet } from 'lucide-react'
+import { Wallet, Trash2, SquarePen } from 'lucide-react'
 
 function TripKosten() {
   const { id } = useParams()
@@ -12,6 +12,7 @@ function TripKosten() {
   const [teilnehmer, setTeilnehmer] = useState([])
   const [laden, setLaden] = useState(true)
   const [formularOffen, setFormularOffen] = useState(false)
+  const [bearbeiteAusgabe, setBearbeiteAusgabe] = useState(null)
 
   // Eingabefelder für neue Ausgabe
   const [neueAusgabe, setNeueAusgabe] = useState({
@@ -65,23 +66,47 @@ function TripKosten() {
     }
   }
 
+  //Ausgabe löschen 
+  const ausgabeLoeschen = async (id) => {
+    const { error } = await supabase
+      .from('ausgaben')
+      .delete()
+      .eq('id', id)
+
+    if (error) console.error('Fehler:', error)
+    else setAusgaben(ausgaben.filter(a => a.id !== id))
+  }
+
+  //Ausgabe bearbeiten 
+  const ausgabeBearbeiten = async (id, updates) => {
+    const { error } = await supabase
+      .from('ausgaben')
+      .update(updates)
+      .eq('id', id)
+
+    if (error) console.error('Fehler:', error)
+    else {
+      setAusgaben(ausgaben.map(a => a.id === id ? { ...a, ...updates } : a))
+    }
+  }
+
   // Hilfsfunktion – berechnet den Anteil einer Person an einer Ausgabe
-    const anteilBerechnen = (ausgabe, personName) => {
-  // fuer als Array parsen – Supabase gibt es manchmal als String zurück
-  let fuerArray = ausgabe.fuer
-  if (typeof fuerArray === 'string') {
-    try { fuerArray = JSON.parse(fuerArray) } catch { fuerArray = null }
-  }
+    function anteilBerechnen(ausgabe, personName) {
+    // fuer als Array parsen – Supabase gibt es manchmal als String zurück
+    let fuerArray = ausgabe.fuer
+    if (typeof fuerArray === 'string') {
+      try { fuerArray = JSON.parse(fuerArray)}  catch { fuerArray = null} 
+    }
 
-  // Wenn fuer null/leer → für alle Teilnehmer
-  const betroffene = (fuerArray && fuerArray.length > 0)
-    ? fuerArray
-    : teilnehmer.map(t => t.name)
+    // Wenn fuer null/leer → für alle Teilnehmer
+    const betroffene = (fuerArray && fuerArray.length > 0)
+      ? fuerArray
+      : teilnehmer.map(t => t.name)
 
-  if (betroffene.includes(personName)) {
-    return ausgabe.betrag / betroffene.length
-  }
-  return 0
+    if (betroffene.includes(personName)) {
+      return ausgabe.betrag / betroffene.length
+    }
+    return 0
   }
 
   // Berechnet wer wem wie viel schuldet
@@ -131,7 +156,7 @@ function TripKosten() {
     <div style={{ paddingBottom: '40px' }}>
       <TripNav tripName={trip.name} />
 
-      <div style={{ padding: '0 20px', maxWidth: '600px', margin: '0 auto' }}>
+      <div style={{ padding: '0 clamp(14px, 4vw, 20px)', maxWidth: '600px', margin: '0 auto', boxSizing: 'border-box' }}>
 
         {/* Gesamtbetrag Karte */}
         <div style={karteStyle}>
@@ -139,7 +164,7 @@ function TripKosten() {
             <Wallet size={18} color="#c9a84c" />
             <p style={{ color: '#8892a4', margin: 0 }}>Gesamtausgaben</p>
           </div>
-          <h2 style={{ fontSize: '2.5rem', color: '#c9a84c', margin: '0 0 8px' }}>
+          <h2 style={{ fontSize: 'clamp(1.8rem, 9vw, 2.5rem)', color: '#c9a84c', margin: '0 0 8px', overflowWrap: 'break-word' }}>
             {gesamt.toFixed(2)}€
           </h2>
           {teilnehmer.length > 0 && (
@@ -156,24 +181,89 @@ function TripKosten() {
           </p>
         ) : (
           ausgaben.map(ausgabe => (
-            <div key={ausgabe.id} style={{
-              ...karteStyle,
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            }}>
-              <div>
-                <p style={{ fontWeight: '600', margin: '0 0 4px' }}>{ausgabe.beschreibung}</p>
-                <p style={{ color: '#8892a4', fontSize: '0.85rem', margin: 0 }}>
-                  bezahlt von {ausgabe.bezahlt_von}
-                  {/* Zeigt für wen die Ausgabe ist */}
-                  {ausgabe.fuer && ausgabe.fuer.length > 0 && (
-                    <span> · für {Array.isArray(ausgabe.fuer) ? ausgabe.fuer.join(', ') : ausgabe.fuer}</span>
-                  )}
-                </p>
-              </div>
-              <p style={{ fontSize: '1.2rem', color: '#c9a84c', margin: 0 }}>{ausgabe.betrag}€</p>
+            <div key={ausgabe.id} style={{ ...karteStyle }}>             
+              {/* Bearbeiten Formular */}
+              {bearbeiteAusgabe?.id === ausgabe.id ? (
+                <div>
+                  <input
+                    value={bearbeiteAusgabe.beschreibung}
+                    onChange={(e) => setBearbeiteAusgabe({ ...bearbeiteAusgabe, beschreibung: e.target.value })}
+                    style={inputStyle}
+                  />
+                  <input
+                    type="number"
+                    value={bearbeiteAusgabe.betrag}
+                    onChange={(e) => setBearbeiteAusgabe({ ...bearbeiteAusgabe, betrag: e.target.value })}
+                    style={inputStyle}
+                  />
+                  <select
+                    value={bearbeiteAusgabe.bezahlt_von}
+                    onChange={(e) => setBearbeiteAusgabe({ ...bearbeiteAusgabe, bezahlt_von: e.target.value })}
+                    style={inputStyle}
+                  >
+                    {teilnehmer.map(person => (
+                      <option key={person.id} value={person.name}>{person.name}</option>
+                    ))}
+                  </select>
+                  <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
+                    <button onClick={async () => {
+                      await ausgabeBearbeiten(ausgabe.id, {
+                        beschreibung: bearbeiteAusgabe.beschreibung,
+                        betrag: parseFloat(bearbeiteAusgabe.betrag),
+                        bezahlt_von: bearbeiteAusgabe.bezahlt_von,
+                      })
+                      setBearbeiteAusgabe(null)
+                    }} style={{
+                      backgroundColor: '#c9a84c', color: '#0a0f1e', border: 'none',
+                      padding: '12px', minHeight: '44px', borderRadius: '10px', cursor: 'pointer',
+                      flex: 1, fontWeight: '600', boxSizing: 'border-box',
+                    }}>Speichern</button>
+                    <button onClick={() => setBearbeiteAusgabe(null)} style={{
+                      backgroundColor: 'transparent', color: '#fff',
+                      border: '1px solid rgba(255,255,255,0.2)',
+                      padding: '12px', minHeight: '44px', borderRadius: '10px', cursor: 'pointer',
+                      flex: 1, boxSizing: 'border-box',
+                    }}>Abbrechen</button>
+                  </div>
+                </div>
+              ) : (
+                /* Normale Ansicht */
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                  <div style={{ flex: '1 1 160px', minWidth: 0 }}>
+                    <p style={{ fontWeight: '600', margin: '0 0 4px', overflowWrap: 'break-word', wordBreak: 'break-word' }}>{ausgabe.beschreibung}</p>
+                    <p style={{ color: '#8892a4', fontSize: '0.85rem', margin: 0, overflowWrap: 'break-word', wordBreak: 'break-word' }}>
+                      bezahlt von {ausgabe.bezahlt_von}
+                      {ausgabe.fuer && ausgabe.fuer.length > 0 && (
+                        <span> · für {Array.isArray(ausgabe.fuer) ? ausgabe.fuer.join(', ') : ausgabe.fuer}</span>
+                      )}
+                    </p>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, marginLeft: 'auto' }}>
+                    <p style={{ fontSize: '1.1rem', color: '#c9a84c', margin: 0, fontWeight: '600', whiteSpace: 'nowrap' }}>
+                      {ausgabe.betrag}€
+                    </p>
+                    <button onClick={() => ausgabeLoeschen(ausgabe.id)} style={{
+                      backgroundColor: 'transparent', border: '1px solid rgba(233,69,96,0.2)',
+                      color: '#e94560', cursor: 'pointer', padding: '6px',
+                      minWidth: '40px', minHeight: '40px', boxSizing: 'border-box',
+                      borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <Trash2 size={14} />
+                    </button>
+                    {/* Bearbeiten öffnet das Formular */}
+                    <button onClick={() => setBearbeiteAusgabe(ausgabe)} style={{
+                      backgroundColor: 'transparent', border: '1px solid rgba(201,168,76,0.2)',
+                      color: '#8892a4', cursor: 'pointer', padding: '6px',
+                      minWidth: '40px', minHeight: '40px', boxSizing: 'border-box',
+                      borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <SquarePen size={14} />
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
-          ))
-        )}
+          )))}
 
         {/* Saldo pro Person */}
         {teilnehmer.length > 0 && ausgaben.length > 0 && (
@@ -188,12 +278,12 @@ function TripKosten() {
               const saldo = bezahlt - anteil
               return (
                 <div key={person.id} style={{
-                  display: 'flex', justifyContent: 'space-between',
+                  display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '4px 12px',
                   padding: '10px 0', borderBottom: '1px solid #1a2235',
                 }}>
-                  <p style={{ fontWeight: '600', margin: 0 }}>{person.name}</p>
+                  <p style={{ fontWeight: '600', margin: 0, minWidth: 0, overflowWrap: 'break-word', wordBreak: 'break-word' }}>{person.name}</p>
                   <p style={{
-                    fontWeight: '600', margin: 0,
+                    fontWeight: '600', margin: 0, whiteSpace: 'nowrap',
                     color: saldo >= 0 ? '#4caf50' : '#e94560',
                   }}>
                     {saldo >= 0 ? '+' : ''}{saldo.toFixed(2)}€
@@ -201,6 +291,7 @@ function TripKosten() {
                 </div>
               )
             })}
+            
           </div>
         )}
 
@@ -212,7 +303,7 @@ function TripKosten() {
               <p style={{ color: '#8892a4' }}>Alle quitt! ✅</p>
             ) : (
               schulden.map((s, index) => (
-                <p key={index} style={{ color: '#8892a4', marginBottom: '8px' }}>
+                <p key={index} style={{ color: '#8892a4', marginBottom: '8px', overflowWrap: 'break-word', wordBreak: 'break-word' }}>
                   <span style={{ color: '#fff', fontWeight: '600' }}>{s.von}</span>
                   {' '}schuldet{' '}
                   <span style={{ color: '#fff', fontWeight: '600' }}>{s.an}</span>
@@ -265,12 +356,12 @@ function TripKosten() {
                   }}
                   style={{
                     display: 'flex', alignItems: 'center', gap: '12px',
-                    padding: '10px 0', borderBottom: '1px solid #1a2235',
-                    cursor: 'pointer',
+                    padding: '12px 0', minHeight: '44px', borderBottom: '1px solid #1a2235',
+                    cursor: 'pointer', boxSizing: 'border-box',
                   }}
                 >
                   <div style={{
-                    width: '22px', height: '22px', borderRadius: '6px',
+                    width: '24px', height: '24px', borderRadius: '6px',
                     backgroundColor: istGewaehlt ? '#c9a84c' : '#1a2235',
                     border: '1px solid rgba(255,255,255,0.1)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -278,7 +369,7 @@ function TripKosten() {
                   }}>
                     {istGewaehlt && <span style={{ fontSize: '12px', color: '#0a0f1e' }}>✓</span>}
                   </div>
-                  <p style={{ margin: 0, color: '#ffffff' }}>{person.name}</p>
+                  <p style={{ margin: 0, color: '#ffffff', minWidth: 0, overflowWrap: 'break-word', wordBreak: 'break-word' }}>{person.name}</p>
                 </div>
               )
             })}
@@ -286,13 +377,14 @@ function TripKosten() {
             <div style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
               <button onClick={ausgabeHinzufuegen} style={{
                 backgroundColor: '#c9a84c', color: '#0a0f1e', border: 'none',
-                padding: '12px', borderRadius: '12px', cursor: 'pointer',
-                flex: 1, fontWeight: '600',
+                padding: '14px', minHeight: '44px', borderRadius: '12px', cursor: 'pointer',
+                flex: 1, fontWeight: '600', boxSizing: 'border-box',
               }}>Speichern</button>
               <button onClick={() => setFormularOffen(false)} style={{
                 backgroundColor: 'transparent', color: '#fff',
                 border: '1px solid rgba(255,255,255,0.2)',
-                padding: '12px', borderRadius: '12px', cursor: 'pointer', flex: 1,
+                padding: '14px', minHeight: '44px', borderRadius: '12px', cursor: 'pointer',
+                flex: 1, boxSizing: 'border-box',
               }}>Abbrechen</button>
             </div>
           </div>
@@ -301,14 +393,17 @@ function TripKosten() {
         {!formularOffen && (
           <button onClick={() => setFormularOffen(true)} style={{
             backgroundColor: '#c9a84c', color: '#0a0f1e', border: 'none',
-            padding: '15px', borderRadius: '12px', fontSize: '1rem',
+            padding: '15px', minHeight: '48px', borderRadius: '12px', fontSize: '1rem',
             fontWeight: '600', cursor: 'pointer', marginTop: '10px', width: '100%',
+            boxSizing: 'border-box',
           }}>
             + Ausgabe hinzufügen
           </button>
         )}
 
+
       </div>
+      
     </div>
   )
 }
@@ -316,7 +411,7 @@ function TripKosten() {
 const karteStyle = {
   backgroundColor: '#111827', borderRadius: '15px',
   border: '1px solid rgba(201,168,76,0.15)',
-  padding: '20px', marginBottom: '15px',
+  padding: 'clamp(14px, 4vw, 20px)', marginBottom: '15px', boxSizing: 'border-box',
 }
 
 const inputStyle = {

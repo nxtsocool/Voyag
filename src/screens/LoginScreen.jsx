@@ -39,8 +39,8 @@ function LoginScreen() {
       <div style={{
         backgroundColor: '#111827', borderRadius: '20px',
         border: '1px solid #c9a84c',
-        padding: '40px', width: '100%', maxWidth: '400px',
-        margin: '0 20px',
+        padding: 'clamp(24px, 7vw, 40px)', width: '100%', maxWidth: '400px',
+        margin: '0 16px', boxSizing: 'border-box',
       }}>
 
         {/* Logo */}
@@ -94,7 +94,10 @@ function LoginScreen() {
         {/* Zwischen Login und Registrieren wechseln */}
         <p
           onClick={() => setIsRegistrieren(!isRegistrieren)}
-          style={{ color: '#8892a4', textAlign: 'center', cursor: 'pointer', fontSize: '0.9rem' }}
+          style={{
+            color: '#8892a4', textAlign: 'center', cursor: 'pointer', fontSize: '0.9rem',
+            padding: '10px 0', margin: 0,
+          }}
         >
           {isRegistrieren ? 'Schon einen Account? Einloggen' : 'Noch kein Account? Registrieren'}
         </p>

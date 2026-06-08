@@ -5,7 +5,36 @@
   font-family: 'Segoe UI', sans-serif;
 }
 
-body {
-  background-color: #0a0f1e ;
+html, body {
+  background-color: #0a0f1e;
   color: #ffffff;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+button, input, select, textarea {
+  font-family: inherit;
+}
+
+/* Touch-optimierte Datepicker Popups – verhindert horizontales Scrollen auf schmalen Screens */
+.react-datepicker-wrapper {
+  display: block;
+  width: 100%;
+}
+
+.react-datepicker-popper {
+  max-width: 95vw;
+}
+
+.react-datepicker {
+  font-size: 0.9rem;
+}
+
+@media (max-width: 480px) {
+  .react-datepicker__day,
+  .react-datepicker__day-name {
+    width: 2rem;
+    line-height: 2rem;
+    margin: 0.15rem;
+  }
 }

@@ -21,8 +21,9 @@ function BottomNav({ onAdd }) {
       borderBottom: '1px solid #111827',
       border: '1px solid #c9a84c',
       borderRadius: '15px 15px 0 0',
-      padding: '8px 0',
+      padding: '8px 0 calc(8px + env(safe-area-inset-bottom))',
       display: 'flex', zIndex: 100,
+      boxSizing: 'border-box',
     }}>
       {tabs.map((tab, index) => {
         const aktiv = location.pathname === tab.path
@@ -35,10 +36,11 @@ function BottomNav({ onAdd }) {
               key={tab.path}
               onClick={() => navigate(tab.path)}
               style={{
-                flex: 1, padding: '12px 0',
+                flex: 1, padding: '12px 0', minHeight: '48px',
                 backgroundColor: 'transparent', border: 'none',
                 cursor: 'pointer', display: 'flex',
-                flexDirection: 'column', alignItems: 'center', gap: '4px',
+                flexDirection: 'column', alignItems: 'center',
+                justifyContent: 'center', gap: '4px',
               }}
             >
               <Icon size={20} color={aktiv ? '#c9a84c' : '#8892a4'} />

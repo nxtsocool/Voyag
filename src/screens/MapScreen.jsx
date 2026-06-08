@@ -115,7 +115,7 @@ function MapScreen() {
   const besuchteCodesListe = besucht.map(b => b.country_code)
 
   return (
-    <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto', paddingBottom: '80px' }}>
+    <div style={{ padding: 'clamp(14px, 4vw, 20px)', maxWidth: '600px', margin: '0 auto', paddingBottom: 'calc(90px + env(safe-area-inset-bottom))', boxSizing: 'border-box' }}>
       <h1 style={{ fontSize: '2rem', fontWeight: '700', letterSpacing: '-0.5px', marginBottom: '4px' }}>
         Meine<span style={{ color: '#c9a84c' }}> Karte</span>
       </h1>
@@ -131,13 +131,13 @@ function MapScreen() {
         display: 'flex', justifyContent: 'space-around', textAlign: 'center',
       }}>
         <div>
-          <p style={{ fontSize: '2rem', fontWeight: '700', color: '#c9a84c', margin: 0 }}>
+          <p style={{ fontSize: 'clamp(1.5rem, 7vw, 2rem)', fontWeight: '700', color: '#c9a84c', margin: 0 }}>
             {besucht.length}
           </p>
           <p style={{ color: '#8892a4', fontSize: '0.85rem', margin: 0 }}>Länder besucht</p>
         </div>
         <div>
-          <p style={{ fontSize: '2rem', fontWeight: '700', color: '#c9a84c', margin: 0 }}>
+          <p style={{ fontSize: 'clamp(1.5rem, 7vw, 2rem)', fontWeight: '700', color: '#c9a84c', margin: 0 }}>
             {Math.round((besucht.length / laender.length) * 100)}%
           </p>
           <p style={{ color: '#8892a4', fontSize: '0.85rem', margin: 0 }}>der Welt</p>
@@ -165,9 +165,10 @@ function MapScreen() {
             value={ausgewaehlt}
             onChange={(e) => setAusgewaehlt(e.target.value)}
             style={{
-              flex: 1, padding: '12px', backgroundColor: '#1a2235',
+              flex: 1, minWidth: 0, padding: '12px', backgroundColor: '#1a2235',
               border: '1px solid rgba(255,255,255,0.1)',
               borderRadius: '10px', color: '#ffffff', fontSize: '1rem',
+              boxSizing: 'border-box', minHeight: '44px',
             }}
           >
             <option value="">Land auswählen...</option>
@@ -179,8 +180,9 @@ function MapScreen() {
           </select>
           <button onClick={landHinzufuegen} style={{
             backgroundColor: '#c9a84c', color: '#0a0f1e',
-            border: 'none', padding: '12px 16px',
+            border: 'none', padding: '12px 20px', minHeight: '44px',
             borderRadius: '10px', cursor: 'pointer', fontWeight: '600',
+            flexShrink: 0, boxSizing: 'border-box',
           }}>+</button>
         </div>
       </div>
@@ -198,16 +200,20 @@ function MapScreen() {
               return (
                 <div key={eintrag.country_code} style={{
                   backgroundColor: '#1a2235', borderRadius: '20px',
-                  padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '8px',
-                  border: '1px solid rgba(255,255,255,0.1)',
+                  padding: '8px 8px 8px 14px', display: 'flex', alignItems: 'center', gap: '6px',
+                  border: '1px solid rgba(255,255,255,0.1)', maxWidth: '100%',
                 }}>
-                  <span style={{ fontSize: '0.9rem' }}>{land?.name || eintrag.country_code}</span>
+                  <span style={{ fontSize: '0.9rem', overflowWrap: 'break-word', wordBreak: 'break-word' }}>
+                    {land?.name || eintrag.country_code}
+                  </span>
                   {/* Nur manuell hinzugefügte Länder können gelöscht werden */}
                   {!eintrag.trip_id && (
                     <button onClick={() => landEntfernen(eintrag.country_code)} style={{
                       background: 'none', border: 'none',
                       color: '#8892a4', cursor: 'pointer',
-                      fontSize: '0.8rem', padding: 0,
+                      fontSize: '1rem', minWidth: '28px', minHeight: '28px',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      flexShrink: 0,
                     }}>×</button>
                   )}
                 </div>

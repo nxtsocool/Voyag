@@ -52,7 +52,7 @@ export default function TripPersonen() {
     <div style={{ paddingBottom: '40px' }}>
       <TripNav tripName={trip.name} />
 
-      <div style={{ padding: '0 20px', maxWidth: '600px', margin: '0 auto' }}>
+      <div style={{ padding: '0 clamp(14px, 4vw, 20px)', maxWidth: '600px', margin: '0 auto', boxSizing: 'border-box' }}>
 
         {/* Teilnehmer Liste */}
         <div style={karteStyle}>
@@ -66,23 +66,24 @@ export default function TripPersonen() {
           {/* Teilnehmer Badges */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
             {teilnehmer.map(person => (
-              <div key={person.id} style={{ position: 'relative' }}>
+              <div key={person.id} style={{ position: 'relative', paddingTop: '8px', paddingRight: '8px' }}>
                 <span style={{
-                  backgroundColor: '#1a2235', padding: '8px 28px 8px 14px',
+                  backgroundColor: '#1a2235', padding: '10px 30px 10px 16px',
                   borderRadius: '20px', fontSize: '0.9rem', display: 'inline-block',
                   border: '1px solid rgba(255,255,255,0.1)',
+                  overflowWrap: 'break-word', wordBreak: 'break-word', maxWidth: '100%',
                 }}>
                   {person.name}
                 </span>
                 <button onClick={() => teilnehmerEntfernen(person.id)} style={{
-                  position: 'absolute', top: '-5px', right: '-5px',
+                  position: 'absolute', top: '0', right: '0',
                   backgroundColor: '#e94560', border: 'none',
                   color: '#fff', borderRadius: '50%',
-                  width: '18px', height: '18px',
+                  width: '28px', height: '28px',
                   fontSize: '10px', cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
-                  <X size={18} />
+                  <X size={16} />
                 </button>
               </div>
             ))}
@@ -101,15 +102,16 @@ export default function TripPersonen() {
               onChange={(e) => setNeuerTeilnehmer(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && teilnehmerHinzufuegen()}
               style={{
-                flex: 1, padding: '10px', backgroundColor: '#1a2235',
+                flex: 1, minWidth: 0, padding: '12px', backgroundColor: '#1a2235',
                 border: '1px solid rgba(255,255,255,0.1)',
                 borderRadius: '10px', color: '#ffffff', fontSize: '1rem',
+                boxSizing: 'border-box',
               }}
             />
             <button onClick={teilnehmerHinzufuegen} style={{
               backgroundColor: '#c9a84c', color: '#0a0f1e', border: 'none',
-              padding: '10px 16px', borderRadius: '10px', cursor: 'pointer',
-              fontSize: '1.2rem', fontWeight: '600',
+              padding: '12px 20px', minHeight: '44px', borderRadius: '10px', cursor: 'pointer',
+              fontSize: '1.2rem', fontWeight: '600', flexShrink: 0, boxSizing: 'border-box',
             }}>+</button>
           </div>
         </div>
@@ -127,8 +129,8 @@ export default function TripPersonen() {
               border: '1px solid rgba(201,168,76,0.3)',
             }}>
               <p style={{
-                fontSize: '2rem', fontWeight: '700', letterSpacing: '0.3em',
-                color: '#c9a84c', margin: 0,
+                fontSize: 'clamp(1.5rem, 7vw, 2rem)', fontWeight: '700', letterSpacing: '0.3em',
+                color: '#c9a84c', margin: 0, overflowWrap: 'break-word',
               }}>
                 {trip.invite_code}
               </p>
@@ -144,5 +146,5 @@ export default function TripPersonen() {
 const karteStyle = {
   backgroundColor: '#111827', borderRadius: '15px',
   border: '1px solid rgba(201,168,76,0.15)',
-  padding: '20px', marginBottom: '15px',
+  padding: 'clamp(14px, 4vw, 20px)', marginBottom: '15px', boxSizing: 'border-box',
 }
