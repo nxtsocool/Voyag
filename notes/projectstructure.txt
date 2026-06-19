@@ -1,0 +1,60 @@
+VOYAG – PROJEKTSTRUKTUR
+========================
+
+Voyag/
+├── .env                    ⚠️  GEHEIM – nie auf GitHub!
+├── .gitignore
+├── package.json            Pakete & Scripts
+├── vite.config.js          Build-Konfiguration
+├── index.html              HTML Einstiegspunkt
+│
+└── src/
+    ├── App.jsx             Navigation & Routen
+    ├── supabase.js         Datenbankverbindung
+    ├── index.css           Globale Styles
+    ├── main.jsx            App-Einstiegspunkt
+    │
+    ├── screens/
+    │   ├── LoginScreen.jsx         Login & Registrierung
+    │   ├── TripsOverview.jsx       Reisenliste
+    │   ├── TripHome.jsx            Reise Übersicht & Kacheln
+    │   ├── TripInfo.jsx            Flug, Hotel, Links
+    │   ├── TripPersonen.jsx        Teilnehmer
+    │   ├── TripPackliste.jsx       Packliste
+    │   ├── TripKosten.jsx          Ausgaben & Abrechnung
+    │   ├── MapScreen.jsx           Weltkarte
+    │   └── SettingsScreen.jsx      Einstellungen
+    │
+    ├── components/
+    │   ├── BottomNav.jsx           Navigation unten
+    │   └── TripNav.jsx             Tab-Navigation in Reise
+    │
+    └── data/
+        ├── laender.js              Alle Länder mit Code & Name
+        └── (countryIds.js           Weltkarten-IDs zu Alpha-2 Codes)
+
+
+SUPABASE TABELLEN
+=================
+trips               Alle Reisen
+teilnehmer          Reise-Teilnehmer
+ausgaben            Kosten & Ausgaben
+packliste           Packlisten-Items
+trip_links          Links pro Reise
+trip_members        Beigetretene Mitglieder
+visited_countries   Besuchte Länder
+
+
+WICHTIGE BEFEHLE
+================
+Lokal starten:      npm run dev
+Änderungen pushen:  git add . → git commit -m "..." → git push
+Paket installieren: npm install paketname --legacy-peer-deps
+
+
+WICHTIGE LINKS
+==============
+Lokale App:   http://localhost:5173
+GitHub:       https://github.com/nxtsocool/Voyag
+Vercel:       https://voyag.vercel.app
+Supabase:     https://supabase.com/dashboard

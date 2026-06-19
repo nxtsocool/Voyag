@@ -1,0 +1,472 @@
+import { useState, useEffect } from 'react'
+import { supabase } from '../supabase'
+import { User, Lock, Trash2, LogOut, Mail, ChevronRight, Globe, Palette, DollarSign, Info } from 'lucide-react'
+
+export default function SettingsScreen() {
+  const [user, setUser] = useState(null)
+  const [profile, setProfile] = useState({ name: '', bio: '', waehrung: '€', sprache: 'de', design: 'dark' })
+  const [laden, setLaden] = useState(true)
+  const [profilBearbeiten, setProfilBearbeiten] = useState(false)
+  const [passwortDaten, setPasswortDaten] = useState({ neu: '', bestaetigung: '' })
+  const [passwortOffen, setPasswortOffen] = useState(false)
+  const [loeschenOffen, setLoeschenOffen] = useState(false)
+  const [nachricht, setNachricht] = useState('')
+  const [appInfoOffen, setAppInfoOffen] = useState(false)
+
+  useEffect(() => {
+    const laden = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      setUser(user)
+      const { data } = await supabase
+        .from('profiles').select('*').eq('id', user.id).single()
+      if (data) setProfile({
+        name: data.name || '',
+        bio: data.bio || '',
+        waehrung: data.waehrung || '€',
+        sprache: data.sprache || 'de',
+        design: data.design || 'dark',
+      })
+      setLaden(false)
+    }
+    laden()
+  }, [])
+
+  const profilSpeichern = async () => {
+    const { error } = await supabase.from('profiles').upsert({
+      id: user.id, name: profile.name, bio: profile.bio,
+      email: user.email, waehrung: profile.waehrung,
+      sprache: profile.sprache, design: profile.design,
+    })
+    if (error) console.error('Fehler:', error)
+    else {
+      setNachricht('Profil gespeichert! ✅')
+      setProfilBearbeiten(false)
+      setTimeout(() => setNachricht(''), 3000)
+    }
+  }
+
+  // Einstellung direkt speichern ohne Formular
+  const einstellungSpeichern = async (key, value) => {
+    setProfile(p => ({ ...p, [key]: value }))
+    await supabase.from('profiles').upsert({
+      id: user.id, email: user.email,
+      name: profile.name, bio: profile.bio,
+      waehrung: key === 'waehrung' ? value : profile.waehrung,
+      sprache: key === 'sprache' ? value : profile.sprache,
+      design: key === 'design' ? value : profile.design,
+    })
+    setNachricht('Gespeichert! ✅')
+    setTimeout(() => setNachricht(''), 2000)
+  }
+
+  const passwortZuruecksetzen = async () => {
+    const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+      redirectTo: window.location.origin,
+    })
+    if (error) console.error('Fehler:', error)
+    else {
+      setNachricht('Email zum Zurücksetzen wurde gesendet! ✅')
+      setPasswortOffen(false)
+      setTimeout(() => setNachricht(''), 3000)
+    }
+  }
+
+  const passwortAendern = async () => {
+    if (!passwortDaten.neu || passwortDaten.neu !== passwortDaten.bestaetigung) {
+      setNachricht('Passwörter stimmen nicht überein! ❌')
+      setTimeout(() => setNachricht(''), 3000)
+      return
+    }
+    if (passwortDaten.neu.length < 6) {
+      setNachricht('Passwort muss mindestens 6 Zeichen haben! ❌')
+      setTimeout(() => setNachricht(''), 3000)
+      return
+    }
+    const { error } = await supabase.auth.updateUser({ password: passwortDaten.neu })
+    if (error) console.error('Fehler:', error)
+    else {
+      setNachricht('Passwort geändert! ✅')
+      setPasswortOffen(false)
+      setPasswortDaten({ neu: '', bestaetigung: '' })
+      setTimeout(() => setNachricht(''), 3000)
+    }
+  }
+
+  const accountLoeschen = async () => {
+    await supabase.from('visited_countries').delete().eq('user_id', user.id)
+    await supabase.from('trip_members').delete().eq('user_id', user.id)
+    const { data: trips } = await supabase.from('trips').select('id').eq('user_id', user.id)
+    if (trips) {
+      for (const trip of trips) {
+        await supabase.from('ausgaben').delete().eq('trip_id', trip.id)
+        await supabase.from('teilnehmer').delete().eq('trip_id', trip.id)
+        await supabase.from('packliste').delete().eq('trip_id', trip.id)
+        await supabase.from('trip_links').delete().eq('trip_id', trip.id)
+        await supabase.from('trip_fluege').delete().eq('trip_id', trip.id)
+        await supabase.from('trip_unterkuenfte').delete().eq('trip_id', trip.id)
+      }
+    }
+    await supabase.from('trips').delete().eq('user_id', user.id)
+    await supabase.from('profiles').delete().eq('id', user.id)
+    await supabase.auth.signOut()
+  }
+
+  const ausloggen = async () => await supabase.auth.signOut()
+
+  if (laden) return (
+    <div style={{ padding: '24px', maxWidth: '600px', margin: '0 auto' }}>
+      {[1,2,3].map(i => (
+        <div key={i} className="skeleton" style={{ height: '80px', borderRadius: '20px', marginBottom: '12px' }} />
+      ))}
+    </div>
+  )
+
+  const initialen = profile.name
+    ? profile.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
+    : user.email[0].toUpperCase()
+
+  return (
+    <div style={{ maxWidth: '600px', margin: '0 auto', paddingBottom: '100px' }}>
+
+      {/* Header mit Avatar */}
+      <div className="fade-in-1" style={{
+        padding: '32px 20px 24px',
+        display: 'flex', alignItems: 'center', gap: '16px',
+      }}>
+        <div style={{
+          width: '64px', height: '64px', borderRadius: '20px',
+          background: 'linear-gradient(135deg, #c9a84c, #8a6f2e)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: '1.4rem', fontWeight: '800', color: '#0a0f1e', flexShrink: 0,
+        }}>
+          {initialen}
+        </div>
+        <div>
+          <h1 style={{ fontSize: '1.4rem', fontWeight: '800', margin: '0 0 2px', letterSpacing: '-0.5px' }}>
+            {profile.name || 'Kein Name'}
+          </h1>
+          <p style={{ color: '#8892a4', fontSize: '0.85rem', margin: 0 }}>{user.email}</p>
+        </div>
+      </div>
+
+      {/* Toast */}
+      {nachricht && (
+        <div className="fade-in" style={{
+          margin: '0 20px 16px',
+          backgroundColor: nachricht.includes('❌') ? 'rgba(233,69,96,0.1)' : 'rgba(201,168,76,0.1)',
+          borderRadius: '14px', padding: '12px 16px',
+          border: `1px solid ${nachricht.includes('❌') ? 'rgba(233,69,96,0.2)' : 'rgba(201,168,76,0.2)'}`,
+          color: nachricht.includes('❌') ? '#e94560' : '#c9a84c',
+          fontWeight: '600', fontSize: '0.9rem',
+        }}>
+          {nachricht}
+        </div>
+      )}
+
+      <div style={{ padding: '0 20px' }}>
+
+        {/* Profil Karte */}
+        <div className="fade-in-2" style={karteStyle}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: profilBearbeiten ? '16px' : '0' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={iconWrapperStyle}><User size={16} color="#c9a84c" /></div>
+              <h3 style={{ margin: 0, fontWeight: '700', fontSize: '1rem' }}>Profil</h3>
+            </div>
+            <button onClick={() => setProfilBearbeiten(!profilBearbeiten)} className="btn-press" style={editButtonStyle}>
+              {profilBearbeiten ? 'Abbrechen' : 'Bearbeiten'}
+            </button>
+          </div>
+
+          {profilBearbeiten ? (
+            <div style={{ marginTop: '16px' }}>
+              <input placeholder="Dein Name" value={profile.name}
+                onChange={(e) => setProfile({ ...profile, name: e.target.value })}
+                style={inputStyle} />
+              <textarea placeholder="Kurze Bio (optional)" value={profile.bio}
+                onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
+                rows={3} style={{ ...inputStyle, resize: 'vertical', fontFamily: 'inherit' }} />
+              <button onClick={profilSpeichern} className="btn-press" style={speichernButtonStyle}>
+                Speichern
+              </button>
+            </div>
+          ) : (
+            <div style={{ marginTop: '16px' }}>
+              <div style={infoZeileStyle}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Mail size={14} color="#8892a4" />
+                  <span style={{ color: '#8892a4', fontSize: '0.85rem' }}>Email</span>
+                </div>
+                <span style={{ fontSize: '0.85rem', fontWeight: '500' }}>{user.email}</span>
+              </div>
+              {profile.name && (
+                <div style={infoZeileStyle}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <User size={14} color="#8892a4" />
+                    <span style={{ color: '#8892a4', fontSize: '0.85rem' }}>Name</span>
+                  </div>
+                  <span style={{ fontSize: '0.85rem', fontWeight: '500' }}>{profile.name}</span>
+                </div>
+              )}
+              {profile.bio && (
+                <div style={{ marginTop: '12px', padding: '12px', backgroundColor: '#1a2235', borderRadius: '12px' }}>
+                  <p style={{ color: '#8892a4', fontSize: '0.75rem', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Bio</p>
+                  <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: 1.5 }}>{profile.bio}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Passwort Karte */}
+        <div className="fade-in-2" style={karteStyle}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={iconWrapperStyle}><Lock size={16} color="#c9a84c" /></div>
+              <div>
+                <h3 style={{ margin: 0, fontWeight: '700', fontSize: '1rem' }}>Passwort</h3>
+                {!passwortOffen && (
+                  <p style={{ color: '#8892a4', fontSize: '0.8rem', margin: '2px 0 0' }}>Direkt ändern oder per Email</p>
+                )}
+              </div>
+            </div>
+            <button onClick={() => setPasswortOffen(!passwortOffen)} className="btn-press" style={editButtonStyle}>
+              {passwortOffen ? 'Abbrechen' : 'Ändern'}
+            </button>
+          </div>
+          {passwortOffen && (
+            <div style={{ marginTop: '16px' }}>
+              <input placeholder="Neues Passwort" type="password"
+                value={passwortDaten.neu}
+                onChange={(e) => setPasswortDaten({ ...passwortDaten, neu: e.target.value })}
+                style={inputStyle} />
+              <input placeholder="Passwort bestätigen" type="password"
+                value={passwortDaten.bestaetigung}
+                onChange={(e) => setPasswortDaten({ ...passwortDaten, bestaetigung: e.target.value })}
+                style={inputStyle} />
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button onClick={passwortAendern} className="btn-press" style={speichernButtonStyle}>Speichern</button>
+                <button onClick={passwortZuruecksetzen} className="btn-press" style={{
+                  ...speichernButtonStyle, backgroundColor: 'transparent',
+                  border: '1px solid rgba(201,168,76,0.3)', color: '#c9a84c',
+                }}>Per Email</button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Präferenzen */}
+        <div className="fade-in-3" style={karteStyle}>
+          <h3 style={{ margin: '0 0 16px', fontWeight: '700', fontSize: '1rem' }}>Präferenzen</h3>
+
+          {/* Währung */}
+          <div style={{ marginBottom: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+              <div style={iconWrapperStyle}><DollarSign size={16} color="#c9a84c" /></div>
+              <span style={{ fontWeight: '600', fontSize: '0.95rem' }}>Währung</span>
+            </div>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              {['€', '$', '£', '¥', '₺', 'CHF'].map(w => (
+                <button key={w} onClick={() => einstellungSpeichern('waehrung', w)}
+                  className="btn-press" style={{
+                    padding: '8px 16px', borderRadius: '12px', cursor: 'pointer',
+                    fontWeight: '600', fontSize: '0.9rem', border: 'none',
+                    backgroundColor: profile.waehrung === w ? '#c9a84c' : '#1a2235',
+                    color: profile.waehrung === w ? '#0a0f1e' : '#8892a4',
+                  }}>
+                  {w}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Sprache */}
+          <div style={{ marginBottom: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+              <div style={iconWrapperStyle}><Globe size={16} color="#c9a84c" /></div>
+              <span style={{ fontWeight: '600', fontSize: '0.95rem' }}>Sprache</span>
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {[{ code: 'de', label: 'Deutsch' }, { code: 'en', label: 'English' }].map(s => (
+                <button key={s.code} onClick={() => einstellungSpeichern('sprache', s.code)}
+                  className="btn-press" style={{
+                    padding: '8px 16px', borderRadius: '12px', cursor: 'pointer',
+                    fontWeight: '600', fontSize: '0.9rem', border: 'none',
+                    backgroundColor: profile.sprache === s.code ? '#c9a84c' : '#1a2235',
+                    color: profile.sprache === s.code ? '#0a0f1e' : '#8892a4',
+                  }}>
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Design */}
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+              <div style={iconWrapperStyle}><Palette size={16} color="#c9a84c" /></div>
+              <span style={{ fontWeight: '600', fontSize: '0.95rem' }}>Design</span>
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {[{ code: 'dark', label: '🌙 Dark' }, { code: 'light', label: '☀️ Light' }].map(d => (
+                <button key={d.code} onClick={() => einstellungSpeichern('design', d.code)}
+                  className="btn-press" style={{
+                    padding: '8px 16px', borderRadius: '12px', cursor: 'pointer',
+                    fontWeight: '600', fontSize: '0.9rem', border: 'none',
+                    backgroundColor: profile.design === d.code ? '#c9a84c' : '#1a2235',
+                    color: profile.design === d.code ? '#0a0f1e' : '#8892a4',
+                    opacity: d.code === 'light' ? 0.5 : 1,
+                  }}>
+                  {d.label}
+                </button>
+              ))}
+            </div>
+            {profile.design === 'light' && (
+              <p style={{ color: '#8892a4', fontSize: '0.8rem', marginTop: '8px' }}>
+                Light Mode kommt bald! 🚧
+              </p>
+            )}
+          </div>
+        </div>
+
+            {/* APP Info */}
+        <div className="fade-in-3" style={karteStyle}>
+          <button
+            onClick={() => setAppInfoOffen(!appInfoOffen)}
+            className="btn-press"
+            style={{
+              width: '100%', background: 'none', border: 'none',
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              cursor: 'pointer', padding: 0,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={iconWrapperStyle}><Info size={16} color="#c9a84c" /></div>
+              <h3 style={{ margin: 0, fontWeight: '700', fontSize: '1rem', color: '#fff' }}>App Info</h3>
+            </div>
+            <ChevronRight size={16} color="#8892a4" style={{
+              transform: appInfoOffen ? 'rotate(90deg)' : 'rotate(0deg)',
+              transition: 'transform 0.2s ease',
+            }} />
+          </button>
+
+          {appInfoOffen && (
+            <div style={{ marginTop: '16px' }}>
+              <div style={infoZeileStyle}>
+                <span style={{ color: '#8892a4', fontSize: '0.85rem' }}>Version</span>
+                <span style={{ fontSize: '0.85rem', fontWeight: '500', color: '#c9a84c' }}>1.0.0</span>
+              </div>
+              <div style={infoZeileStyle}>
+                <span style={{ color: '#8892a4', fontSize: '0.85rem' }}>Entwickler</span>
+                <span style={{ fontSize: '0.85rem', fontWeight: '500' }}>Georg Kummert</span>
+              </div>
+              <div style={{ ...infoZeileStyle, borderBottom: 'none' }}>
+                <span style={{ color: '#8892a4', fontSize: '0.85rem' }}>Made with</span>
+                <span style={{ fontSize: '0.85rem' }}>⚡ React + Supabase</span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Ausloggen */}
+        <button onClick={ausloggen} className="btn-press fade-in-4" style={{
+          width: '100%', padding: '16px', marginBottom: '10px',
+          backgroundColor: '#111827', border: 'none', borderRadius: '16px',
+          cursor: 'pointer', display: 'flex', alignItems: 'center',
+          justifyContent: 'space-between',
+          boxShadow: '0 2px 12px rgba(0,0,0,0.2)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ ...iconWrapperStyle, backgroundColor: 'rgba(136,146,164,0.1)' }}>
+              <LogOut size={16} color="#8892a4" />
+            </div>
+            <span style={{ color: '#8892a4', fontWeight: '600', fontSize: '0.95rem' }}>Ausloggen</span>
+          </div>
+          <ChevronRight size={16} color="#8892a4" />
+        </button>
+
+        {/* Account löschen */}
+        {!loeschenOffen ? (
+          <button onClick={() => setLoeschenOffen(true)} className="btn-press fade-in-5" style={{
+            width: '100%', padding: '16px',
+            backgroundColor: 'rgba(233,69,96,0.06)',
+            border: '1px solid rgba(233,69,96,0.15)',
+            borderRadius: '16px', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ ...iconWrapperStyle, backgroundColor: 'rgba(233,69,96,0.1)' }}>
+                <Trash2 size={16} color="#e94560" />
+              </div>
+              <span style={{ color: '#e94560', fontWeight: '600', fontSize: '0.95rem' }}>Account löschen</span>
+            </div>
+            <ChevronRight size={16} color="#e94560" />
+          </button>
+        ) : (
+          <div style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.75)',
+            display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+            zIndex: 1000,
+          }}>
+            <div className="fade-in" style={{
+              backgroundColor: '#111827', borderRadius: '24px 24px 0 0',
+              padding: '32px 24px 48px', width: '100%', maxWidth: '600px',
+            }}>
+              <div style={{ width: '40px', height: '4px', backgroundColor: '#1a2235', borderRadius: '2px', margin: '0 auto 24px' }} />
+              <h3 style={{ margin: '0 0 8px', fontWeight: '800', fontSize: '1.3rem' }}>Account löschen?</h3>
+              <p style={{ color: '#8892a4', margin: '0 0 28px', fontSize: '0.95rem', lineHeight: 1.6 }}>
+                Alle deine Reisen und Daten werden <span style={{ color: '#fff', fontWeight: '600' }}>unwiderruflich</span> gelöscht!
+              </p>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button onClick={accountLoeschen} className="btn-press" style={{
+                  backgroundColor: '#e94560', color: '#fff', border: 'none',
+                  padding: '14px', borderRadius: '14px', cursor: 'pointer',
+                  flex: 1, fontWeight: '700', fontSize: '1rem',
+                }}>Ja, löschen</button>
+                <button onClick={() => setLoeschenOffen(false)} className="btn-press" style={{
+                  backgroundColor: '#1a2235', color: '#fff', border: 'none',
+                  padding: '14px', borderRadius: '14px', cursor: 'pointer', flex: 1, fontWeight: '600',
+                }}>Abbrechen</button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+const karteStyle = {
+  backgroundColor: '#111827', borderRadius: '20px',
+  boxShadow: '0 2px 16px rgba(0,0,0,0.25)',
+  padding: '20px', marginBottom: '12px',
+}
+
+const inputStyle = {
+  width: '100%', padding: '13px 14px', backgroundColor: '#1a2235',
+  border: '1.5px solid rgba(255,255,255,0.06)', borderRadius: '12px',
+  color: '#ffffff', fontSize: '1rem', marginBottom: '10px', boxSizing: 'border-box',
+}
+
+const editButtonStyle = {
+  backgroundColor: 'rgba(201,168,76,0.1)', border: 'none',
+  color: '#c9a84c', padding: '8px 14px', borderRadius: '10px',
+  cursor: 'pointer', fontSize: '0.8rem', fontWeight: '700',
+}
+
+const speichernButtonStyle = {
+  backgroundColor: '#c9a84c', color: '#0a0f1e', border: 'none',
+  padding: '13px', borderRadius: '12px', cursor: 'pointer',
+  flex: 1, fontWeight: '700', fontSize: '1rem',
+}
+
+const iconWrapperStyle = {
+  width: '32px', height: '32px', borderRadius: '10px',
+  backgroundColor: 'rgba(201,168,76,0.1)',
+  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+}
+
+const infoZeileStyle = {
+  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+  padding: '10px 0', borderBottom: '1px solid #1a2235',
+}

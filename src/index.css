@@ -1,0 +1,165 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  background-color: #080d1a;
+  color: #ffffff;
+}
+
+/* Smooth transitions für alle interaktiven Elemente */
+button, a, input, select, textarea {
+  transition: all 0.2s ease;
+}
+
+/* Karten hover Effekt */
+.karte-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+}
+
+.karte-hover:active {
+  transform: translateY(0px);
+}
+
+/* Button Press Effekt */
+.btn-press:active {
+  transform: scale(0.97);
+}
+
+/* Fade In Animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeInUp 0.4s ease forwards;
+}
+
+/* Staggered Animation für Listen */
+.fade-in-1 { animation: fadeInUp 0.3s ease 0.05s both; }
+.fade-in-2 { animation: fadeInUp 0.3s ease 0.1s both; }
+.fade-in-3 { animation: fadeInUp 0.3s ease 0.15s both; }
+.fade-in-4 { animation: fadeInUp 0.3s ease 0.2s both; }
+.fade-in-5 { animation: fadeInUp 0.3s ease 0.25s both; }
+
+/* Skeleton Loading */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #111827 25%, #1a2235 50%, #111827 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+/* Input Focus */
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: rgba(201,168,76,0.5) !important;
+  box-shadow: 0 0 0 3px rgba(201,168,76,0.1);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 0px;
+}
+
+/* Datepicker immer ganz oben */
+.react-datepicker-popper {
+  z-index: 9999 !important;
+}
+
+.react-datepicker {
+  z-index: 9999 !important;
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Karten fliegen von unten rein mit Stagger */
+@keyframes flyIn {
+  from {
+    opacity: 0;
+    transform: translateY(60px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.fly-in-1 { animation: flyIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.05s both; }
+.fly-in-2 { animation: flyIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both; }
+.fly-in-3 { animation: flyIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.25s both; }
+.fly-in-4 { animation: flyIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.35s both; }
+.fly-in-5 { animation: flyIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.45s both; }
+
+/* Header fliegt von oben rein */
+@keyframes flyDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fly-down { animation: flyDown 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* Kompass dreht sich auf TripsOverview */
+@keyframes kompassSpin {
+  from { transform: rotate(-360deg) scale(0); opacity: 0; }
+  to   { transform: rotate(0deg) scale(1);   opacity: 1; }
+}
+
+/* Logo Text slideIn */
+@keyframes logoSlideIn {
+  from { opacity: 0; transform: translateX(-15px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes goldGlow {
+  0%   { opacity: 0; filter: brightness(3); }
+  60%  { opacity: 1; filter: brightness(1.5); }
+  100% { opacity: 1; filter: brightness(1); }
+}
+
+.kompass-spin {
+  animation: kompassSpin 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
+  display: inline-block;
+}
+
+.logo-slide {
+  animation: logoSlideIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.5s both;
+  display: inline-block;
+}
+
+.logo-gold {
+  animation: goldGlow 0.8s ease 0.8s both;
+  display: inline-block;
+}

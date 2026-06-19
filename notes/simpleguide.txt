@@ -1,0 +1,45 @@
+🔧 Lokale Entwicklung starten
+bashcd C:\Users\kumme\Voyag
+npm run dev
+Dann im Browser: http://localhost:5173
+
+🚀 Änderungen live schalten
+bashcd C:\Users\kumme\Voyag
+git add .
+git commit -m "Was du geändert hast"
+git push
+Vercel baut automatisch neu – nach 1-2 Minuten live!
+
+📦 Neues Paket installieren
+bashnpm install paketname
+# Falls Fehler:
+npm install paketname --legacy-peer-deps
+
+🗄️ Datenbank ändern
+
+Geh auf supabase.com → dein Projekt → SQL Editor
+SQL Befehl eingeben → Run
+
+
+👤 Neuen Nutzer einladen
+
+Supabase → Authentication → Users → Invite user
+Email eingeben → Nutzer bekommt eine Email
+
+
+🔑 Supabase Keys nachschauen
+
+Supabase → Project Settings → API
+
+
+⚡ Vercel Deployment
+
+vercel.com → dein Projekt → Deployments
+Manuell deployen: drei Punkte → Redeploy
+
+
+🐛 Fehler debuggen
+
+Im Browser: F12 → Console
+In VS Code Terminal: Fehlermeldung lesen
+In Supabase: Logs → API Logs

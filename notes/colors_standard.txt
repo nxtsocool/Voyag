@@ -1,0 +1,6 @@
+background - 		#0a0f1e
+cards - 		#111827
+buttons/akzente - 	#c9a84c
+Eingabefelder -		#111827
+
+MQVDL4
