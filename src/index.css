@@ -6,9 +6,28 @@
   -webkit-font-smoothing: antialiased;
 }
 
-body {
+html, body {
+  /* Verhindert horizontales Scrollen auf kleinen Screens, falls ein Element doch mal überläuft */
+  overflow-x: hidden;
+  width: 100%;
   background-color: #080d1a;
   color: #ffffff;
+}
+
+#root {
+  overflow-x: hidden;
+  width: 100%;
+}
+
+/* Bilder/SVGs dürfen ihren Container nie sprengen */
+img, svg {
+  max-width: 100%;
+}
+
+/* Mindestens 16px bei Formularfeldern verhindert Auto-Zoom beim Fokus auf iOS Safari.
+   Inline-Styles in den Screens überschreiben das gezielt, falls nötig. */
+input, select, textarea {
+  font-size: 16px;
 }
 
 /* Smooth transitions für alle interaktiven Elemente */

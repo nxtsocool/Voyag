@@ -320,7 +320,8 @@ function MapScreen() {
               </span>
               <button onClick={() => setPopup(null)} style={{
                 background: 'none', border: 'none', color: '#8892a4',
-                cursor: 'pointer', padding: '2px', display: 'flex', flexShrink: 0,
+                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0, width: '28px', height: '28px', margin: '-7px',
               }}>
                 <X size={14} />
               </button>
@@ -330,7 +331,7 @@ function MapScreen() {
             {popup.isBesucht ? (
               popup.manuelHinzugefuegt ? (
                 <button onClick={() => landEntfernen(popup.code)} className="btn-press" style={{
-                  width: '100%', padding: '8px 10px', borderRadius: '10px',
+                  width: '100%', padding: '8px 10px', minHeight: '44px', boxSizing: 'border-box', borderRadius: '10px',
                   border: 'none', backgroundColor: 'rgba(233,69,96,0.15)',
                   color: '#e94560', cursor: 'pointer',
                   fontSize: '0.82rem', fontWeight: '600',
@@ -350,7 +351,7 @@ function MapScreen() {
               )
             ) : (
               <button onClick={() => landHinzufuegen(popup.code)} className="btn-press" style={{
-                width: '100%', padding: '8px 10px', borderRadius: '10px',
+                width: '100%', padding: '8px 10px', minHeight: '44px', boxSizing: 'border-box', borderRadius: '10px',
                 border: 'none', backgroundColor: 'rgba(201,168,76,0.15)',
                 color: '#c9a84c', cursor: 'pointer',
                 fontSize: '0.82rem', fontWeight: '600',
@@ -470,20 +471,17 @@ function MapScreen() {
                   {/* Nur manuell hinzugefügte Länder können entfernt werden */}
                   {!eintrag.trip_id && (
                     <button onClick={() => landEntfernen(eintrag.country_code)} className="btn-press" style={{
-                      background: 'rgba(233,69,96,0.12)',
-                      border: 'none',
-                      color: '#e94560',
-                      cursor: 'pointer',
-                      width: '22px',
-                      height: '22px',
-                      borderRadius: '50%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0,
-                      fontSize: '1rem',
-                      padding: 0,
-                    }}>×</button>
+                      background: 'none', border: 'none', color: '#e94560',
+                      cursor: 'pointer', width: '34px', height: '34px', margin: '-6px',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      flexShrink: 0, fontSize: '1rem', padding: 0,
+                    }}>
+                      <span style={{
+                        width: '22px', height: '22px', borderRadius: '50%',
+                        backgroundColor: 'rgba(233,69,96,0.12)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}>×</span>
+                    </button>
                   )}
                 </div>
               )
@@ -511,8 +509,10 @@ const inputStyle = {
   backgroundColor: '#1a2235',
   border: '1px solid rgba(255,255,255,0.08)',
   borderRadius: '12px',
+  // min. 16px verhindert Auto-Zoom bei Fokus auf iOS Safari
   color: '#ffffff',
-  fontSize: '0.95rem',
+  fontSize: '16px',
+  minHeight: '44px',
   boxSizing: 'border-box',
 }
 

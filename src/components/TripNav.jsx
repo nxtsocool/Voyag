@@ -23,7 +23,7 @@ function TripNav({ tripName }) {
           background: 'rgba(201,168,76,0.1)',
           border: '1px solid rgba(201,168,76,0.2)',
           color: '#c9a84c', cursor: 'pointer',
-          width: '40px', height: '40px', borderRadius: '50%',
+          width: '44px', height: '44px', borderRadius: '50%',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           flexShrink: 0,
         }}>
@@ -57,7 +57,7 @@ function TripNav({ tripName }) {
                 backgroundColor: aktiv ? '#c9a84c' : '#111827',
                 color: aktiv ? '#080d1a' : '#8892a4',
                 border: 'none',
-                padding: '10px 16px', minHeight: '40px',
+                padding: '10px 16px', minHeight: '44px',
                 borderRadius: '50px',
                 cursor: 'pointer', fontSize: '0.82rem', fontWeight: aktiv ? '700' : '500',
                 whiteSpace: 'nowrap', flexShrink: 0, boxSizing: 'border-box',

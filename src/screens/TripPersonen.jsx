@@ -225,21 +225,22 @@ export default function TripPersonen() {
                           backgroundColor: 'rgba(201,168,76,0.1)',
                           border: '1px solid rgba(201,168,76,0.25)',
                           color: '#c9a84c', cursor: 'pointer',
-                          padding: '7px 12px', borderRadius: '50px',
+                          padding: '0 14px', minHeight: '44px', boxSizing: 'border-box',
+                          borderRadius: '50px', display: 'flex', alignItems: 'center',
                           fontSize: '0.75rem', fontWeight: '600',
                         }}
                       >
                         Verknüpfen
                       </button>
                     )}
-                    {/* Löschen */}
+                    {/* Löschen – min. 44x44px Touch-Target (Apple HIG) */}
                     <button onClick={() => teilnehmerEntfernen(person.id)} className="btn-press" style={{
                       backgroundColor: 'rgba(233,69,96,0.08)',
                       border: '1px solid rgba(233,69,96,0.2)',
                       color: '#e94560', cursor: 'pointer',
-                      width: '34px', height: '34px', borderRadius: '50%',
+                      width: '44px', height: '44px', borderRadius: '50%',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: '1.1rem', fontWeight: '300',
+                      fontSize: '1.1rem', fontWeight: '300', flexShrink: 0,
                     }}>×</button>
                   </div>
                 </div>
@@ -269,14 +270,14 @@ export default function TripPersonen() {
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <button onClick={() => userVerknuepfen(person.id)} className="btn-press" style={{
                         backgroundColor: '#c9a84c', color: '#0a0f1e', border: 'none',
-                        padding: '10px 16px', borderRadius: '12px', cursor: 'pointer',
+                        padding: '10px 16px', minHeight: '44px', boxSizing: 'border-box', borderRadius: '12px', cursor: 'pointer',
                         fontWeight: '700', fontSize: '0.88rem', flex: 1,
                         boxShadow: '0 4px 12px rgba(201,168,76,0.3)',
                       }}>Verknüpfen</button>
                       <button onClick={() => setVerknuepfenId(null)} className="btn-press" style={{
                         backgroundColor: 'transparent', color: '#8892a4',
                         border: '1px solid rgba(255,255,255,0.12)',
-                        padding: '10px 16px', borderRadius: '12px', cursor: 'pointer',
+                        padding: '10px 16px', minHeight: '44px', boxSizing: 'border-box', borderRadius: '12px', cursor: 'pointer',
                         fontSize: '0.88rem', flex: 1,
                       }}>Abbrechen</button>
                     </div>
@@ -360,6 +361,7 @@ const inputStyle = {
   backgroundColor: '#1a2235',
   border: '1px solid rgba(255,255,255,0.08)',
   borderRadius: '12px',
-  color: '#ffffff', fontSize: '0.95rem',
+  // min. 16px verhindert Auto-Zoom bei Fokus auf iOS Safari
+  color: '#ffffff', fontSize: '16px',
   boxSizing: 'border-box', marginBottom: '10px',
 }

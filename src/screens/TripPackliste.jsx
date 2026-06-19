@@ -185,25 +185,30 @@ export default function TripPackliste() {
                   /* Normale Item Ansicht */
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
 
-                    {/* Runde Checkbox mit smooth Animation */}
+                    {/* Runde Checkbox – 44x44px Touch-Target, optisch bleibt der Kreis 26px */}
                     <div
                       onClick={() => toggleErledigt(item)}
                       className="btn-press"
                       style={{
+                        width: '44px', height: '44px',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        flexShrink: 0, cursor: 'pointer', margin: '-9px',
+                      }}
+                    >
+                      <div style={{
                         width: '26px', height: '26px', borderRadius: '50%',
                         backgroundColor: item.erledigt ? '#c9a84c' : 'transparent',
                         border: item.erledigt
                           ? '2px solid #c9a84c'
                           : '2px solid rgba(255,255,255,0.2)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        flexShrink: 0, cursor: 'pointer',
                         transition: 'all 0.25s ease',
                         boxShadow: item.erledigt ? '0 0 10px rgba(201,168,76,0.35)' : 'none',
-                      }}
-                    >
-                      {item.erledigt && (
-                        <span style={{ fontSize: '13px', color: '#0a0f1e', fontWeight: '700', lineHeight: 1 }}>✓</span>
-                      )}
+                      }}>
+                        {item.erledigt && (
+                          <span style={{ fontSize: '13px', color: '#0a0f1e', fontWeight: '700', lineHeight: 1 }}>✓</span>
+                        )}
+                      </div>
                     </div>
 
                     {/* Item Text */}
@@ -263,22 +268,23 @@ const inputStyle = {
   backgroundColor: '#1a2235',
   border: '1px solid rgba(255,255,255,0.08)',
   borderRadius: '12px',
-  color: '#ffffff', fontSize: '0.95rem',
+  // min. 16px verhindert Auto-Zoom bei Fokus auf iOS Safari
+  color: '#ffffff', fontSize: '16px',
   marginBottom: '10px', boxSizing: 'border-box',
 }
 
 const ikonButtonStyle = {
   backgroundColor: 'rgba(201,168,76,0.1)',
   border: '1px solid rgba(201,168,76,0.2)',
-  cursor: 'pointer', padding: '7px', borderRadius: '10px',
-  minWidth: '34px', minHeight: '34px', boxSizing: 'border-box',
+  cursor: 'pointer', borderRadius: '10px',
+  minWidth: '44px', minHeight: '44px', boxSizing: 'border-box',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
 }
 
 const ikonButtonStyleRot = {
   backgroundColor: 'rgba(233,69,96,0.1)',
   border: '1px solid rgba(233,69,96,0.2)',
-  cursor: 'pointer', padding: '7px', borderRadius: '10px',
-  minWidth: '34px', minHeight: '34px', boxSizing: 'border-box',
+  cursor: 'pointer', borderRadius: '10px',
+  minWidth: '44px', minHeight: '44px', boxSizing: 'border-box',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
 }

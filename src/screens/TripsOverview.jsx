@@ -273,10 +273,10 @@ function TripsOverview() {
 
       {/* Header */}
       <div className="fly-down" style={{
-        display: 'flex', justifyContent: 'space-between',
-        alignItems: 'flex-start', marginBottom: '28px',
+        display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap',
+        alignItems: 'flex-start', marginBottom: '28px', gap: '12px',
       }}>
-        <div>
+        <div style={{ minWidth: 0 }}>
           {/* Logo mit Kompass als O */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0px',  }}>
             <span className="logo-slide" style={{ fontSize: '2.2rem', fontWeight: '800', color: '#ffffff', letterSpacing: '-2px', lineHeight: 1 }}>V</span>
@@ -295,21 +295,23 @@ function TripsOverview() {
           </p>
         </div>
          {/* Buttons – waren weg! */}
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           <button onClick={() => setBeitretenOffen(!beitretenOffen)} className="btn-press" style={{
             backgroundColor: 'transparent', color: '#c9a84c',
             border: '1.5px solid rgba(201,168,76,0.4)', padding: '10px 16px',
+            minHeight: '44px', boxSizing: 'border-box',
             borderRadius: '14px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600',
           }}>Beitreten</button>
           <button onClick={() => setFormularOffen(!formularOffen)} className="btn-press" style={{
             backgroundColor: '#c9a84c', color: '#0a0f1e', border: 'none',
-            padding: '10px 16px', borderRadius: '14px', cursor: 'pointer',
+            padding: '10px 16px', minHeight: '44px', boxSizing: 'border-box',
+            borderRadius: '14px', cursor: 'pointer',
             fontSize: '0.85rem', fontWeight: '700',
           }}>+ Neu</button>
         </div>
       </div>
 
-      <div style={{ paddingBottom: '100px' }}>
+      <div style={{ paddingBottom: 'calc(100px + env(safe-area-inset-bottom))' }}>
 
         {/* Beitreten Formular */}
         {beitretenOffen && (
@@ -408,7 +410,8 @@ function TripsOverview() {
                     background: `linear-gradient(135deg, ${farbe.accent} 0%, ${farbe.bg} 100%)`,
                     padding: '20px',
                     borderRadius: '20px 20px 0 0',
-                    display: 'flex', alignItems: 'center', gap: '16px',
+                    display: 'flex', alignItems: 'center', gap: '12px',
+                    boxSizing: 'border-box',
                   }}
                 >
                   {/* Flaggen Bild */}
@@ -426,34 +429,40 @@ function TripsOverview() {
                   {/* Name + Land */}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <h2 style={{
-                      margin: '0 0 3px', fontSize: '1.15rem',
+                      margin: '0 0 3px', fontSize: 'clamp(0.95rem, 4.5vw, 1.15rem)',
                       fontWeight: '800', letterSpacing: '-0.5px',
                       color: '#ffffff',
+                      overflowWrap: 'break-word', wordBreak: 'break-word',
                     }}>
                       {trip.name}
                     </h2>
-                    <p style={{ margin: 0, color: 'rgba(255,255,255,0.55)', fontSize: '0.82rem' }}>
+                    <p style={{
+                      margin: 0, color: 'rgba(255,255,255,0.55)', fontSize: '0.82rem',
+                      overflowWrap: 'break-word', wordBreak: 'break-word',
+                    }}>
                       {landName} · {trip.datum}
                     </p>
                   </div>
 
-                  {/* Aktions Buttons */}
-                  <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+                  {/* Aktions Buttons – min. 44x44px Touch-Target (Apple HIG) */}
+                  <div style={{ display: 'flex', gap: '2px', flexShrink: 0 }}>
                     {eigenTrip ? (
                       <>
                         <button onClick={(e) => { e.stopPropagation(); bearbeitenOeffnen(trip) }}
                           className="btn-press" style={{
                             backgroundColor: 'rgba(255,255,255,0.1)', border: 'none',
-                            color: 'rgba(255,255,255,0.7)', padding: '7px', borderRadius: '10px',
-                            cursor: 'pointer', display: 'flex', alignItems: 'center',
+                            color: 'rgba(255,255,255,0.7)', borderRadius: '10px',
+                            width: '44px', height: '44px',
+                            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                           }}>
                           <SquarePen size={14} />
                         </button>
                         <button onClick={(e) => { e.stopPropagation(); setLoescheTrip(trip) }}
                           className="btn-press" style={{
                             backgroundColor: 'rgba(233,69,96,0.15)', border: 'none',
-                            color: '#e94560', padding: '7px', borderRadius: '10px',
-                            cursor: 'pointer', display: 'flex', alignItems: 'center',
+                            color: '#e94560', borderRadius: '10px',
+                            width: '44px', height: '44px',
+                            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                           }}>
                           <Trash2 size={14} />
                         </button>
@@ -462,8 +471,10 @@ function TripsOverview() {
                       <button onClick={(e) => { e.stopPropagation(); reiseVerlassen(trip.id) }}
                         className="btn-press" style={{
                           backgroundColor: 'rgba(255,255,255,0.08)', border: 'none',
-                          color: 'rgba(255,255,255,0.5)', padding: '7px 12px',
+                          color: 'rgba(255,255,255,0.5)', padding: '0 12px',
+                          minHeight: '44px', boxSizing: 'border-box',
                           borderRadius: '10px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: '600',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
                         }}>
                         Verlassen
                       </button>
@@ -541,7 +552,9 @@ function TripsOverview() {
         }}>
           <div className="fade-in" style={{
             backgroundColor: '#111827', borderRadius: '24px 24px 0 0',
-            padding: '32px 24px 48px', width: '100%', maxWidth: '600px',
+            padding: '32px 24px calc(48px + env(safe-area-inset-bottom))',
+            width: '100%', maxWidth: '600px', boxSizing: 'border-box',
+            maxHeight: '85vh', overflowY: 'auto',
           }}>
             <div style={{
               width: '40px', height: '4px', backgroundColor: '#1a2235',

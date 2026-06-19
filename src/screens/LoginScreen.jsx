@@ -138,10 +138,8 @@ function LoginScreen() {
                 marginTop: '8px',
               }}>
                 <svg
-                  width="clamp(36px, 9vw, 52px)"
-                  height="clamp(36px, 9vw, 52px)"
                   viewBox="0 0 60 60"
-                  style={{ verticalAlign: 'middle' }}
+                  style={{ verticalAlign: 'middle', width: 'clamp(36px, 9vw, 52px)', height: 'clamp(36px, 9vw, 52px)' }}
                 >
                   {/* Äußerer Ring */}
                   <circle cx="30" cy="30" r="27" fill="none" stroke="#c9a84c" stroke-width="4"/>
@@ -228,11 +226,12 @@ function LoginScreen() {
             <button
               onClick={() => setPasswortSichtbar(!passwortSichtbar)}
               style={{
-                position: 'absolute', right: '14px', top: '50%',
+                position: 'absolute', right: '4px', top: '50%',
                 transform: 'translateY(-50%)',
                 background: 'none', border: 'none', cursor: 'pointer',
-                color: '#8892a4', padding: '4px',
-                display: 'flex', alignItems: 'center',
+                color: '#8892a4',
+                width: '44px', height: '44px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}
             >
               {passwortSichtbar ? <EyeOff size={16} /> : <Eye size={16} />}

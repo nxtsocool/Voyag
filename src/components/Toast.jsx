@@ -46,14 +46,15 @@ export default function Toast({ toasts, setToasts }) {
               {toast.nachricht}
             </p>
 
-            {/* Schließen Button */}
+            {/* Schließen Button – min. 44x44px Touch-Target (Apple HIG) */}
             <button
               onClick={() => setToasts(t => t.filter(t => t.id !== toast.id))}
               style={{
                 background: 'none', border: 'none',
                 color: '#8892a4', cursor: 'pointer',
-                padding: 0, flexShrink: 0,
-                display: 'flex', alignItems: 'center',
+                flexShrink: 0,
+                width: '44px', height: '44px', margin: '-12px -4px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}
             >
               <X size={16} />

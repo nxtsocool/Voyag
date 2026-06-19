@@ -482,8 +482,9 @@ function TripInfo() {
                   </a>
                   <button onClick={() => linkLoeschen(link.id)} className="btn-press" style={{
                     background: 'none', border: 'none', color: '#8892a4',
-                    cursor: 'pointer', padding: '2px', lineHeight: 1,
-                    display: 'flex', alignItems: 'center', fontSize: '14px',
+                    cursor: 'pointer', lineHeight: 1, margin: '-9px -6px -9px 0',
+                    width: '34px', height: '34px',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px',
                   }}>
                     ×
                   </button>
@@ -590,7 +591,8 @@ const inputStyle = {
   backgroundColor: '#1a2235',
   border: '1px solid rgba(255,255,255,0.08)',
   borderRadius: '12px',
-  color: '#ffffff', fontSize: '0.95rem',
+  // min. 16px verhindert Auto-Zoom bei Fokus auf iOS Safari
+  color: '#ffffff', fontSize: '16px',
   marginBottom: '10px', boxSizing: 'border-box',
 }
 
@@ -598,7 +600,7 @@ const addButtonStyle = {
   backgroundColor: 'transparent',
   border: '1px solid rgba(201,168,76,0.3)',
   color: '#c9a84c', padding: '8px 14px',
-  minHeight: '36px', borderRadius: '50px',
+  minHeight: '44px', borderRadius: '50px', boxSizing: 'border-box',
   cursor: 'pointer', fontSize: '0.8rem', fontWeight: '600',
   display: 'flex', alignItems: 'center',
   whiteSpace: 'nowrap',
@@ -622,16 +624,16 @@ const abbrechenButtonStyle = {
 const ikonButtonStyle = {
   backgroundColor: 'rgba(201,168,76,0.1)',
   border: '1px solid rgba(201,168,76,0.2)',
-  cursor: 'pointer', padding: '7px', borderRadius: '10px',
-  minWidth: '34px', minHeight: '34px', boxSizing: 'border-box',
+  cursor: 'pointer', borderRadius: '10px',
+  minWidth: '44px', minHeight: '44px', boxSizing: 'border-box',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
 }
 
 const ikonButtonStyleRot = {
   backgroundColor: 'rgba(233,69,96,0.1)',
   border: '1px solid rgba(233,69,96,0.2)',
-  cursor: 'pointer', padding: '7px', borderRadius: '10px',
-  minWidth: '34px', minHeight: '34px', boxSizing: 'border-box',
+  cursor: 'pointer', borderRadius: '10px',
+  minWidth: '44px', minHeight: '44px', boxSizing: 'border-box',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
 }
 

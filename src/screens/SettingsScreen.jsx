@@ -126,7 +126,7 @@ export default function SettingsScreen() {
     : user.email[0].toUpperCase()
 
   return (
-    <div style={{ maxWidth: '600px', margin: '0 auto', paddingBottom: '100px' }}>
+    <div style={{ maxWidth: '600px', margin: '0 auto', paddingBottom: 'calc(100px + env(safe-area-inset-bottom))' }}>
 
       {/* Header mit Avatar */}
       <div className="fade-in-1" style={{
@@ -268,7 +268,7 @@ export default function SettingsScreen() {
               {['€', '$', '£', '¥', '₺', 'CHF'].map(w => (
                 <button key={w} onClick={() => einstellungSpeichern('waehrung', w)}
                   className="btn-press" style={{
-                    padding: '8px 16px', borderRadius: '12px', cursor: 'pointer',
+                    padding: '0 16px', minHeight: '44px', display: 'flex', alignItems: 'center', borderRadius: '12px', cursor: 'pointer',
                     fontWeight: '600', fontSize: '0.9rem', border: 'none',
                     backgroundColor: profile.waehrung === w ? '#c9a84c' : '#1a2235',
                     color: profile.waehrung === w ? '#0a0f1e' : '#8892a4',
@@ -289,7 +289,7 @@ export default function SettingsScreen() {
               {[{ code: 'de', label: 'Deutsch' }, { code: 'en', label: 'English' }].map(s => (
                 <button key={s.code} onClick={() => einstellungSpeichern('sprache', s.code)}
                   className="btn-press" style={{
-                    padding: '8px 16px', borderRadius: '12px', cursor: 'pointer',
+                    padding: '0 16px', minHeight: '44px', display: 'flex', alignItems: 'center', borderRadius: '12px', cursor: 'pointer',
                     fontWeight: '600', fontSize: '0.9rem', border: 'none',
                     backgroundColor: profile.sprache === s.code ? '#c9a84c' : '#1a2235',
                     color: profile.sprache === s.code ? '#0a0f1e' : '#8892a4',
@@ -310,7 +310,7 @@ export default function SettingsScreen() {
               {[{ code: 'dark', label: '🌙 Dark' }, { code: 'light', label: '☀️ Light' }].map(d => (
                 <button key={d.code} onClick={() => einstellungSpeichern('design', d.code)}
                   className="btn-press" style={{
-                    padding: '8px 16px', borderRadius: '12px', cursor: 'pointer',
+                    padding: '0 16px', minHeight: '44px', display: 'flex', alignItems: 'center', borderRadius: '12px', cursor: 'pointer',
                     fontWeight: '600', fontSize: '0.9rem', border: 'none',
                     backgroundColor: profile.design === d.code ? '#c9a84c' : '#1a2235',
                     color: profile.design === d.code ? '#0a0f1e' : '#8892a4',
@@ -336,7 +336,7 @@ export default function SettingsScreen() {
             style={{
               width: '100%', background: 'none', border: 'none',
               display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              cursor: 'pointer', padding: 0,
+              cursor: 'pointer', padding: 0, minHeight: '44px', boxSizing: 'border-box',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -410,7 +410,9 @@ export default function SettingsScreen() {
           }}>
             <div className="fade-in" style={{
               backgroundColor: '#111827', borderRadius: '24px 24px 0 0',
-              padding: '32px 24px 48px', width: '100%', maxWidth: '600px',
+              padding: '32px 24px calc(48px + env(safe-area-inset-bottom))',
+              width: '100%', maxWidth: '600px', boxSizing: 'border-box',
+              maxHeight: '85vh', overflowY: 'auto',
             }}>
               <div style={{ width: '40px', height: '4px', backgroundColor: '#1a2235', borderRadius: '2px', margin: '0 auto 24px' }} />
               <h3 style={{ margin: '0 0 8px', fontWeight: '800', fontSize: '1.3rem' }}>Account löschen?</h3>
@@ -420,12 +422,12 @@ export default function SettingsScreen() {
               <div style={{ display: 'flex', gap: '10px' }}>
                 <button onClick={accountLoeschen} className="btn-press" style={{
                   backgroundColor: '#e94560', color: '#fff', border: 'none',
-                  padding: '14px', borderRadius: '14px', cursor: 'pointer',
+                  padding: '14px', minHeight: '44px', boxSizing: 'border-box', borderRadius: '14px', cursor: 'pointer',
                   flex: 1, fontWeight: '700', fontSize: '1rem',
                 }}>Ja, löschen</button>
                 <button onClick={() => setLoeschenOffen(false)} className="btn-press" style={{
                   backgroundColor: '#1a2235', color: '#fff', border: 'none',
-                  padding: '14px', borderRadius: '14px', cursor: 'pointer', flex: 1, fontWeight: '600',
+                  padding: '14px', minHeight: '44px', boxSizing: 'border-box', borderRadius: '14px', cursor: 'pointer', flex: 1, fontWeight: '600',
                 }}>Abbrechen</button>
               </div>
             </div>
@@ -450,7 +452,8 @@ const inputStyle = {
 
 const editButtonStyle = {
   backgroundColor: 'rgba(201,168,76,0.1)', border: 'none',
-  color: '#c9a84c', padding: '8px 14px', borderRadius: '10px',
+  color: '#c9a84c', padding: '0 14px', minHeight: '44px', borderRadius: '10px',
+  display: 'flex', alignItems: 'center', flexShrink: 0,
   cursor: 'pointer', fontSize: '0.8rem', fontWeight: '700',
 }
 

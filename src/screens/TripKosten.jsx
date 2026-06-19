@@ -225,7 +225,7 @@ function TripKosten() {
   )
 
   return (
-    <div style={{ paddingBottom: '110px' }}>
+    <div style={{ paddingBottom: 'calc(170px + env(safe-area-inset-bottom))' }}>
       <TripNav tripName={trip.name} />
 
       <div style={{ padding: '0 clamp(14px, 4vw, 20px)', maxWidth: '600px', margin: '0 auto', boxSizing: 'border-box' }}>
@@ -410,7 +410,8 @@ function TripKosten() {
               {schulden.length > 0 && (
                 <button onClick={() => setAbrechnenOffen(!abrechnenOffen)} className="btn-press" style={{
                   backgroundColor: 'transparent', border: '1px solid rgba(201,168,76,0.3)',
-                  color: '#c9a84c', padding: '6px 12px', borderRadius: '8px',
+                  color: '#c9a84c', padding: '0 12px', minHeight: '44px', boxSizing: 'border-box',
+                  borderRadius: '8px', display: 'flex', alignItems: 'center',
                   cursor: 'pointer', fontSize: '0.8rem', fontWeight: '600',
                 }}>
                   {abrechnenOffen ? 'Fertig' : 'Abrechnen'}
@@ -438,7 +439,7 @@ function TripKosten() {
                   {abrechnenOffen && (
                     <button onClick={() => schuldAbrechnen(s)} className="btn-press" style={{
                       backgroundColor: 'rgba(76,175,80,0.15)', border: '1px solid rgba(76,175,80,0.3)',
-                      color: '#4caf50', padding: '6px 10px', borderRadius: '8px',
+                      color: '#4caf50', padding: '0 10px', minHeight: '44px', boxSizing: 'border-box', borderRadius: '8px',
                       cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px',
                       fontSize: '0.78rem', fontWeight: '700', width: '100%', justifyContent: 'center', marginTop: '4px',
                     }}>
@@ -453,12 +454,12 @@ function TripKosten() {
 
       </div>
 
-      {/* Floating Action Button – wie bei Splid */}
+      {/* Floating Action Button – wie bei Splid – bottom berücksichtigt Safe-Area, damit er nicht mit der BottomNav kollidiert */}
       <button
         onClick={() => setFormularOffen(true)}
         className="btn-press"
         style={{
-          position: 'fixed', bottom: '92px', right: '20px',
+          position: 'fixed', bottom: 'calc(92px + env(safe-area-inset-bottom))', right: '20px',
           width: '58px', height: '58px', borderRadius: '50%',
           backgroundColor: '#c9a84c', border: 'none', cursor: 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -489,7 +490,7 @@ function TripKosten() {
               <h3 style={{ margin: 0, fontWeight: '800', fontSize: '1.2rem' }}>Neue Ausgabe</h3>
               <button onClick={() => setFormularOffen(false)} style={{
                 background: 'rgba(255,255,255,0.08)', border: 'none', borderRadius: '50%',
-                width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 cursor: 'pointer', color: '#8892a4',
               }}>
                 <X size={16} />
@@ -574,7 +575,9 @@ const karteStyle = {
 const inputStyle = {
   width: '100%', padding: '13px 14px', backgroundColor: '#1a2235',
   border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px',
-  color: '#ffffff', fontSize: '0.95rem', marginBottom: '10px', boxSizing: 'border-box',
+  // min. 16px verhindert Auto-Zoom bei Fokus auf iOS Safari
+  color: '#ffffff', fontSize: '16px', minHeight: '44px',
+  marginBottom: '10px', boxSizing: 'border-box',
 }
 
 const speichernButtonStyle = {
@@ -593,15 +596,15 @@ const abbrechenButtonStyle = {
 
 const ikonButtonStyle = {
   backgroundColor: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.2)',
-  cursor: 'pointer', padding: '7px', borderRadius: '10px',
-  minWidth: '34px', minHeight: '34px', boxSizing: 'border-box',
+  cursor: 'pointer', borderRadius: '10px',
+  minWidth: '44px', minHeight: '44px', boxSizing: 'border-box',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
 }
 
 const ikonButtonStyleRot = {
   backgroundColor: 'rgba(233,69,96,0.1)', border: '1px solid rgba(233,69,96,0.2)',
-  cursor: 'pointer', padding: '7px', borderRadius: '10px',
-  minWidth: '34px', minHeight: '34px', boxSizing: 'border-box',
+  cursor: 'pointer', borderRadius: '10px',
+  minWidth: '44px', minHeight: '44px', boxSizing: 'border-box',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
 }
 

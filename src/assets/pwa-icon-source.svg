@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- Hintergrund -->
+  <rect width="512" height="512" fill="#080d1a"/>
+  <rect width="512" height="512" fill="url(#glow)"/>
+
+  <!-- Kompass-Symbol, zentriert -->
+  <g transform="translate(256 200)">
+    <circle cx="0" cy="0" r="118" fill="none" stroke="#c9a84c" stroke-width="16"/>
+    <circle cx="0" cy="0" r="78" fill="none" stroke="#c9a84c" stroke-width="3" opacity="0.3"/>
+    <!-- Nordnadel gold -->
+    <polygon points="0,-108 17,-22 0,-40 -17,-22" fill="#c9a84c"/>
+    <!-- Südnadel weiß/transparent -->
+    <polygon points="0,108 17,22 0,40 -17,22" fill="#ffffff" opacity="0.18"/>
+    <circle cx="0" cy="0" r="17" fill="#c9a84c"/>
+    <circle cx="0" cy="0" r="8" fill="#080d1a"/>
+    <circle cx="0" cy="-108" r="9" fill="#c9a84c"/>
+  </g>
+
+  <!-- Wordmark "Voyag" -->
+  <text x="256" y="410" text-anchor="middle"
+    font-family="Arial, 'Segoe UI', sans-serif" font-weight="800"
+    font-size="92" letter-spacing="-2" fill="#ffffff">Vo<tspan fill="#c9a84c">yag</tspan></text>
+
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="38%" r="60%">
+      <stop offset="0%" stop-color="#c9a84c" stop-opacity="0.16"/>
+      <stop offset="70%" stop-color="#c9a84c" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+</svg>
