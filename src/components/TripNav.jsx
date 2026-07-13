@@ -1,17 +1,20 @@
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
-import { Info, Users, CheckSquare, Wallet, ChevronLeft, Camera } from 'lucide-react'
+import { Info, Users, CheckSquare, Wallet, ChevronLeft, Camera, MapPin } from 'lucide-react'
+import { useSettings } from '../context/SettingsContext'
 
 function TripNav({ tripName }) {
   const navigate = useNavigate()
   const { id } = useParams()
   const location = useLocation()
+  const { t } = useSettings()
 
   const tabs = [
-    { path: `/trip/${id}/info`, label: 'Info', icon: Info },
-    { path: `/trip/${id}/personen`, label: 'Personen', icon: Users },
-    { path: `/trip/${id}/packliste`, label: 'Packliste', icon: CheckSquare },
-    { path: `/trip/${id}/kosten`, label: 'Kosten', icon: Wallet },
-    { path: `/trip/${id}/fotos`, label: 'Fotos', icon: Camera },
+    { path: `/trip/${id}/info`, label: t('navInfo'), icon: Info },
+    { path: `/trip/${id}/orte`, label: t('navOrte'), icon: MapPin },
+    { path: `/trip/${id}/personen`, label: t('navPersonen'), icon: Users },
+    { path: `/trip/${id}/packliste`, label: t('navPackliste'), icon: CheckSquare },
+    { path: `/trip/${id}/kosten`, label: t('navKosten'), icon: Wallet },
+    { path: `/trip/${id}/fotos`, label: t('navFotos'), icon: Camera },
   ]
 
   return (

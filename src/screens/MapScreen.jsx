@@ -4,6 +4,7 @@ import laender from '../data/laender'
 import * as d3 from 'd3'
 import * as topojson from 'topojson-client'
 import { Search, X, Plus } from 'lucide-react'
+import { useSettings } from '../context/SettingsContext'
 
 const countryIds = {
   // Europa
@@ -45,6 +46,7 @@ const countryIds = {
 }
 
 function MapScreen() {
+  const { t } = useSettings()
   const [besucht, setBesucht] = useState([])
   const [userId, setUserId] = useState(null)
   const [suche, setSuche] = useState('')
@@ -52,7 +54,7 @@ function MapScreen() {
   const [balkenBreite, setBalkenBreite] = useState(0)
   const svgRef = useRef(null)
   const mapContainerRef = useRef(null)
-  
+
   // Zoom-Zustand zwischen Neu-Zeichnungen erhalten
   const zoomTransformRef = useRef(d3.zoomIdentity)
 
@@ -225,10 +227,10 @@ function MapScreen() {
           margin: '0 0 4px',
           lineHeight: 1.1,
         }}>
-          Meine <span style={{ color: '#c9a84c' }}>Karte</span>
+          {t('meinePrefix')} <span style={{ color: '#c9a84c' }}>{t('karte')}</span>
         </h1>
         <p style={{ color: '#8892a4', fontSize: '0.85rem', margin: 0 }}>
-          Deine persönliche Reisegeschichte
+          {t('deinePersoenlicheReisegeschichte')}
         </p>
       </div>
 
@@ -237,7 +239,7 @@ function MapScreen() {
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: '16px' }}>
           <div>
             <p style={{ color: '#8892a4', fontSize: '0.7rem', fontWeight: '600', letterSpacing: '0.15em', textTransform: 'uppercase', margin: '0 0 4px' }}>
-              Bereiste Länder
+              {t('bereisteLaender')}
             </p>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
               <span style={{ fontSize: 'clamp(2.4rem, 10vw, 3.2rem)', fontWeight: '800', color: '#c9a84c', lineHeight: 1 }}>
@@ -248,7 +250,7 @@ function MapScreen() {
           </div>
           <div style={{ textAlign: 'right' }}>
             <p style={{ color: '#8892a4', fontSize: '0.7rem', fontWeight: '600', letterSpacing: '0.15em', textTransform: 'uppercase', margin: '0 0 4px' }}>
-              Der Welt
+              {t('derWelt')}
             </p>
             <span style={{ fontSize: 'clamp(1.8rem, 8vw, 2.6rem)', fontWeight: '800', color: '#ffffff', lineHeight: 1 }}>
               {prozent}%
@@ -291,7 +293,7 @@ function MapScreen() {
           pointerEvents: 'none',
           zIndex: 1,
         }}>
-          Scroll / Pinch zum Zoomen
+          {t('scrollPinchZoomen')}
         </div>
 
         {/* Länder-Popup beim Klick */}
@@ -337,7 +339,7 @@ function MapScreen() {
                   fontSize: '0.82rem', fontWeight: '600',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px',
                 }}>
-                  × Entfernen
+                  × {t('entfernen')}
                 </button>
               ) : (
                 <div style={{
@@ -346,7 +348,7 @@ function MapScreen() {
                   color: '#4caf50', fontSize: '0.82rem', fontWeight: '600',
                   textAlign: 'center',
                 }}>
-                  ✓ Via Trip besucht
+                  ✓ {t('viaTripBesucht')}
                 </div>
               )
             ) : (
@@ -357,7 +359,7 @@ function MapScreen() {
                 fontSize: '0.82rem', fontWeight: '600',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px',
               }}>
-                <Plus size={14} /> Hinzufügen
+                <Plus size={14} /> {t('hinzufuegen')}
               </button>
             )}
           </div>
@@ -375,7 +377,7 @@ function MapScreen() {
           }}>
             <Search size={16} color="#c9a84c" />
           </div>
-          <h3 style={{ margin: 0, fontWeight: '700', fontSize: '1rem' }}>Land hinzufügen</h3>
+          <h3 style={{ margin: 0, fontWeight: '700', fontSize: '1rem' }}>{t('landHinzufuegenTitel')}</h3>
         </div>
 
         {/* Suchfeld */}
@@ -385,7 +387,7 @@ function MapScreen() {
             transform: 'translateY(-50%)', pointerEvents: 'none',
           }} />
           <input
-            placeholder="Land suchen..."
+            placeholder={t('landSuchenPlatzhalter')}
             value={suche}
             onChange={(e) => setSuche(e.target.value)}
             style={{ ...inputStyle, paddingLeft: '40px' }}
@@ -427,7 +429,7 @@ function MapScreen() {
 
         {suche.trim().length > 0 && gefilterteLaender.length === 0 && (
           <p style={{ color: '#8892a4', fontSize: '0.85rem', margin: '10px 0 0', textAlign: 'center' }}>
-            Kein Land gefunden
+            {t('keinLandGefunden')}
           </p>
         )}
       </div>
@@ -436,7 +438,7 @@ function MapScreen() {
       {besucht.length > 0 && (
         <div className="fade-in" style={karteStyle}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
-            <h3 style={{ margin: 0, fontWeight: '700', fontSize: '1rem' }}>Besuchte Länder</h3>
+            <h3 style={{ margin: 0, fontWeight: '700', fontSize: '1rem' }}>{t('besuchteLaender')}</h3>
             <span style={{
               backgroundColor: 'rgba(201,168,76,0.15)',
               color: '#c9a84c',

@@ -3,9 +3,11 @@ import { useParams } from 'react-router-dom'
 import { supabase } from '../supabase'
 import TripNav from '../components/TripNav'
 import { Upload, Trash2, Image, ChevronLeft, ChevronRight, X, Camera } from 'lucide-react'
+import { useSettings } from '../context/SettingsContext'
 
 export default function TripFotos() {
   const { id } = useParams()
+  const { t } = useSettings()
   const [trip, setTrip] = useState(null)
   const [fotos, setFotos] = useState([])
   const [laden, setLaden] = useState(true)
@@ -104,10 +106,10 @@ export default function TripFotos() {
         }}>
           <div>
             <h2 style={{ margin: 0, fontWeight: '800', fontSize: '1.3rem', letterSpacing: '-0.5px' }}>
-              Fotos
+              {t('navFotos')}
             </h2>
             <p style={{ color: '#8892a4', fontSize: '0.82rem', margin: '2px 0 0' }}>
-              {fotos.length} {fotos.length === 1 ? 'Foto' : 'Fotos'} im Album
+              {t('fotosAnzahlAlbum')(fotos.length)}
             </p>
           </div>
           <div>
@@ -131,9 +133,9 @@ export default function TripFotos() {
               }}
             >
               {hochladen ? (
-                <>⏳ Lädt...</>
+                <>⏳ {t('laedt')}</>
               ) : (
-                <><Upload size={16} /> Hochladen</>
+                <><Upload size={16} /> {t('hochladen')}</>
               )}
             </button>
           </div>
@@ -155,10 +157,10 @@ export default function TripFotos() {
               <Camera size={32} color="#c9a84c" />
             </div>
             <h3 style={{ margin: '0 0 8px', fontWeight: '700', fontSize: '1.1rem' }}>
-              Noch keine Fotos
+              {t('keineFotos')}
             </h3>
             <p style={{ color: '#8892a4', margin: '0 0 24px', fontSize: '0.9rem' }}>
-              Haltet eure Reisemomente fest!
+              {t('haltetMomenteFest')}
             </p>
             <button
               onClick={() => fileInputRef.current.click()}
@@ -170,7 +172,7 @@ export default function TripFotos() {
                 display: 'inline-flex', alignItems: 'center', gap: '8px',
               }}
             >
-              <Upload size={18} /> Erstes Foto hochladen
+              <Upload size={18} /> {t('erstesFotoHochladen')}
             </button>
           </div>
         ) : (

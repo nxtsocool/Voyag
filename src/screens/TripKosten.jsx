@@ -5,11 +5,12 @@ import TripNav from '../components/TripNav'
 import { Wallet, Trash2, SquarePen, Plus, Check, Calendar, X } from 'lucide-react'
 import Toast from '../components/Toast'
 import useToast from '../hooks/useToast.jsx'
+import { useSettings } from '../context/SettingsContext'
 
 function TripKosten() {
   const { id } = useParams()
   const { toasts, setToasts, toast } = useToast()
-
+  const { waehrung, t } = useSettings()
   const [trip, setTrip] = useState(null)
   const [ausgaben, setAusgaben] = useState([])
   const [teilnehmer, setTeilnehmer] = useState([])
@@ -53,7 +54,7 @@ function TripKosten() {
   // Neue Ausgabe speichern
   const ausgabeHinzufuegen = async () => {
     if (!neueAusgabe.beschreibung || !neueAusgabe.betrag || !neueAusgabe.bezahlt_von) {
-      toast('Bitte alle Felder ausfüllen!', 'error')
+      toast(t('bitteAlleFelderAusfuellen'), 'error')
       return
     }
 
@@ -71,7 +72,7 @@ function TripKosten() {
 
     if (error) {
       console.error('Fehler:', error)
-      toast('Fehler beim Speichern!', 'error')
+      toast(t('fehlerBeimSpeichern'), 'error')
     } else {
       setAusgaben([data[0], ...ausgaben])
       setNeueAusgabe({
@@ -79,7 +80,7 @@ function TripKosten() {
         datum: new Date().toISOString().split('T')[0],
       })
       setFormularOffen(false)
-      toast('Ausgabe hinzugefügt! ✅', 'success')
+      toast(t('ausgabeHinzugefuegt'), 'success')
     }
   }
 
@@ -98,9 +99,9 @@ function TripKosten() {
       console.error('Fehler beim Löschen:', error)
       // Bei Fehler die Ausgabe wieder zurückholen
       setAusgaben(vorherigeAusgaben)
-      toast('Löschen fehlgeschlagen!', 'error')
+      toast(t('loeschenFehlgeschlagen'), 'error')
     } else {
-      toast('Ausgabe gelöscht', 'success')
+      toast(t('ausgabeGeloescht'), 'success')
     }
   }
 
@@ -112,10 +113,10 @@ function TripKosten() {
 
     if (error) {
       console.error('Fehler:', error)
-      toast('Speichern fehlgeschlagen!', 'error')
+      toast(t('speichernFehlgeschlagen'), 'error')
     } else {
       setAusgaben(ausgaben.map(a => a.id === ausgabeId ? { ...a, ...updates } : a))
-      toast('Gespeichert! ✅', 'success')
+      toast(t('gespeichertHaken'), 'success')
     }
   }
 
@@ -125,7 +126,7 @@ function TripKosten() {
     if (typeof fuerArray === 'string') {
       try { fuerArray = JSON.parse(fuerArray) } catch { fuerArray = null }
     }
-    const betroffene = (fuerArray && fuerArray.length > 0) ? fuerArray : teilnehmer.map(t => t.name)
+    const betroffene = (fuerArray && fuerArray.length > 0) ? fuerArray : teilnehmer.map(p => p.name)
     if (betroffene.includes(personName)) return ausgabe.betrag / betroffene.length
     return 0
   }
@@ -178,12 +179,12 @@ function TripKosten() {
       console.error('Fehler:', error)
       // Bei Fehler rückgängig machen
       setAbrechnungen(prev => prev.filter(a => a !== neueAbrechnung))
-      toast('Abrechnen fehlgeschlagen!', 'error')
+      toast(t('abrechnenFehlgeschlagen'), 'error')
     } else {
       // Mit echten Daten synchronisieren (korrekte IDs)
       const { data } = await supabase.from('abrechnungen').select('*').eq('trip_id', id)
       setAbrechnungen(data || [])
-      toast('Beglichen! ✅', 'success')
+      toast(t('beglichenHaken'), 'success')
     }
   }
 
@@ -242,7 +243,7 @@ function TripKosten() {
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '22px' }}>
             <p style={{ color: '#8892a4', fontSize: '0.7rem', fontWeight: '600', letterSpacing: '0.15em', textTransform: 'uppercase', margin: 0 }}>
-              Gesamtausgaben
+              {t('gesamtausgaben')}
             </p>
             <Wallet size={18} color="rgba(201,168,76,0.5)" />
           </div>
@@ -252,23 +253,23 @@ function TripKosten() {
             fontWeight: '800', letterSpacing: '-1.5px', overflowWrap: 'break-word',
             textShadow: '0 0 40px rgba(201,168,76,0.2)',
           }}>
-            {gesamt.toFixed(2)}€
+            {gesamt.toFixed(2)}{waehrung}
           </h2>
 
           {teilnehmer.length > 0 && (
             <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
               <div>
-                <p style={{ color: '#8892a4', fontSize: '0.65rem', margin: '0 0 3px', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: '600' }}>Teilnehmer</p>
+                <p style={{ color: '#8892a4', fontSize: '0.65rem', margin: '0 0 3px', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: '600' }}>{t('teilnehmerLabel')}</p>
                 <p style={{ color: '#fff', fontWeight: '700', margin: 0, fontSize: '0.95rem' }}>{teilnehmer.length}</p>
               </div>
               <div style={{ width: '1px', backgroundColor: 'rgba(255,255,255,0.1)' }} />
               <div>
-                <p style={{ color: '#8892a4', fontSize: '0.65rem', margin: '0 0 3px', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: '600' }}>Pro Person</p>
-                <p style={{ color: '#fff', fontWeight: '700', margin: 0, fontSize: '0.95rem' }}>{(gesamt / teilnehmer.length).toFixed(2)}€</p>
+                <p style={{ color: '#8892a4', fontSize: '0.65rem', margin: '0 0 3px', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: '600' }}>{t('proPerson')}</p>
+                <p style={{ color: '#fff', fontWeight: '700', margin: 0, fontSize: '0.95rem' }}>{(gesamt / teilnehmer.length).toFixed(2)}{waehrung}</p>
               </div>
               <div style={{ width: '1px', backgroundColor: 'rgba(255,255,255,0.1)' }} />
               <div>
-                <p style={{ color: '#8892a4', fontSize: '0.65rem', margin: '0 0 3px', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: '600' }}>Ausgaben</p>
+                <p style={{ color: '#8892a4', fontSize: '0.65rem', margin: '0 0 3px', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: '600' }}>{t('ausgabenLabel')}</p>
                 <p style={{ color: '#fff', fontWeight: '700', margin: 0, fontSize: '0.95rem' }}>{ausgaben.length}</p>
               </div>
             </div>
@@ -278,7 +279,7 @@ function TripKosten() {
         {/* Timeline der Ausgaben – nach Datum gruppiert */}
         {ausgaben.length > 0 && (
           <div className="fade-in-2" style={karteStyle}>
-            <h3 style={{ margin: '0 0 20px', fontWeight: '700', fontSize: '1rem' }}>Ausgaben</h3>
+            <h3 style={{ margin: '0 0 20px', fontWeight: '700', fontSize: '1rem' }}>{t('ausgabenLabel')}</h3>
 
             {ausgabenNachDatum().map(([datum, ausgabenDesTages], gruppenIndex) => (
               <div key={datum} style={{ marginBottom: gruppenIndex < ausgabenNachDatum().length - 1 ? '24px' : '0' }}>
@@ -295,10 +296,10 @@ function TripKosten() {
                       <div className="fade-in" style={{ marginBottom: '16px' }}>
                         <input value={bearbeiteAusgabe.beschreibung}
                           onChange={(e) => setBearbeiteAusgabe({ ...bearbeiteAusgabe, beschreibung: e.target.value })}
-                          style={inputStyle} placeholder="Beschreibung" />
+                          style={inputStyle} placeholder={t('beschreibungPlatzhalter')} />
                         <input type="number" value={bearbeiteAusgabe.betrag}
                           onChange={(e) => setBearbeiteAusgabe({ ...bearbeiteAusgabe, betrag: e.target.value })}
-                          style={inputStyle} placeholder="Betrag" />
+                          style={inputStyle} placeholder={t('betragPlatzhalter')} />
                         <input type="date" value={bearbeiteAusgabe.datum}
                           onChange={(e) => setBearbeiteAusgabe({ ...bearbeiteAusgabe, datum: e.target.value })}
                           style={inputStyle} />
@@ -316,8 +317,8 @@ function TripKosten() {
                               datum: bearbeiteAusgabe.datum,
                             })
                             setBearbeiteAusgabe(null)
-                          }} className="btn-press" style={{ ...speichernButtonStyle, flex: 1 }}>Speichern</button>
-                          <button onClick={() => setBearbeiteAusgabe(null)} className="btn-press" style={{ ...abbrechenButtonStyle, flex: 1 }}>Abbrechen</button>
+                          }} className="btn-press" style={{ ...speichernButtonStyle, flex: 1 }}>{t('speichern')}</button>
+                          <button onClick={() => setBearbeiteAusgabe(null)} className="btn-press" style={{ ...abbrechenButtonStyle, flex: 1 }}>{t('abbrechen')}</button>
                         </div>
                       </div>
                     ) : (
@@ -335,13 +336,13 @@ function TripKosten() {
                               {ausgabe.beschreibung}
                             </p>
                             <span style={{ fontSize: '1.1rem', color: '#c9a84c', fontWeight: '700', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                              {Number(ausgabe.betrag).toFixed(2)}€
+                              {Number(ausgabe.betrag).toFixed(2)}{waehrung}
                             </span>
                           </div>
                           <p style={{ color: '#8892a4', fontSize: '0.78rem', margin: 0, overflowWrap: 'break-word', wordBreak: 'break-word' }}>
-                            von {ausgabe.bezahlt_von}
+                            {t('bezahltVonText')(ausgabe.bezahlt_von)}
                             {ausgabe.fuer && ausgabe.fuer.length > 0 && (
-                              <span> · für {Array.isArray(ausgabe.fuer) ? ausgabe.fuer.join(', ') : ausgabe.fuer}</span>
+                              <span> · {t('fuerWenText')(Array.isArray(ausgabe.fuer) ? ausgabe.fuer.join(', ') : ausgabe.fuer)}</span>
                             )}
                           </p>
                         </div>
@@ -365,14 +366,14 @@ function TripKosten() {
 
         {ausgaben.length === 0 && (
           <p className="fade-in" style={{ color: '#8892a4', textAlign: 'center', marginBottom: '16px', fontStyle: 'italic', fontSize: '0.9rem' }}>
-            Noch keine Ausgaben – tippe unten rechts auf "+"!
+            {t('keineAusgaben')}
           </p>
         )}
 
         {/* Saldo pro Person mit Balken */}
         {teilnehmer.length > 0 && ausgaben.length > 0 && (
           <div className="fade-in-3" style={karteStyle}>
-            <h3 style={{ margin: '0 0 18px', fontWeight: '700', fontSize: '1rem' }}>Saldo</h3>
+            <h3 style={{ margin: '0 0 18px', fontWeight: '700', fontSize: '1rem' }}>{t('saldoTitel')}</h3>
             {teilnehmer.map(person => {
               const saldo = saldoBerechnen(person)
               const balkenBreite = Math.min((Math.abs(saldo) / maxSaldo) * 100, 100)
@@ -385,7 +386,7 @@ function TripKosten() {
                       {person.name}
                     </p>
                     <p style={{ fontWeight: '700', margin: 0, whiteSpace: 'nowrap', marginLeft: '8px', color: positiv ? '#4caf50' : '#e94560', fontSize: '0.95rem' }}>
-                      {positiv ? '+' : ''}{saldo.toFixed(2)}€
+                      {positiv ? '+' : ''}{saldo.toFixed(2)}{waehrung}
                     </p>
                   </div>
                   <div style={{ backgroundColor: '#0d1525', borderRadius: '6px', height: '5px', overflow: 'hidden' }}>
@@ -406,7 +407,7 @@ function TripKosten() {
         {ausgaben.length > 0 && (
           <div className="fade-in-4" style={karteStyle}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h3 style={{ margin: 0, fontWeight: '700', fontSize: '1rem' }}>Abrechnung</h3>
+              <h3 style={{ margin: 0, fontWeight: '700', fontSize: '1rem' }}>{t('abrechnungTitel')}</h3>
               {schulden.length > 0 && (
                 <button onClick={() => setAbrechnenOffen(!abrechnenOffen)} className="btn-press" style={{
                   backgroundColor: 'transparent', border: '1px solid rgba(201,168,76,0.3)',
@@ -414,7 +415,7 @@ function TripKosten() {
                   borderRadius: '8px', display: 'flex', alignItems: 'center',
                   cursor: 'pointer', fontSize: '0.8rem', fontWeight: '600',
                 }}>
-                  {abrechnenOffen ? 'Fertig' : 'Abrechnen'}
+                  {abrechnenOffen ? t('fertig') : t('abrechnen')}
                 </button>
               )}
             </div>
@@ -423,7 +424,7 @@ function TripKosten() {
                 <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'rgba(76,175,80,0.15)', border: '1px solid rgba(76,175,80,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <span style={{ fontSize: '15px' }}>✓</span>
                 </div>
-                <p style={{ color: '#4caf50', margin: 0, fontWeight: '600' }}>Alle quitt!</p>
+                <p style={{ color: '#4caf50', margin: 0, fontWeight: '600' }}>{t('alleQuitt')}</p>
               </div>
             ) : (
               schulden.map((s, index) => (
@@ -432,9 +433,9 @@ function TripKosten() {
                   marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap',
                 }}>
                   <span style={{ color: '#fff', fontWeight: '700', overflowWrap: 'break-word', wordBreak: 'break-word' }}>{s.von}</span>
-                  <span style={{ color: '#8892a4', fontSize: '0.82rem' }}>schuldet</span>
+                  <span style={{ color: '#8892a4', fontSize: '0.82rem' }}>{t('schuldet')}</span>
                   <span style={{ color: '#fff', fontWeight: '700', overflowWrap: 'break-word', wordBreak: 'break-word' }}>{s.an}</span>
-                  <span style={{ color: '#c9a84c', fontWeight: '800', marginLeft: 'auto' }}>{s.betrag}€</span>
+                  <span style={{ color: '#c9a84c', fontWeight: '800', marginLeft: 'auto' }}>{s.betrag}{waehrung}</span>
 
                   {abrechnenOffen && (
                     <button onClick={() => schuldAbrechnen(s)} className="btn-press" style={{
@@ -443,7 +444,7 @@ function TripKosten() {
                       cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px',
                       fontSize: '0.78rem', fontWeight: '700', width: '100%', justifyContent: 'center', marginTop: '4px',
                     }}>
-                      <Check size={13} /> Beglichen
+                      <Check size={13} /> {t('beglichenBtn')}
                     </button>
                   )}
                 </div>
@@ -487,7 +488,7 @@ function TripKosten() {
             <div style={{ width: '40px', height: '4px', backgroundColor: '#1a2235', borderRadius: '2px', margin: '0 auto 20px' }} />
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h3 style={{ margin: 0, fontWeight: '800', fontSize: '1.2rem' }}>Neue Ausgabe</h3>
+              <h3 style={{ margin: 0, fontWeight: '800', fontSize: '1.2rem' }}>{t('neueAusgabeTitel')}</h3>
               <button onClick={() => setFormularOffen(false)} style={{
                 background: 'rgba(255,255,255,0.08)', border: 'none', borderRadius: '50%',
                 width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -497,11 +498,11 @@ function TripKosten() {
               </button>
             </div>
 
-            <input placeholder="Beschreibung" value={neueAusgabe.beschreibung}
+            <input placeholder={t('beschreibungPlatzhalter')} value={neueAusgabe.beschreibung}
               onChange={(e) => setNeueAusgabe({ ...neueAusgabe, beschreibung: e.target.value })}
               style={inputStyle} />
 
-            <input placeholder="Betrag in €" type="number" value={neueAusgabe.betrag}
+            <input placeholder={t('betragInWaehrungPlatzhalter')} type="number" value={neueAusgabe.betrag}
               onChange={(e) => setNeueAusgabe({ ...neueAusgabe, betrag: e.target.value })}
               style={inputStyle} />
 
@@ -512,12 +513,12 @@ function TripKosten() {
             <select value={neueAusgabe.bezahlt_von}
               onChange={(e) => setNeueAusgabe({ ...neueAusgabe, bezahlt_von: e.target.value })}
               style={{ ...inputStyle, appearance: 'none' }}>
-              <option value="">Bezahlt von...</option>
+              <option value="">{t('bezahltVonOption')}</option>
               {teilnehmer.map(person => <option key={person.id} value={person.name}>{person.name}</option>)}
             </select>
 
             <p style={{ color: '#8892a4', marginBottom: '10px', fontSize: '0.82rem' }}>
-              Für wen? – leer lassen = für alle
+              {t('fuerWenLeerAlle')}
             </p>
             {teilnehmer.map(person => {
               const istGewaehlt = neueAusgabe.fuer.includes(person.name)
@@ -554,8 +555,8 @@ function TripKosten() {
             })}
 
             <div style={{ display: 'flex', gap: '10px', marginTop: '18px' }}>
-              <button onClick={ausgabeHinzufuegen} className="btn-press" style={{ ...speichernButtonStyle, flex: 1 }}>Speichern</button>
-              <button onClick={() => setFormularOffen(false)} className="btn-press" style={{ ...abbrechenButtonStyle, flex: 1 }}>Abbrechen</button>
+              <button onClick={ausgabeHinzufuegen} className="btn-press" style={{ ...speichernButtonStyle, flex: 1 }}>{t('speichern')}</button>
+              <button onClick={() => setFormularOffen(false)} className="btn-press" style={{ ...abbrechenButtonStyle, flex: 1 }}>{t('abbrechen')}</button>
             </div>
           </div>
         </div>

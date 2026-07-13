@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { supabase } from '../supabase'
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react'
+import { useSettings } from '../context/SettingsContext'
 
 function LoginScreen() {
+  const { t, sprache, setSprache } = useSettings()
   const [email, setEmail] = useState('')
   const [passwort, setPasswort] = useState('')
   const [isRegistrieren, setIsRegistrieren] = useState(false)
@@ -18,7 +20,7 @@ function LoginScreen() {
       if (error) setFehler(error.message)
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password: passwort })
-      if (error) setFehler('Email oder Passwort falsch')
+      if (error) setFehler(t('loginFehlerFalsch'))
     }
     setLaden(false)
   }
@@ -103,7 +105,63 @@ function LoginScreen() {
           animation: nadelPuls 2.5s ease-in-out 1.8s infinite;
           transform-origin: 50% 50%;
         }
+
+        /* Sprachwechsler – kurzer Fade/Scale Effekt bei jedem Wechsel */
+        @keyframes spracheWechsel {
+          from { opacity: 0; transform: scale(0.85); }
+          to   { opacity: 1; transform: scale(1); }
+        }
+
+        .sprache-switch-wrap {
+          animation: inputFlyIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
+        }
+
+        .sprache-pill {
+          animation: spracheWechsel 0.25s ease;
+        }
       `}</style>
+
+      {/* Sprachwechsler – oben rechts, schon vor dem Login nutzbar */}
+      <div className="sprache-switch-wrap" style={{
+        position: 'fixed',
+        top: 'calc(16px + env(safe-area-inset-top))',
+        right: '16px',
+        zIndex: 10,
+        display: 'flex',
+        gap: '4px',
+        backgroundColor: '#111827',
+        borderRadius: '50px',
+        padding: '4px',
+        boxShadow: '0 4px 16px rgba(0,0,0,0.35)',
+      }}>
+        {['de', 'en'].map((code) => {
+          const aktiv = sprache === code
+          return (
+            <button
+              key={code}
+              onClick={() => setSprache(code)}
+              className="btn-press"
+              style={{
+                minWidth: '38px',
+                padding: '7px 12px',
+                borderRadius: '50px',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '0.72rem',
+                fontWeight: '700',
+                letterSpacing: '0.04em',
+                backgroundColor: aktiv ? '#c9a84c' : 'transparent',
+                color: aktiv ? '#0a0f1e' : '#8892a4',
+                transition: 'background-color 0.25s ease, color 0.25s ease',
+              }}
+            >
+              <span key={`${code}-${sprache}`} className={aktiv ? 'sprache-pill' : ''} style={{ display: 'inline-block' }}>
+                {code.toUpperCase()}
+              </span>
+            </button>
+          )
+        })}
+      </div>
 
       <div style={{
         minHeight: '100vh',
@@ -181,7 +239,7 @@ function LoginScreen() {
               color: '#8892a4', fontSize: '0.82rem', margin: 0,
               letterSpacing: '0.2em', textTransform: 'uppercase',
             }}>
-              {isRegistrieren ? 'Erstelle deinen Account' : 'Travel Together'}
+              {isRegistrieren ? t('erstelleAccountTagline') : t('travelTagline')}
             </p>
           </div>
 
@@ -203,7 +261,7 @@ function LoginScreen() {
               transform: 'translateY(-50%)', pointerEvents: 'none',
             }} />
             <input
-              placeholder="Email" type="email" value={email}
+              placeholder={t('email')} type="email" value={email}
               onChange={(e) => setEmail(e.target.value)}
               style={{ ...inputStyle, paddingLeft: '44px' }}
             />
@@ -216,7 +274,7 @@ function LoginScreen() {
               transform: 'translateY(-50%)', pointerEvents: 'none',
             }} />
             <input
-              placeholder="Passwort"
+              placeholder={t('passwort')}
               type={passwortSichtbar ? 'text' : 'password'}
               value={passwort}
               onChange={(e) => setPasswort(e.target.value)}
@@ -250,7 +308,7 @@ function LoginScreen() {
               boxShadow: '0 6px 24px rgba(201,168,76,0.35)',
               letterSpacing: '0.02em',
             }}>
-              {laden ? 'Lädt...' : isRegistrieren ? 'Account erstellen' : 'Einloggen'}
+              {laden ? t('laedt') : isRegistrieren ? t('accountErstellen') : t('einloggen')}
             </button>
           </div>
 
@@ -264,12 +322,12 @@ function LoginScreen() {
             }}
           >
             {isRegistrieren ? (
-              <>Schon einen Account?{' '}
-                <span style={{ color: '#c9a84c', fontWeight: '600' }}>Einloggen</span>
+              <>{t('schonAccount')}{' '}
+                <span style={{ color: '#c9a84c', fontWeight: '600' }}>{t('einloggen')}</span>
               </>
             ) : (
-              <>Noch kein Account?{' '}
-                <span style={{ color: '#c9a84c', fontWeight: '600' }}>Registrieren</span>
+              <>{t('nochKeinAccount')}{' '}
+                <span style={{ color: '#c9a84c', fontWeight: '600' }}>{t('registrieren')}</span>
               </>
             )}
           </p>

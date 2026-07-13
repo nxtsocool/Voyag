@@ -8,6 +8,7 @@ import 'react-datepicker/dist/react-datepicker.css'
 import { de } from 'date-fns/locale'
 import Toast from '../components/Toast'
 import useToast from '../hooks/useToast.jsx'
+import { useSettings } from '../context/SettingsContext'
 
 
 // Farbe anhand Trip-ID auswählen
@@ -35,7 +36,7 @@ const getRegionFarbe = (code) => {
 }
 
 // Countdown berechnen
-const getCountdown = (datum) => {
+const getCountdown = (datum, t) => {
   if (!datum) return null
   const startTeil = datum.split(' - ')[0]
   const teile = startTeil.split('.')
@@ -43,10 +44,10 @@ const getCountdown = (datum) => {
   const start = new Date(`${teile[2]}-${teile[1]}-${teile[0]}`)
   const heute = new Date()
   const tage = Math.ceil((start - heute) / (1000 * 60 * 60 * 24))
-  if (tage < 0) return 'Reise abgeschlossen'
-  if (tage === 0) return 'Heute geht es los!'
-  if (tage === 1) return 'Noch 1 Tag' // ← Singular
-  return `Noch ${tage} Tage`
+  if (tage < 0) return t('reiseAbgeschlossenStatus')
+  if (tage === 0) return t('heuteGehtsLosLang')
+  if (tage === 1) return t('nochEinTag') // ← Singular
+  return t('nochXTage')(tage)
 }
 
 const getFlaggeUrl = (code) => {
@@ -57,6 +58,7 @@ const getFlaggeUrl = (code) => {
 function TripsOverview() {
   const navigate = useNavigate()
   const { toasts, setToasts, toast } = useToast()
+  const { t } = useSettings()
 
   const [trips, setTrips] = useState([])
   const [laden, setLaden] = useState(true)
@@ -72,6 +74,11 @@ function TripsOverview() {
   const [neueReise, setNeueReise] = useState({
     name: '', land_code: '', startDatum: null, endDatum: null
   })
+  // Verknüpfungs-Modal State
+  const [verknuepfungsModal, setVerknuepfungsModal] = useState(false)
+  const [unverknuepfteTeilnehmer, setUnverknuepfteTeilnehmer] = useState([])
+  const [aktuelleBeigetreteneReise, setAktuelleBeigetreteneReise] = useState(null)
+  const [ausgewaehlteTeilnehmer, setAusgewaehlteTeilnehmer] = useState(null)
 
   useEffect(() => { tripsLaden() }, [])
 
@@ -180,6 +187,7 @@ function TripsOverview() {
     await supabase.from('trip_links').delete().eq('trip_id', tripId)
     await supabase.from('trip_fluege').delete().eq('trip_id', tripId)
     await supabase.from('trip_unterkuenfte').delete().eq('trip_id', tripId)
+    await supabase.from('trip_orte').delete().eq('trip_id', tripId)
     const { error } = await supabase.from('trips').delete().eq('id', tripId)
     if (error) console.error('Fehler:', error)
     else {
@@ -201,17 +209,17 @@ function TripsOverview() {
     const { data: trip, error } = await supabase
       .from('trips').select('*').eq('invite_code', einladungsCode.toUpperCase()).single()
 
-    if (error || !trip) { toast('Code nicht gefunden!', 'error'); return }
+    if (error || !trip) { toast(t('codeNichtGefunden'), 'error'); return }
 
     const { data: authData } = await supabase.auth.getUser()
     const user = authData.user
 
-    if (trip.user_id === user.id) { toast('Das ist deine eigene Reise!', 'error'); return }
+    if (trip.user_id === user.id) { toast(t('eigeneReise'), 'error'); return }
 
     const { data: bereitsVorhanden } = await supabase
       .from('trip_members').select('*').eq('trip_id', trip.id).eq('user_id', user.id).single()
 
-    if (bereitsVorhanden) { toast('Du bist bereits Mitglied!', 'error'); return }
+    if (bereitsVorhanden) { toast(t('bereitsMitglied'), 'error'); return }
 
     await supabase.from('trip_members').insert([{ trip_id: trip.id, user_id: user.id }])
     const { data: vorhandenBeitreten } = await supabase
@@ -231,6 +239,43 @@ function TripsOverview() {
 
     setEinladungsCode('')
     setBeitretenOffen(false)
+
+    // Prüfen ob unverknüpfte Teilnehmer vorhanden sind
+    const { data: unverknuepfte } = await supabase
+      .from('teilnehmer')
+      .select('*')
+      .eq('trip_id', trip.id)
+      .is('user_id', null)
+
+    if (unverknuepfte && unverknuepfte.length > 0) {
+      // Modal anzeigen zur optionalen Selbst-Verknüpfung
+      setUnverknuepfteTeilnehmer(unverknuepfte)
+      setAktuelleBeigetreteneReise(trip)
+      setVerknuepfungsModal(true)
+    } else {
+      await tripsLaden()
+    }
+  }
+
+  // Eingeloggten User mit einem Teilnehmer-Eintrag verknüpfen
+  const teilnehmerVerknuepfen = async (person) => {
+    const { error } = await supabase
+      .from('teilnehmer')
+      .update({ user_id: currentUser.id })
+      .eq('id', person.id)
+
+    if (!error) toast(t('verknuepftErfolgreich'), 'success')
+    setVerknuepfungsModal(false)
+    setAusgewaehlteTeilnehmer(null)
+    setAktuelleBeigetreteneReise(null)
+    await tripsLaden()
+  }
+
+  // Modal schließen ohne Verknüpfung
+  const verknuepfungUeberspringen = async () => {
+    setVerknuepfungsModal(false)
+    setAusgewaehlteTeilnehmer(null)
+    setAktuelleBeigetreteneReise(null)
     await tripsLaden()
   }
 
@@ -291,7 +336,7 @@ function TripsOverview() {
             <span className="logo-gold" style={{ fontSize: '2.2rem', fontWeight: '800', color: '#c9a84c', letterSpacing: '-2px', lineHeight: 1 }}>ag</span>
           </div>
           <p style={{ color: '#8892a4', fontSize: '0.8rem', marginTop: '4px' }}>
-            {trips.length} {trips.length === 1 ? 'Reise' : 'Reisen'} geplant
+            {t('tripsAnzahlText')(trips.length)}
           </p>
         </div>
          {/* Buttons – waren weg! */}
@@ -301,13 +346,13 @@ function TripsOverview() {
             border: '1.5px solid rgba(201,168,76,0.4)', padding: '10px 16px',
             minHeight: '44px', boxSizing: 'border-box',
             borderRadius: '14px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600',
-          }}>Beitreten</button>
+          }}>{t('beitreten')}</button>
           <button onClick={() => setFormularOffen(!formularOffen)} className="btn-press" style={{
             backgroundColor: '#c9a84c', color: '#0a0f1e', border: 'none',
             padding: '10px 16px', minHeight: '44px', boxSizing: 'border-box',
             borderRadius: '14px', cursor: 'pointer',
             fontSize: '0.85rem', fontWeight: '700',
-          }}>+ Neu</button>
+          }}>{t('neu')}</button>
         </div>
       </div>
 
@@ -316,13 +361,13 @@ function TripsOverview() {
         {/* Beitreten Formular */}
         {beitretenOffen && (
           <div className="fade-in" style={{ ...karteStyle, position: 'relative', zIndex: 100 }}>
-            <h3 style={{ marginBottom: '16px', fontWeight: '700' }}>Reise beitreten</h3>
-            <input placeholder="Einladungscode (z.B. XKQT82)" value={einladungsCode}
+            <h3 style={{ marginBottom: '16px', fontWeight: '700' }}>{t('reiseBeitretenTitel')}</h3>
+            <input placeholder={t('einladungscodePlatzhalter')} value={einladungsCode}
               onChange={(e) => setEinladungsCode(e.target.value.toUpperCase())}
               onKeyDown={(e) => e.key === 'Enter' && reiseBeitreten()} style={inputStyle} />
             <div style={{ display: 'flex', gap: '8px' }}>
-              <button onClick={reiseBeitreten} className="btn-press" style={speichernButtonStyle}>Beitreten</button>
-              <button onClick={() => setBeitretenOffen(false)} className="btn-press" style={abbrechenButtonStyle}>Abbrechen</button>
+              <button onClick={reiseBeitreten} className="btn-press" style={speichernButtonStyle}>{t('beitreten')}</button>
+              <button onClick={() => setBeitretenOffen(false)} className="btn-press" style={abbrechenButtonStyle}>{t('abbrechen')}</button>
             </div>
           </div>
         )}
@@ -330,27 +375,27 @@ function TripsOverview() {
         {/* Neue Reise Formular */}
         {formularOffen && (
           <div className="fade-in" style={{ ...karteStyle, position: 'relative', zIndex: 100 }}>
-            <h3 style={{ marginBottom: '16px', fontWeight: '700' }}>Neue Reise</h3>
-            <input placeholder="Name (z.B. Mallorca 2025)" value={neueReise.name}
+            <h3 style={{ marginBottom: '16px', fontWeight: '700' }}>{t('neueReiseTitel')}</h3>
+            <input placeholder={t('reiseNamePlatzhalter')} value={neueReise.name}
               onChange={(e) => setNeueReise({ ...neueReise, name: e.target.value })} style={inputStyle} />
             <select value={neueReise.land_code}
               onChange={(e) => setNeueReise({ ...neueReise, land_code: e.target.value })} style={inputStyle}>
-              <option value="">Land auswählen...</option>
+              <option value="">{t('landAuswaehlen')}</option>
               {laender.map(land => <option key={land.code} value={land.code}>{land.name}</option>)}
             </select>
             <DatePicker selected={neueReise.startDatum}
               onChange={(date) => setNeueReise({ ...neueReise, startDatum: date })}
               selectsStart startDate={neueReise.startDatum} endDate={neueReise.endDatum}
-              placeholderText="Startdatum" locale={de} dateFormat="dd.MM.yyyy"
+              placeholderText={t('startdatumPlatzhalter')} locale={de} dateFormat="dd.MM.yyyy"
               customInput={<input style={inputStyle} />} />
             <DatePicker selected={neueReise.endDatum}
               onChange={(date) => setNeueReise({ ...neueReise, endDatum: date })}
               selectsEnd startDate={neueReise.startDatum} endDate={neueReise.endDatum}
-              minDate={neueReise.startDatum} placeholderText="Enddatum" locale={de}
+              minDate={neueReise.startDatum} placeholderText={t('enddatumPlatzhalter')} locale={de}
               dateFormat="dd.MM.yyyy" customInput={<input style={inputStyle} />} />
             <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
-              <button onClick={reiseHinzufuegen} className="btn-press" style={speichernButtonStyle}>Erstellen</button>
-              <button onClick={() => setFormularOffen(false)} className="btn-press" style={abbrechenButtonStyle}>Abbrechen</button>
+              <button onClick={reiseHinzufuegen} className="btn-press" style={speichernButtonStyle}>{t('erstellen')}</button>
+              <button onClick={() => setFormularOffen(false)} className="btn-press" style={abbrechenButtonStyle}>{t('abbrechen')}</button>
             </div>
           </div>
         )}
@@ -358,30 +403,30 @@ function TripsOverview() {
         {/* Reise bearbeiten Formular */}
         {bearbeiteTrip && (
             <div className="fade-in" style={{ ...karteStyle, position: 'relative', zIndex: 100 }}>
-            <h3 style={{ marginBottom: '16px', fontWeight: '700' }}>Reise bearbeiten</h3>
-            <input placeholder="Name" value={bearbeiteDaten.name}
+            <h3 style={{ marginBottom: '16px', fontWeight: '700' }}>{t('reiseBearbeitenTitel')}</h3>
+            <input placeholder={t('name')} value={bearbeiteDaten.name}
               onChange={(e) => setBearbeiteDaten({ ...bearbeiteDaten, name: e.target.value })} style={inputStyle} />
             <select value={bearbeiteDaten.land_code}
               onChange={(e) => setBearbeiteDaten({ ...bearbeiteDaten, land_code: e.target.value })} style={inputStyle}>
-              <option value="">Land auswählen...</option>
+              <option value="">{t('landAuswaehlen')}</option>
               {laender.map(land => <option key={land.code} value={land.code}>{land.name}</option>)}
             </select>
             <p style={{ color: '#8892a4', fontSize: '0.82rem', marginBottom: '10px' }}>
-              Datum leer lassen = unverändert
+              {t('datumLeerLassen')}
             </p>
             <DatePicker selected={bearbeiteDaten.startDatum}
               onChange={(date) => setBearbeiteDaten({ ...bearbeiteDaten, startDatum: date })}
               selectsStart startDate={bearbeiteDaten.startDatum} endDate={bearbeiteDaten.endDatum}
-              placeholderText="Neues Startdatum" locale={de} dateFormat="dd.MM.yyyy"
+              placeholderText={t('neuesStartdatum')} locale={de} dateFormat="dd.MM.yyyy"
               customInput={<input style={inputStyle} />} />
             <DatePicker selected={bearbeiteDaten.endDatum}
               onChange={(date) => setBearbeiteDaten({ ...bearbeiteDaten, endDatum: date })}
               selectsEnd startDate={bearbeiteDaten.startDatum} endDate={bearbeiteDaten.endDatum}
-              minDate={bearbeiteDaten.startDatum} placeholderText="Neues Enddatum" locale={de}
+              minDate={bearbeiteDaten.startDatum} placeholderText={t('neuesEnddatum')} locale={de}
               dateFormat="dd.MM.yyyy" customInput={<input style={inputStyle} />} />
             <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
-              <button onClick={reiseSpeichern} className="btn-press" style={speichernButtonStyle}>Speichern</button>
-              <button onClick={() => setBearbeiteTrip(null)} className="btn-press" style={abbrechenButtonStyle}>Abbrechen</button>
+              <button onClick={reiseSpeichern} className="btn-press" style={speichernButtonStyle}>{t('speichern')}</button>
+              <button onClick={() => setBearbeiteTrip(null)} className="btn-press" style={abbrechenButtonStyle}>{t('abbrechen')}</button>
             </div>
           </div>
         )}
@@ -389,7 +434,7 @@ function TripsOverview() {
         {/* Trip Karten */}
         {trips.map((trip, index) => {
           const farbe = getRegionFarbe(trip.land_code)
-          const countdown = getCountdown(trip.datum)
+          const countdown = getCountdown(trip.datum, t)
           const landName = laender.find(l => l.code === trip.land_code)?.name || ''
           const eigenTrip = trip.user_id === currentUser?.id
 
@@ -476,7 +521,7 @@ function TripsOverview() {
                           borderRadius: '10px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: '600',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                         }}>
-                        Verlassen
+                        {t('verlassen')}
                       </button>
                     )}
                   </div>
@@ -503,7 +548,7 @@ function TripsOverview() {
                       padding: '4px 10px', borderRadius: '8px',
                       fontSize: '0.75rem', fontWeight: '600',
                     }}>
-                      Beigetreten
+                      {t('beigetreten')}
                     </span>
                   )}
 
@@ -533,10 +578,10 @@ function TripsOverview() {
               <Globe size={32} color="#c9a84c" />
             </div>
             <p style={{ fontWeight: '700', color: '#fff', marginBottom: '8px', fontSize: '1.1rem' }}>
-              Noch keine Reisen
+              {t('nochKeineReisen')}
             </p>
             <p style={{ fontSize: '0.9rem', color: '#8892a4', lineHeight: 1.5 }}>
-              Tippe auf "+ Neu" um deine<br />erste Reise hinzuzufügen!
+              {t('tippeNeuReiseZeile1')}<br />{t('tippeNeuReiseZeile2')}
             </p>
           </div>
         )}
@@ -561,11 +606,10 @@ function TripsOverview() {
               borderRadius: '2px', margin: '0 auto 24px',
             }} />
             <h3 style={{ margin: '0 0 8px', fontWeight: '700', fontSize: '1.2rem' }}>
-              Reise löschen?
+              {t('reiseLoeschenTitel')}
             </h3>
             <p style={{ color: '#8892a4', margin: '0 0 28px', fontSize: '0.95rem', lineHeight: 1.5 }}>
-              <span style={{ color: '#fff', fontWeight: '600' }}>{loescheTrip.name}</span> wird
-              unwiderruflich gelöscht – inkl. aller Teilnehmer, Ausgaben und der Packliste.
+              <span style={{ color: '#fff', fontWeight: '600' }}>{loescheTrip.name}</span> {t('wirdUnwiderruflichGeloescht')}
             </p>
             <div style={{ display: 'flex', gap: '10px' }}>
               <button onClick={() => reiseEntfernen(loescheTrip.id)} className="btn-press" style={{
@@ -573,15 +617,111 @@ function TripsOverview() {
                 padding: '14px', borderRadius: '14px', cursor: 'pointer',
                 flex: 1, fontWeight: '700', fontSize: '1rem',
               }}>
-                Löschen
+                {t('loeschen')}
               </button>
               <button onClick={() => setLoescheTrip(null)} className="btn-press" style={abbrechenButtonStyle}>
-                Abbrechen
+                {t('abbrechen')}
               </button>
             </div>
           </div>
         </div>
       )}
+      {/* Verknüpfungs-Modal – Bottom Sheet von unten */}
+      {verknuepfungsModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.75)',
+          display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+          zIndex: 1000,
+        }}>
+          <div className="fade-in" style={{
+            backgroundColor: '#111827', borderRadius: '24px 24px 0 0',
+            padding: '32px 24px calc(48px + env(safe-area-inset-bottom))',
+            width: '100%', maxWidth: '600px', boxSizing: 'border-box',
+            maxHeight: '85vh', overflowY: 'auto',
+          }}>
+            {/* Drag Handle */}
+            <div style={{
+              width: '40px', height: '4px', backgroundColor: '#1a2235',
+              borderRadius: '2px', margin: '0 auto 24px',
+            }} />
+
+            {/* Titel + Untertitel */}
+            <h3 style={{ margin: '0 0 6px', fontWeight: '700', fontSize: '1.2rem' }}>
+              {t('bistDuDabeiTitel')}
+            </h3>
+            <p style={{ color: '#8892a4', margin: '0 0 24px', fontSize: '0.88rem', lineHeight: 1.5 }}>
+              {t('namenAuswaehlenUntertitel')}
+            </p>
+
+            {/* Teilnehmer-Karten */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
+              {unverknuepfteTeilnehmer.map(person => {
+                const ausgewaehlt = ausgewaehlteTeilnehmer?.id === person.id
+                const initiale = person.name?.charAt(0)?.toUpperCase() || '?'
+                return (
+                  <button
+                    key={person.id}
+                    onClick={() => setAusgewaehlteTeilnehmer(ausgewaehlt ? null : person)}
+                    className="btn-press"
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '14px',
+                      backgroundColor: ausgewaehlt ? 'rgba(201,168,76,0.08)' : '#1a2235',
+                      border: ausgewaehlt
+                        ? '1.5px solid rgba(201,168,76,0.5)'
+                        : '1.5px solid rgba(255,255,255,0.06)',
+                      borderRadius: '16px', padding: '14px 16px',
+                      cursor: 'pointer', textAlign: 'left',
+                      transition: 'all 0.2s ease', width: '100%', boxSizing: 'border-box',
+                    }}
+                  >
+                    {/* Avatar mit Initiale */}
+                    <div style={{
+                      width: '42px', height: '42px', borderRadius: '50%',
+                      backgroundColor: '#c9a84c', flexShrink: 0,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '1.1rem', fontWeight: '700', color: '#0a0f1e',
+                    }}>
+                      {initiale}
+                    </div>
+                    <span style={{ color: '#fff', fontWeight: '600', fontSize: '0.95rem', flex: 1 }}>
+                      {person.name}
+                    </span>
+                    {/* Häkchen wenn ausgewählt */}
+                    {ausgewaehlt && (
+                      <span style={{ color: '#c9a84c', fontSize: '1.1rem', fontWeight: '700', flexShrink: 0 }}>✓</span>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* Bestätigen-Button – nur sichtbar wenn eine Person ausgewählt ist */}
+            {ausgewaehlteTeilnehmer && (
+              <button
+                onClick={() => teilnehmerVerknuepfen(ausgewaehlteTeilnehmer)}
+                className="btn-press"
+                style={{ ...speichernButtonStyle, flex: 'none', width: '100%', padding: '14px', marginBottom: '10px' }}
+              >
+                {t('bestaetigen')}
+              </button>
+            )}
+
+            {/* "Ich bin keiner davon" schließt Modal ohne Verknüpfung */}
+            <button
+              onClick={verknuepfungUeberspringen}
+              className="btn-press"
+              style={{
+                ...abbrechenButtonStyle, flex: 'none', width: '100%', padding: '14px',
+                color: '#8892a4', boxSizing: 'border-box',
+              }}
+            >
+              {t('ichBinKeinervonDenen')}
+            </button>
+          </div>
+        </div>
+      )}
+
     <Toast toasts={toasts} setToasts={setToasts} />
     </div>
   )

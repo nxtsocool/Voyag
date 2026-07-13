@@ -3,9 +3,11 @@ import { useParams } from 'react-router-dom'
 import { supabase } from '../supabase'
 import TripNav from '../components/TripNav'
 import { UserPlus, CheckCircle } from 'lucide-react'
+import { useSettings } from '../context/SettingsContext'
 
 export default function TripPersonen() {
   const { id } = useParams()
+  const { t } = useSettings()
   const [trip, setTrip] = useState(null)
   const [teilnehmer, setTeilnehmer] = useState([])
   const [profile, setProfile] = useState({})
@@ -81,7 +83,7 @@ export default function TripPersonen() {
       .single()
 
     if (!profileData) {
-      setVerknuepfenFehler('Kein Voyag-Nutzer mit dieser Email gefunden!')
+      setVerknuepfenFehler(t('keinNutzerGefunden'))
       return
     }
 
@@ -146,7 +148,7 @@ export default function TripPersonen() {
         {/* Teilnehmer Liste */}
         {teilnehmer.length === 0 ? (
           <div className="fade-in" style={{ ...karteStyle, textAlign: 'center', padding: '32px' }}>
-            <p style={{ color: '#8892a4', margin: 0 }}>Noch keine Teilnehmer – füge den ersten hinzu!</p>
+            <p style={{ color: '#8892a4', margin: 0 }}>{t('keineTeilnehmer')}</p>
           </div>
         ) : (
           teilnehmer.map((person, index) => {
@@ -200,11 +202,11 @@ export default function TripPersonen() {
                       </p>
                       {verknuepftProfil ? (
                         <p style={{ color: '#c9a84c', fontSize: '0.78rem', margin: 0, fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          @{verknuepftProfil.name || 'Voyag Nutzer'} · Verknüpft
+                          @{verknuepftProfil.name || t('voyagNutzerFallback')} · {t('verknuepftSuffix')}
                         </p>
                       ) : (
                         <p style={{ color: '#8892a4', fontSize: '0.78rem', margin: 0 }}>
-                          Kein Voyag-Konto
+                          {t('keinVoyagKonto')}
                         </p>
                       )}
                     </div>
@@ -230,7 +232,7 @@ export default function TripPersonen() {
                           fontSize: '0.75rem', fontWeight: '600',
                         }}
                       >
-                        Verknüpfen
+                        {t('verknuepfen')}
                       </button>
                     )}
                     {/* Löschen – min. 44x44px Touch-Target (Apple HIG) */}
@@ -252,10 +254,10 @@ export default function TripPersonen() {
                     borderTop: '1px solid rgba(255,255,255,0.06)',
                   }}>
                     <p style={{ color: '#8892a4', fontSize: '0.82rem', marginBottom: '10px' }}>
-                      Voyag-Konto per Email verknüpfen:
+                      {t('voyagKontoVerknuepfenText')}
                     </p>
                     <input
-                      placeholder="Email des Nutzers"
+                      placeholder={t('emailNutzerPlatzhalter')}
                       value={userEmail}
                       onChange={(e) => setUserEmail(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && userVerknuepfen(person.id)}
@@ -273,13 +275,13 @@ export default function TripPersonen() {
                         padding: '10px 16px', minHeight: '44px', boxSizing: 'border-box', borderRadius: '12px', cursor: 'pointer',
                         fontWeight: '700', fontSize: '0.88rem', flex: 1,
                         boxShadow: '0 4px 12px rgba(201,168,76,0.3)',
-                      }}>Verknüpfen</button>
+                      }}>{t('verknuepfen')}</button>
                       <button onClick={() => setVerknuepfenId(null)} className="btn-press" style={{
                         backgroundColor: 'transparent', color: '#8892a4',
                         border: '1px solid rgba(255,255,255,0.12)',
                         padding: '10px 16px', minHeight: '44px', boxSizing: 'border-box', borderRadius: '12px', cursor: 'pointer',
                         fontSize: '0.88rem', flex: 1,
-                      }}>Abbrechen</button>
+                      }}>{t('abbrechen')}</button>
                     </div>
                   </div>
                 )}
@@ -299,11 +301,11 @@ export default function TripPersonen() {
             }}>
               <UserPlus size={16} color="#c9a84c" />
             </div>
-            <h3 style={{ margin: 0, fontWeight: '700', fontSize: '1rem' }}>Teilnehmer hinzufügen</h3>
+            <h3 style={{ margin: 0, fontWeight: '700', fontSize: '1rem' }}>{t('teilnehmerHinzufuegenTitel')}</h3>
           </div>
           <div style={{ display: 'flex', gap: '10px' }}>
             <input
-              placeholder="Name..."
+              placeholder={t('namePlatzhalterPunkte')}
               value={neuerTeilnehmer}
               onChange={(e) => setNeuerTeilnehmer(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && teilnehmerHinzufuegen()}
@@ -321,9 +323,9 @@ export default function TripPersonen() {
         {/* Einladungscode */}
         {trip.invite_code && (
           <div className="fade-in" style={karteStyle}>
-            <h3 style={{ margin: '0 0 6px', fontWeight: '700' }}>Einladungscode</h3>
+            <h3 style={{ margin: '0 0 6px', fontWeight: '700' }}>{t('einladungscodeTitel')}</h3>
             <p style={{ color: '#8892a4', fontSize: '0.82rem', marginBottom: '14px' }}>
-              Teile diesen Code damit Freunde der Reise beitreten können
+              {t('einladungscodeText')}
             </p>
             <div style={{
               backgroundColor: '#0d1525',

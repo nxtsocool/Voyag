@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabase'
 import { User, Lock, Trash2, LogOut, Mail, ChevronRight, Globe, Palette, DollarSign, Info } from 'lucide-react'
+import { useSettings } from '../context/SettingsContext'
 
 export default function SettingsScreen() {
   const [user, setUser] = useState(null)
@@ -12,6 +13,7 @@ export default function SettingsScreen() {
   const [loeschenOffen, setLoeschenOffen] = useState(false)
   const [nachricht, setNachricht] = useState('')
   const [appInfoOffen, setAppInfoOffen] = useState(false)
+  const { setWaehrung: setGlobalWaehrung, setSprache: setGlobalSprache, setDesign: setGlobalDesign, t } = useSettings()
 
   useEffect(() => {
     const laden = async () => {
@@ -39,7 +41,7 @@ export default function SettingsScreen() {
     })
     if (error) console.error('Fehler:', error)
     else {
-      setNachricht('Profil gespeichert! ✅')
+      setNachricht(t('profilGespeichert'))
       setProfilBearbeiten(false)
       setTimeout(() => setNachricht(''), 3000)
     }
@@ -48,6 +50,12 @@ export default function SettingsScreen() {
   // Einstellung direkt speichern ohne Formular
   const einstellungSpeichern = async (key, value) => {
     setProfile(p => ({ ...p, [key]: value }))
+
+    // Auch globalen Context updaten falls Währung geändert wird
+    if (key === 'waehrung') setGlobalWaehrung(value)
+    if (key === 'sprache') setGlobalSprache(value)
+    if (key === 'design') setGlobalDesign(value)
+
     await supabase.from('profiles').upsert({
       id: user.id, email: user.email,
       name: profile.name, bio: profile.bio,
@@ -55,7 +63,7 @@ export default function SettingsScreen() {
       sprache: key === 'sprache' ? value : profile.sprache,
       design: key === 'design' ? value : profile.design,
     })
-    setNachricht('Gespeichert! ✅')
+    setNachricht(t('gespeichertHaken'))
     setTimeout(() => setNachricht(''), 2000)
   }
 
@@ -65,7 +73,7 @@ export default function SettingsScreen() {
     })
     if (error) console.error('Fehler:', error)
     else {
-      setNachricht('Email zum Zurücksetzen wurde gesendet! ✅')
+      setNachricht(t('emailZumZuruecksetzenGesendet'))
       setPasswortOffen(false)
       setTimeout(() => setNachricht(''), 3000)
     }
@@ -73,19 +81,19 @@ export default function SettingsScreen() {
 
   const passwortAendern = async () => {
     if (!passwortDaten.neu || passwortDaten.neu !== passwortDaten.bestaetigung) {
-      setNachricht('Passwörter stimmen nicht überein! ❌')
+      setNachricht(t('passwoerterStimmenNichtUeberein'))
       setTimeout(() => setNachricht(''), 3000)
       return
     }
     if (passwortDaten.neu.length < 6) {
-      setNachricht('Passwort muss mindestens 6 Zeichen haben! ❌')
+      setNachricht(t('passwortMindestens6Zeichen'))
       setTimeout(() => setNachricht(''), 3000)
       return
     }
     const { error } = await supabase.auth.updateUser({ password: passwortDaten.neu })
     if (error) console.error('Fehler:', error)
     else {
-      setNachricht('Passwort geändert! ✅')
+      setNachricht(t('passwortGeaendert'))
       setPasswortOffen(false)
       setPasswortDaten({ neu: '', bestaetigung: '' })
       setTimeout(() => setNachricht(''), 3000)
@@ -143,7 +151,7 @@ export default function SettingsScreen() {
         </div>
         <div>
           <h1 style={{ fontSize: '1.4rem', fontWeight: '800', margin: '0 0 2px', letterSpacing: '-0.5px' }}>
-            {profile.name || 'Kein Name'}
+            {profile.name || t('keinName')}
           </h1>
           <p style={{ color: '#8892a4', fontSize: '0.85rem', margin: 0 }}>{user.email}</p>
         </div>
@@ -170,23 +178,23 @@ export default function SettingsScreen() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: profilBearbeiten ? '16px' : '0' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <div style={iconWrapperStyle}><User size={16} color="#c9a84c" /></div>
-              <h3 style={{ margin: 0, fontWeight: '700', fontSize: '1rem' }}>Profil</h3>
+              <h3 style={{ margin: 0, fontWeight: '700', fontSize: '1rem' }}>{t('profilTitel')}</h3>
             </div>
             <button onClick={() => setProfilBearbeiten(!profilBearbeiten)} className="btn-press" style={editButtonStyle}>
-              {profilBearbeiten ? 'Abbrechen' : 'Bearbeiten'}
+              {profilBearbeiten ? t('abbrechen') : t('bearbeiten')}
             </button>
           </div>
 
           {profilBearbeiten ? (
             <div style={{ marginTop: '16px' }}>
-              <input placeholder="Dein Name" value={profile.name}
+              <input placeholder={t('deinNamePlatzhalter')} value={profile.name}
                 onChange={(e) => setProfile({ ...profile, name: e.target.value })}
                 style={inputStyle} />
-              <textarea placeholder="Kurze Bio (optional)" value={profile.bio}
+              <textarea placeholder={t('kurzeBioPlatzhalter')} value={profile.bio}
                 onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
                 rows={3} style={{ ...inputStyle, resize: 'vertical', fontFamily: 'inherit' }} />
               <button onClick={profilSpeichern} className="btn-press" style={speichernButtonStyle}>
-                Speichern
+                {t('speichern')}
               </button>
             </div>
           ) : (
@@ -194,7 +202,7 @@ export default function SettingsScreen() {
               <div style={infoZeileStyle}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Mail size={14} color="#8892a4" />
-                  <span style={{ color: '#8892a4', fontSize: '0.85rem' }}>Email</span>
+                  <span style={{ color: '#8892a4', fontSize: '0.85rem' }}>{t('email')}</span>
                 </div>
                 <span style={{ fontSize: '0.85rem', fontWeight: '500' }}>{user.email}</span>
               </div>
@@ -202,14 +210,14 @@ export default function SettingsScreen() {
                 <div style={infoZeileStyle}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <User size={14} color="#8892a4" />
-                    <span style={{ color: '#8892a4', fontSize: '0.85rem' }}>Name</span>
+                    <span style={{ color: '#8892a4', fontSize: '0.85rem' }}>{t('name')}</span>
                   </div>
                   <span style={{ fontSize: '0.85rem', fontWeight: '500' }}>{profile.name}</span>
                 </div>
               )}
               {profile.bio && (
                 <div style={{ marginTop: '12px', padding: '12px', backgroundColor: '#1a2235', borderRadius: '12px' }}>
-                  <p style={{ color: '#8892a4', fontSize: '0.75rem', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Bio</p>
+                  <p style={{ color: '#8892a4', fontSize: '0.75rem', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{t('bioLabel')}</p>
                   <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: 1.5 }}>{profile.bio}</p>
                 </div>
               )}
@@ -223,32 +231,32 @@ export default function SettingsScreen() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <div style={iconWrapperStyle}><Lock size={16} color="#c9a84c" /></div>
               <div>
-                <h3 style={{ margin: 0, fontWeight: '700', fontSize: '1rem' }}>Passwort</h3>
+                <h3 style={{ margin: 0, fontWeight: '700', fontSize: '1rem' }}>{t('passwortTitel')}</h3>
                 {!passwortOffen && (
-                  <p style={{ color: '#8892a4', fontSize: '0.8rem', margin: '2px 0 0' }}>Direkt ändern oder per Email</p>
+                  <p style={{ color: '#8892a4', fontSize: '0.8rem', margin: '2px 0 0' }}>{t('direktAendernOderEmail')}</p>
                 )}
               </div>
             </div>
             <button onClick={() => setPasswortOffen(!passwortOffen)} className="btn-press" style={editButtonStyle}>
-              {passwortOffen ? 'Abbrechen' : 'Ändern'}
+              {passwortOffen ? t('abbrechen') : t('aendern')}
             </button>
           </div>
           {passwortOffen && (
             <div style={{ marginTop: '16px' }}>
-              <input placeholder="Neues Passwort" type="password"
+              <input placeholder={t('neuesPasswortPlatzhalter')} type="password"
                 value={passwortDaten.neu}
                 onChange={(e) => setPasswortDaten({ ...passwortDaten, neu: e.target.value })}
                 style={inputStyle} />
-              <input placeholder="Passwort bestätigen" type="password"
+              <input placeholder={t('passwortBestaetigenPlatzhalter')} type="password"
                 value={passwortDaten.bestaetigung}
                 onChange={(e) => setPasswortDaten({ ...passwortDaten, bestaetigung: e.target.value })}
                 style={inputStyle} />
               <div style={{ display: 'flex', gap: '8px' }}>
-                <button onClick={passwortAendern} className="btn-press" style={speichernButtonStyle}>Speichern</button>
+                <button onClick={passwortAendern} className="btn-press" style={speichernButtonStyle}>{t('speichern')}</button>
                 <button onClick={passwortZuruecksetzen} className="btn-press" style={{
                   ...speichernButtonStyle, backgroundColor: 'transparent',
                   border: '1px solid rgba(201,168,76,0.3)', color: '#c9a84c',
-                }}>Per Email</button>
+                }}>{t('perEmail')}</button>
               </div>
             </div>
           )}
@@ -256,13 +264,13 @@ export default function SettingsScreen() {
 
         {/* Präferenzen */}
         <div className="fade-in-3" style={karteStyle}>
-          <h3 style={{ margin: '0 0 16px', fontWeight: '700', fontSize: '1rem' }}>Präferenzen</h3>
+          <h3 style={{ margin: '0 0 16px', fontWeight: '700', fontSize: '1rem' }}>{t('praeferenzenTitel')}</h3>
 
           {/* Währung */}
           <div style={{ marginBottom: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
               <div style={iconWrapperStyle}><DollarSign size={16} color="#c9a84c" /></div>
-              <span style={{ fontWeight: '600', fontSize: '0.95rem' }}>Währung</span>
+              <span style={{ fontWeight: '600', fontSize: '0.95rem' }}>{t('waehrungLabel')}</span>
             </div>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               {['€', '$', '£', '¥', '₺', 'CHF'].map(w => (
@@ -283,7 +291,7 @@ export default function SettingsScreen() {
           <div style={{ marginBottom: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
               <div style={iconWrapperStyle}><Globe size={16} color="#c9a84c" /></div>
-              <span style={{ fontWeight: '600', fontSize: '0.95rem' }}>Sprache</span>
+              <span style={{ fontWeight: '600', fontSize: '0.95rem' }}>{t('spracheLabel')}</span>
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
               {[{ code: 'de', label: 'Deutsch' }, { code: 'en', label: 'English' }].map(s => (
@@ -304,10 +312,10 @@ export default function SettingsScreen() {
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
               <div style={iconWrapperStyle}><Palette size={16} color="#c9a84c" /></div>
-              <span style={{ fontWeight: '600', fontSize: '0.95rem' }}>Design</span>
+              <span style={{ fontWeight: '600', fontSize: '0.95rem' }}>{t('designLabel')}</span>
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
-              {[{ code: 'dark', label: '🌙 Dark' }, { code: 'light', label: '☀️ Light' }].map(d => (
+              {[{ code: 'dark', labelKey: 'darkLabel' }, { code: 'light', labelKey: 'lightLabel' }].map(d => (
                 <button key={d.code} onClick={() => einstellungSpeichern('design', d.code)}
                   className="btn-press" style={{
                     padding: '0 16px', minHeight: '44px', display: 'flex', alignItems: 'center', borderRadius: '12px', cursor: 'pointer',
@@ -316,19 +324,19 @@ export default function SettingsScreen() {
                     color: profile.design === d.code ? '#0a0f1e' : '#8892a4',
                     opacity: d.code === 'light' ? 0.5 : 1,
                   }}>
-                  {d.label}
+                  {t(d.labelKey)}
                 </button>
               ))}
             </div>
             {profile.design === 'light' && (
               <p style={{ color: '#8892a4', fontSize: '0.8rem', marginTop: '8px' }}>
-                Light Mode kommt bald! 🚧
+                {t('lightModeKommtBald')}
               </p>
             )}
           </div>
         </div>
 
-            {/* APP Info */}
+        {/* App Info */}
         <div className="fade-in-3" style={karteStyle}>
           <button
             onClick={() => setAppInfoOffen(!appInfoOffen)}
@@ -341,7 +349,7 @@ export default function SettingsScreen() {
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <div style={iconWrapperStyle}><Info size={16} color="#c9a84c" /></div>
-              <h3 style={{ margin: 0, fontWeight: '700', fontSize: '1rem', color: '#fff' }}>App Info</h3>
+              <h3 style={{ margin: 0, fontWeight: '700', fontSize: '1rem', color: '#fff' }}>{t('appInfoTitel')}</h3>
             </div>
             <ChevronRight size={16} color="#8892a4" style={{
               transform: appInfoOffen ? 'rotate(90deg)' : 'rotate(0deg)',
@@ -352,15 +360,15 @@ export default function SettingsScreen() {
           {appInfoOffen && (
             <div style={{ marginTop: '16px' }}>
               <div style={infoZeileStyle}>
-                <span style={{ color: '#8892a4', fontSize: '0.85rem' }}>Version</span>
+                <span style={{ color: '#8892a4', fontSize: '0.85rem' }}>{t('versionLabel')}</span>
                 <span style={{ fontSize: '0.85rem', fontWeight: '500', color: '#c9a84c' }}>1.0.0</span>
               </div>
               <div style={infoZeileStyle}>
-                <span style={{ color: '#8892a4', fontSize: '0.85rem' }}>Entwickler</span>
+                <span style={{ color: '#8892a4', fontSize: '0.85rem' }}>{t('entwicklerLabel')}</span>
                 <span style={{ fontSize: '0.85rem', fontWeight: '500' }}>Georg Kummert</span>
               </div>
               <div style={{ ...infoZeileStyle, borderBottom: 'none' }}>
-                <span style={{ color: '#8892a4', fontSize: '0.85rem' }}>Made with</span>
+                <span style={{ color: '#8892a4', fontSize: '0.85rem' }}>{t('madeWithLabel')}</span>
                 <span style={{ fontSize: '0.85rem' }}>⚡ React + Supabase</span>
               </div>
             </div>
@@ -379,7 +387,7 @@ export default function SettingsScreen() {
             <div style={{ ...iconWrapperStyle, backgroundColor: 'rgba(136,146,164,0.1)' }}>
               <LogOut size={16} color="#8892a4" />
             </div>
-            <span style={{ color: '#8892a4', fontWeight: '600', fontSize: '0.95rem' }}>Ausloggen</span>
+            <span style={{ color: '#8892a4', fontWeight: '600', fontSize: '0.95rem' }}>{t('ausloggen')}</span>
           </div>
           <ChevronRight size={16} color="#8892a4" />
         </button>
@@ -397,7 +405,7 @@ export default function SettingsScreen() {
               <div style={{ ...iconWrapperStyle, backgroundColor: 'rgba(233,69,96,0.1)' }}>
                 <Trash2 size={16} color="#e94560" />
               </div>
-              <span style={{ color: '#e94560', fontWeight: '600', fontSize: '0.95rem' }}>Account löschen</span>
+              <span style={{ color: '#e94560', fontWeight: '600', fontSize: '0.95rem' }}>{t('accountLoeschenBtn')}</span>
             </div>
             <ChevronRight size={16} color="#e94560" />
           </button>
@@ -415,20 +423,20 @@ export default function SettingsScreen() {
               maxHeight: '85vh', overflowY: 'auto',
             }}>
               <div style={{ width: '40px', height: '4px', backgroundColor: '#1a2235', borderRadius: '2px', margin: '0 auto 24px' }} />
-              <h3 style={{ margin: '0 0 8px', fontWeight: '800', fontSize: '1.3rem' }}>Account löschen?</h3>
+              <h3 style={{ margin: '0 0 8px', fontWeight: '800', fontSize: '1.3rem' }}>{t('accountLoeschenTitel')}</h3>
               <p style={{ color: '#8892a4', margin: '0 0 28px', fontSize: '0.95rem', lineHeight: 1.6 }}>
-                Alle deine Reisen und Daten werden <span style={{ color: '#fff', fontWeight: '600' }}>unwiderruflich</span> gelöscht!
+                {t('accountLoeschenTextVor')} <span style={{ color: '#fff', fontWeight: '600' }}>{t('unwiderruflich')}</span> {t('accountLoeschenTextNach')}
               </p>
               <div style={{ display: 'flex', gap: '10px' }}>
                 <button onClick={accountLoeschen} className="btn-press" style={{
                   backgroundColor: '#e94560', color: '#fff', border: 'none',
                   padding: '14px', minHeight: '44px', boxSizing: 'border-box', borderRadius: '14px', cursor: 'pointer',
                   flex: 1, fontWeight: '700', fontSize: '1rem',
-                }}>Ja, löschen</button>
+                }}>{t('jaLoeschen')}</button>
                 <button onClick={() => setLoeschenOffen(false)} className="btn-press" style={{
                   backgroundColor: '#1a2235', color: '#fff', border: 'none',
                   padding: '14px', minHeight: '44px', boxSizing: 'border-box', borderRadius: '14px', cursor: 'pointer', flex: 1, fontWeight: '600',
-                }}>Abbrechen</button>
+                }}>{t('abbrechen')}</button>
               </div>
             </div>
           </div>

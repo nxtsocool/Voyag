@@ -2,16 +2,19 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
 import laender from '../data/laender'
-import { ChevronLeft, Info, Users, CheckSquare, Wallet, Camera, Rocket, PartyPopper } from 'lucide-react'
+import { ChevronLeft, Info, Users, CheckSquare, Wallet, Camera, MapPin, Rocket, PartyPopper } from 'lucide-react'
+import { useSettings } from '../context/SettingsContext'
 
 function TripHome() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { t } = useSettings()
 
   const [trip, setTrip] = useState(null)
   const [teilnehmer, setTeilnehmer] = useState([])
   const [ausgaben, setAusgaben] = useState([])
   const [packliste, setPackliste] = useState([])
+  const [orteAnzahl, setOrteAnzahl] = useState(0)
   const [laden, setLaden] = useState(true)
 
   useEffect(() => {
@@ -32,6 +35,11 @@ function TripHome() {
       const { data: packlisteData } = await supabase
         .from('packliste').select('*').eq('trip_id', id)
       setPackliste(packlisteData || [])
+
+      // Anzahl gespeicherter Orte laden
+      const { data: orteData } = await supabase
+        .from('trip_orte').select('id').eq('trip_id', id)
+      setOrteAnzahl((orteData || []).length)
 
       setLaden(false)
     }
@@ -78,10 +86,10 @@ function TripHome() {
     )
     if (tage === 0) return (
       <span style={{ color: '#c9a84c', fontWeight: '700', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-        Heute geht's los! <Rocket size={18} />
+        {t('heuteGehtsLos')} <Rocket size={18} />
       </span>
     )
-    
+
       if (tage < 0) {
         const endTeil = trip.datum?.split(' - ')[1]
         const endTeile = endTeil?.split('.')
@@ -92,7 +100,7 @@ function TripHome() {
 
         return (
           <span style={{ color: '#c9a84c', fontWeight: '700', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            {nochAktiv ? 'Reise läuft! 🛫' : 'Reise abgeschlossen!'} <PartyPopper size={18} />
+            {nochAktiv ? t('reiseLaeuft') : t('reiseAbgeschlossenAusruf')} <PartyPopper size={18} />
           </span>
         )
     }
@@ -101,7 +109,7 @@ function TripHome() {
     if (tage > 0) {
       return (
         <span style={{ color: '#c9a84c', fontWeight: '700', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          Noch {tage} Tag{tage === 1 ? '' : 'e'} bis zur Abreise
+          {t('nochTageBisAbreise')(tage)}
         </span>
       )
     }
@@ -195,26 +203,35 @@ function TripHome() {
           className="karte-hover btn-press fade-in-1"
           style={kachelStyle}>
           <div style={iconWrapStyle}><Info size={20} color="#c9a84c" /></div>
-          <p style={kachelTitelStyle}>Info</p>
-          <p style={kachelSubStyle}>Flug, Hotel & Links</p>
+          <p style={kachelTitelStyle}>{t('navInfo')}</p>
+          <p style={kachelSubStyle}>{t('flugHotelLinks')}</p>
+        </div>
+
+        {/* Orte & Aktivitäten */}
+        <div onClick={() => navigate(`/trip/${id}/orte`)}
+          className="karte-hover btn-press fade-in-2"
+          style={kachelStyle}>
+          <div style={iconWrapStyle}><MapPin size={20} color="#c9a84c" /></div>
+          <p style={kachelTitelStyle}>{t('navOrte')}</p>
+          <p style={kachelSubStyle}>{t('orteAnzahl')(orteAnzahl)}</p>
         </div>
 
         {/* Personen */}
         <div onClick={() => navigate(`/trip/${id}/personen`)}
-          className="karte-hover btn-press fade-in-2"
+          className="karte-hover btn-press fade-in-3"
           style={kachelStyle}>
           <div style={iconWrapStyle}><Users size={20} color="#c9a84c" /></div>
-          <p style={kachelTitelStyle}>Personen</p>
-          <p style={kachelSubStyle}>{teilnehmer.length} Teilnehmer</p>
+          <p style={kachelTitelStyle}>{t('navPersonen')}</p>
+          <p style={kachelSubStyle}>{t('teilnehmerAnzahl')(teilnehmer.length)}</p>
         </div>
 
         {/* Packliste mit Mini-Fortschrittsbalken */}
         <div onClick={() => navigate(`/trip/${id}/packliste`)}
-          className="karte-hover btn-press fade-in-3"
+          className="karte-hover btn-press fade-in-4"
           style={kachelStyle}>
           <div style={iconWrapStyle}><CheckSquare size={20} color="#c9a84c" /></div>
-          <p style={kachelTitelStyle}>Packliste</p>
-          <p style={kachelSubStyle}>{packlisteErledigt}/{packliste.length} gepackt</p>
+          <p style={kachelTitelStyle}>{t('navPackliste')}</p>
+          <p style={kachelSubStyle}>{t('packlisteFortschrittKurz')(packlisteErledigt, packliste.length)}</p>
           {packliste.length > 0 && (
             <div style={{ marginTop: '12px', backgroundColor: '#0d1525', borderRadius: '6px', height: '4px', overflow: 'hidden' }}>
               <div style={{
@@ -227,22 +244,20 @@ function TripHome() {
 
         {/* Kosten */}
         <div onClick={() => navigate(`/trip/${id}/kosten`)}
-          className="karte-hover btn-press fade-in-4"
+          className="karte-hover btn-press fade-in-5"
           style={kachelStyle}>
           <div style={iconWrapStyle}><Wallet size={20} color="#c9a84c" /></div>
-          <p style={kachelTitelStyle}>Kosten</p>
-          <p style={kachelSubStyle}>{gesamt.toFixed(0)}€ ausgegeben</p>
+          <p style={kachelTitelStyle}>{t('navKosten')}</p>
+          <p style={kachelSubStyle}>{t('kostenAusgegeben')(gesamt.toFixed(0))}</p>
         </div>
 
-        {/* Fotos – volle Breite als breite Kachel */}
+        {/* Fotos */}
         <div onClick={() => navigate(`/trip/${id}/fotos`)}
           className="karte-hover btn-press fade-in-5"
-          style={{ ...kachelStyle, gridColumn: '1 / -1', flexDirection: 'row', alignItems: 'center', gap: '16px', paddingTop: '18px', paddingBottom: '18px' }}>
-          <div style={{ ...iconWrapStyle, marginBottom: 0, flexShrink: 0 }}><Camera size={20} color="#c9a84c" /></div>
-          <div>
-            <p style={kachelTitelStyle}>Fotos</p>
-            <p style={kachelSubStyle}>Gemeinsames Album</p>
-          </div>
+          style={kachelStyle}>
+          <div style={iconWrapStyle}><Camera size={20} color="#c9a84c" /></div>
+          <p style={kachelTitelStyle}>{t('navFotos')}</p>
+          <p style={kachelSubStyle}>{t('gemeinsamesAlbum')}</p>
         </div>
 
       </div>

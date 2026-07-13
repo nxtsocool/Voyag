@@ -3,9 +3,11 @@ import { useParams } from 'react-router-dom'
 import { supabase } from '../supabase'
 import TripNav from '../components/TripNav'
 import { Trash2, SquarePen, PackageCheck } from 'lucide-react'
+import { useSettings } from '../context/SettingsContext'
 
 export default function TripPackliste() {
   const { id } = useParams()
+  const { t } = useSettings()
   const [trip, setTrip] = useState(null)
   const [packliste, setPackliste] = useState([])
   const [neuesItem, setNeuesItem] = useState('')
@@ -100,7 +102,7 @@ export default function TripPackliste() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '16px' }}>
               <div>
                 <p style={{ color: '#8892a4', fontSize: '0.7rem', fontWeight: '600', letterSpacing: '0.15em', textTransform: 'uppercase', margin: '0 0 4px' }}>
-                  Fortschritt
+                  {t('fortschritt')}
                 </p>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
                   <span style={{ fontSize: 'clamp(2.2rem, 9vw, 3rem)', fontWeight: '800', color: '#c9a84c', lineHeight: 1 }}>
@@ -112,7 +114,7 @@ export default function TripPackliste() {
                 </div>
               </div>
               <p style={{ color: '#8892a4', fontSize: '0.88rem', margin: 0, fontWeight: '500' }}>
-                {erledigt} / {gesamt} gepackt
+                {t('erledigtVonGesamt')(erledigt, gesamt)}
               </p>
             </div>
 
@@ -148,7 +150,7 @@ export default function TripPackliste() {
 
           {packliste.length === 0 ? (
             <p style={{ color: '#8892a4', fontSize: '0.9rem', margin: '0 0 20px', textAlign: 'center', padding: '20px 0', fontStyle: 'italic' }}>
-              Noch nichts auf der Liste – füge dein erstes Item hinzu!
+              {t('nochNichtsAufListe')}
             </p>
           ) : (
             packliste.map((item, index) => (
@@ -172,13 +174,13 @@ export default function TripPackliste() {
                         padding: '12px', minHeight: '44px', borderRadius: '12px',
                         cursor: 'pointer', flex: 1, fontWeight: '700', boxSizing: 'border-box',
                         boxShadow: '0 4px 12px rgba(201,168,76,0.3)',
-                      }}>Speichern</button>
+                      }}>{t('speichern')}</button>
                       <button onClick={() => setBearbeiteItem(null)} className="btn-press" style={{
                         backgroundColor: 'transparent', color: '#8892a4',
                         border: '1px solid rgba(255,255,255,0.12)',
                         padding: '12px', minHeight: '44px', borderRadius: '12px',
                         cursor: 'pointer', flex: 1, boxSizing: 'border-box',
-                      }}>Abbrechen</button>
+                      }}>{t('abbrechen')}</button>
                     </div>
                   </div>
                 ) : (
@@ -242,7 +244,7 @@ export default function TripPackliste() {
           {/* Item hinzufügen */}
           <div style={{ display: 'flex', gap: '10px', marginTop: packliste.length > 0 ? '20px' : '0' }}>
             <input
-              placeholder="+ Item hinzufügen..."
+              placeholder={t('itemHinzufuegenPlatzhalter')}
               value={neuesItem}
               onChange={(e) => setNeuesItem(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && itemHinzufuegen()}

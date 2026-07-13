@@ -1,9 +1,6 @@
 BUGFIX
 
-- Reise wird hinzugefügt bei eigenem EInladungscode
-- Designs ändern
-- Mobile Ansicht optimieren
-
+- Acc Löschen geht nicht
 
 
 

@@ -1,18 +1,19 @@
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Plane, Map, Settings } from 'lucide-react'
+import { useSettings } from '../context/SettingsContext'
 
 function BottomNav() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { t } = useSettings() // Übersetzungsfunktion holen
 
   const tabs = [
-    { path: '/', label: 'Reisen', icon: Plane },
-    { path: '/map', label: 'Karte', icon: Map },
-    { path: '/settings', label: 'Einstellungen', icon: Settings },
+    { path: '/', label: t('reisen'), icon: Plane },
+    { path: '/map', label: t('karte'), icon: Map },
+    { path: '/settings', label: t('einstellungen'), icon: Settings },
   ]
 
   return (
-    // Floating Card – schwebt über dem Bildschirmrand
     <div style={{
       position: 'fixed',
       bottom: '14px',
@@ -52,9 +53,7 @@ function BottomNav() {
               position: 'relative',
             }}
           >
-            {/* Kein Strich mehr – stattdessen Gold Dot unter dem Icon */}
             <Icon size={22} color={aktiv ? '#c9a84c' : '#8892a4'} />
-
             <span style={{
               fontSize: '10px',
               color: aktiv ? '#c9a84c' : '#8892a4',
@@ -63,8 +62,6 @@ function BottomNav() {
             }}>
               {tab.label}
             </span>
-
-            {/* Kleiner Gold Dot unter dem Label */}
             {aktiv && (
               <div style={{
                 width: '4px', height: '4px',

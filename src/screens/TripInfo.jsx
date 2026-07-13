@@ -3,9 +3,11 @@ import { useParams } from 'react-router-dom'
 import { supabase } from '../supabase'
 import TripNav from '../components/TripNav'
 import { Plane, Hotel, Link, Trash2, NotebookPen, SquarePen, ExternalLink } from 'lucide-react'
+import { useSettings } from '../context/SettingsContext'
 
 function TripInfo() {
   const { id } = useParams()
+  const { t } = useSettings()
   const [trip, setTrip] = useState(null)
   const [laden, setLaden] = useState(true)
 
@@ -195,61 +197,61 @@ function TripInfo() {
           <div style={sectionHeaderStyle}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <div style={sectionIconStyle}><Plane size={16} color="#c9a84c" /></div>
-              <h3 style={sectionTitelStyle}>Flüge</h3>
+              <h3 style={sectionTitelStyle}>{t('fluegeTitel')}</h3>
             </div>
             <button onClick={() => setFlugFormularOffen(!flugFormularOffen)} className="btn-press" style={addButtonStyle}>
-              {flugFormularOffen ? 'Abbrechen' : '+ Flug'}
+              {flugFormularOffen ? t('abbrechen') : t('flugHinzufuegenBtn')}
             </button>
           </div>
 
           {/* Flug Formular */}
           {flugFormularOffen && (
             <div className="fade-in" style={formularStyle}>
-              <input placeholder="Titel (z.B. Hinflug)" value={neuerFlug.titel}
+              <input placeholder={t('titelHinflugPlatzhalter')} value={neuerFlug.titel}
                 onChange={(e) => setNeuerFlug({ ...neuerFlug, titel: e.target.value })}
                 style={inputStyle} />
-              <input placeholder="Flugnummer (z.B. FR1234)" value={neuerFlug.flugnummer}
+              <input placeholder={t('flugnummerPlatzhalter')} value={neuerFlug.flugnummer}
                 onChange={(e) => setNeuerFlug({ ...neuerFlug, flugnummer: e.target.value })}
                 style={inputStyle} />
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                <input placeholder="Abflug (06:30 MUC)" value={neuerFlug.abflug}
+                <input placeholder={t('abflugPlatzhalter')} value={neuerFlug.abflug}
                   onChange={(e) => setNeuerFlug({ ...neuerFlug, abflug: e.target.value })}
                   style={{ ...inputStyle, marginBottom: 0 }} />
-                <input placeholder="Ankunft (09:45 ATH)" value={neuerFlug.ankunft}
+                <input placeholder={t('ankunftPlatzhalter')} value={neuerFlug.ankunft}
                   onChange={(e) => setNeuerFlug({ ...neuerFlug, ankunft: e.target.value })}
                   style={{ ...inputStyle, marginBottom: 0 }} />
               </div>
               <button onClick={flugHinzufuegen} className="btn-press" style={{ ...speichernButtonStyle, marginTop: '12px' }}>
-                Hinzufügen
+                {t('hinzufuegen')}
               </button>
             </div>
           )}
 
           {/* Flüge Liste */}
           {fluege.length === 0 ? (
-            <p style={leerTextStyle}>Noch keine Flüge – tippe auf "+ Flug"</p>
+            <p style={leerTextStyle}>{t('keineFluege')}</p>
           ) : (
             fluege.map(flug => (
               <div key={flug.id} style={{ marginBottom: '12px' }}>
                 {bearbeiteFlug?.id === flug.id ? (
                   <div className="fade-in" style={formularStyle}>
-                    <input placeholder="Titel" value={bearbeiteFlug.titel}
+                    <input placeholder={t('titelPlatzhalter')} value={bearbeiteFlug.titel}
                       onChange={(e) => setBearbeiteFlug({ ...bearbeiteFlug, titel: e.target.value })}
                       style={inputStyle} />
-                    <input placeholder="Flugnummer" value={bearbeiteFlug.flugnummer}
+                    <input placeholder={t('flugnummerKurzPlatzhalter')} value={bearbeiteFlug.flugnummer}
                       onChange={(e) => setBearbeiteFlug({ ...bearbeiteFlug, flugnummer: e.target.value })}
                       style={inputStyle} />
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                      <input placeholder="Abflug" value={bearbeiteFlug.abflug}
+                      <input placeholder={t('abflugKurzPlatzhalter')} value={bearbeiteFlug.abflug}
                         onChange={(e) => setBearbeiteFlug({ ...bearbeiteFlug, abflug: e.target.value })}
                         style={{ ...inputStyle, marginBottom: 0 }} />
-                      <input placeholder="Ankunft" value={bearbeiteFlug.ankunft}
+                      <input placeholder={t('ankunftKurzPlatzhalter')} value={bearbeiteFlug.ankunft}
                         onChange={(e) => setBearbeiteFlug({ ...bearbeiteFlug, ankunft: e.target.value })}
                         style={{ ...inputStyle, marginBottom: 0 }} />
                     </div>
                     <div style={{ display: 'flex', gap: '10px', marginTop: '12px' }}>
-                      <button onClick={flugSpeichern} className="btn-press" style={{ ...speichernButtonStyle, flex: 1 }}>Speichern</button>
-                      <button onClick={() => setBearbeiteFlug(null)} className="btn-press" style={{ ...abbrechenButtonStyle, flex: 1 }}>Abbrechen</button>
+                      <button onClick={flugSpeichern} className="btn-press" style={{ ...speichernButtonStyle, flex: 1 }}>{t('speichern')}</button>
+                      <button onClick={() => setBearbeiteFlug(null)} className="btn-press" style={{ ...abbrechenButtonStyle, flex: 1 }}>{t('abbrechen')}</button>
                     </div>
                   </div>
                 ) : (
@@ -320,67 +322,67 @@ function TripInfo() {
           <div style={sectionHeaderStyle}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <div style={sectionIconStyle}><Hotel size={16} color="#c9a84c" /></div>
-              <h3 style={sectionTitelStyle}>Unterkünfte</h3>
+              <h3 style={sectionTitelStyle}>{t('unterkuenfteTitel')}</h3>
             </div>
             <button onClick={() => setUnterkunftFormularOffen(!unterkunftFormularOffen)} className="btn-press" style={addButtonStyle}>
-              {unterkunftFormularOffen ? 'Abbrechen' : '+ Unterkunft'}
+              {unterkunftFormularOffen ? t('abbrechen') : t('unterkunftHinzufuegenBtn')}
             </button>
           </div>
 
           {/* Unterkunft Formular */}
           {unterkunftFormularOffen && (
             <div className="fade-in" style={formularStyle}>
-              <input placeholder="Titel (z.B. Hotel Woche 1)" value={neueUnterkunft.titel}
+              <input placeholder={t('titelHotelWochePlatzhalter')} value={neueUnterkunft.titel}
                 onChange={(e) => setNeueUnterkunft({ ...neueUnterkunft, titel: e.target.value })}
                 style={inputStyle} />
-              <input placeholder="Name (z.B. Hotel Miramare)" value={neueUnterkunft.name}
+              <input placeholder={t('nameHotelPlatzhalter')} value={neueUnterkunft.name}
                 onChange={(e) => setNeueUnterkunft({ ...neueUnterkunft, name: e.target.value })}
                 style={inputStyle} />
-              <input placeholder="Adresse" value={neueUnterkunft.adresse}
+              <input placeholder={t('adresse')} value={neueUnterkunft.adresse}
                 onChange={(e) => setNeueUnterkunft({ ...neueUnterkunft, adresse: e.target.value })}
                 style={inputStyle} />
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                <input placeholder="Check-in (14:00)" value={neueUnterkunft.checkin}
+                <input placeholder={t('checkinPlatzhalter')} value={neueUnterkunft.checkin}
                   onChange={(e) => setNeueUnterkunft({ ...neueUnterkunft, checkin: e.target.value })}
                   style={{ ...inputStyle, marginBottom: 0 }} />
-                <input placeholder="Check-out (11:00)" value={neueUnterkunft.checkout}
+                <input placeholder={t('checkoutPlatzhalter')} value={neueUnterkunft.checkout}
                   onChange={(e) => setNeueUnterkunft({ ...neueUnterkunft, checkout: e.target.value })}
                   style={{ ...inputStyle, marginBottom: 0 }} />
               </div>
               <button onClick={unterkunftHinzufuegen} className="btn-press" style={{ ...speichernButtonStyle, marginTop: '12px' }}>
-                Hinzufügen
+                {t('hinzufuegen')}
               </button>
             </div>
           )}
 
           {/* Unterkünfte Liste */}
           {unterkuenfte.length === 0 ? (
-            <p style={leerTextStyle}>Noch keine Unterkünfte – tippe auf "+ Unterkunft"</p>
+            <p style={leerTextStyle}>{t('keineUnterkuenfte')}</p>
           ) : (
             unterkuenfte.map(unterkunft => (
               <div key={unterkunft.id} style={{ marginBottom: '12px' }}>
                 {bearbeiteUnterkunft?.id === unterkunft.id ? (
                   <div className="fade-in" style={formularStyle}>
-                    <input placeholder="Titel" value={bearbeiteUnterkunft.titel}
+                    <input placeholder={t('titelPlatzhalter')} value={bearbeiteUnterkunft.titel}
                       onChange={(e) => setBearbeiteUnterkunft({ ...bearbeiteUnterkunft, titel: e.target.value })}
                       style={inputStyle} />
-                    <input placeholder="Name" value={bearbeiteUnterkunft.name}
+                    <input placeholder={t('name')} value={bearbeiteUnterkunft.name}
                       onChange={(e) => setBearbeiteUnterkunft({ ...bearbeiteUnterkunft, name: e.target.value })}
                       style={inputStyle} />
-                    <input placeholder="Adresse" value={bearbeiteUnterkunft.adresse}
+                    <input placeholder={t('adresse')} value={bearbeiteUnterkunft.adresse}
                       onChange={(e) => setBearbeiteUnterkunft({ ...bearbeiteUnterkunft, adresse: e.target.value })}
                       style={inputStyle} />
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                      <input placeholder="Check-in" value={bearbeiteUnterkunft.checkin}
+                      <input placeholder={t('checkinKurzPlatzhalter')} value={bearbeiteUnterkunft.checkin}
                         onChange={(e) => setBearbeiteUnterkunft({ ...bearbeiteUnterkunft, checkin: e.target.value })}
                         style={{ ...inputStyle, marginBottom: 0 }} />
-                      <input placeholder="Check-out" value={bearbeiteUnterkunft.checkout}
+                      <input placeholder={t('checkoutKurzPlatzhalter')} value={bearbeiteUnterkunft.checkout}
                         onChange={(e) => setBearbeiteUnterkunft({ ...bearbeiteUnterkunft, checkout: e.target.value })}
                         style={{ ...inputStyle, marginBottom: 0 }} />
                     </div>
                     <div style={{ display: 'flex', gap: '10px', marginTop: '12px' }}>
-                      <button onClick={unterkunftSpeichern} className="btn-press" style={{ ...speichernButtonStyle, flex: 1 }}>Speichern</button>
-                      <button onClick={() => setBearbeiteUnterkunft(null)} className="btn-press" style={{ ...abbrechenButtonStyle, flex: 1 }}>Abbrechen</button>
+                      <button onClick={unterkunftSpeichern} className="btn-press" style={{ ...speichernButtonStyle, flex: 1 }}>{t('speichern')}</button>
+                      <button onClick={() => setBearbeiteUnterkunft(null)} className="btn-press" style={{ ...abbrechenButtonStyle, flex: 1 }}>{t('abbrechen')}</button>
                     </div>
                   </div>
                 ) : (
@@ -411,13 +413,13 @@ function TripInfo() {
                       <div style={{ display: 'flex', gap: '12px', marginBottom: unterkunft.adresse ? '12px' : '0' }}>
                         {unterkunft.checkin && (
                           <div style={{ flex: 1, backgroundColor: 'rgba(8,13,26,0.6)', borderRadius: '10px', padding: '10px 12px' }}>
-                            <p style={{ color: '#8892a4', fontSize: '0.65rem', fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 4px' }}>Check-in</p>
+                            <p style={{ color: '#8892a4', fontSize: '0.65rem', fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 4px' }}>{t('checkinKurzPlatzhalter')}</p>
                             <p style={{ color: '#fff', fontWeight: '700', margin: 0, fontSize: '0.95rem' }}>{unterkunft.checkin}</p>
                           </div>
                         )}
                         {unterkunft.checkout && (
                           <div style={{ flex: 1, backgroundColor: 'rgba(8,13,26,0.6)', borderRadius: '10px', padding: '10px 12px' }}>
-                            <p style={{ color: '#8892a4', fontSize: '0.65rem', fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 4px' }}>Check-out</p>
+                            <p style={{ color: '#8892a4', fontSize: '0.65rem', fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 4px' }}>{t('checkoutKurzPlatzhalter')}</p>
                             <p style={{ color: '#fff', fontWeight: '700', margin: 0, fontSize: '0.95rem' }}>{unterkunft.checkout}</p>
                           </div>
                         )}
@@ -440,28 +442,28 @@ function TripInfo() {
           <div style={sectionHeaderStyle}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <div style={sectionIconStyle}><Link size={16} color="#c9a84c" /></div>
-              <h3 style={sectionTitelStyle}>Links</h3>
+              <h3 style={sectionTitelStyle}>{t('linksTitel')}</h3>
             </div>
             <button onClick={() => setLinkFormularOffen(!linkFormularOffen)} className="btn-press" style={addButtonStyle}>
-              {linkFormularOffen ? 'Abbrechen' : '+ Link'}
+              {linkFormularOffen ? t('abbrechen') : t('linkHinzufuegenBtn')}
             </button>
           </div>
 
           {linkFormularOffen && (
             <div className="fade-in" style={formularStyle}>
-              <input placeholder="Titel (z.B. Hotel Booking)" value={neuerLink.titel}
+              <input placeholder={t('titelHotelBookingPlatzhalter')} value={neuerLink.titel}
                 onChange={(e) => setNeuerLink({ ...neuerLink, titel: e.target.value })}
                 style={inputStyle} />
-              <input placeholder="URL (z.B. booking.com/...)" value={neuerLink.url}
+              <input placeholder={t('urlPlatzhalter')} value={neuerLink.url}
                 onChange={(e) => setNeuerLink({ ...neuerLink, url: e.target.value })}
                 style={inputStyle} />
-              <button onClick={linkHinzufuegen} className="btn-press" style={speichernButtonStyle}>Hinzufügen</button>
+              <button onClick={linkHinzufuegen} className="btn-press" style={speichernButtonStyle}>{t('hinzufuegen')}</button>
             </div>
           )}
 
           {/* Links als Chips */}
           {links.length === 0 ? (
-            <p style={leerTextStyle}>Noch keine Links gespeichert</p>
+            <p style={leerTextStyle}>{t('keineLinks')}</p>
           ) : (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
               {links.map(link => (
@@ -499,10 +501,10 @@ function TripInfo() {
           <div style={sectionHeaderStyle}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <div style={sectionIconStyle}><NotebookPen size={16} color="#c9a84c" /></div>
-              <h3 style={sectionTitelStyle}>Notizen</h3>
+              <h3 style={sectionTitelStyle}>{t('notizenTitel')}</h3>
             </div>
             <button onClick={() => setNotizenBearbeiten(!notizenBearbeiten)} className="btn-press" style={addButtonStyle}>
-              {notizenBearbeiten ? 'Abbrechen' : 'Bearbeiten'}
+              {notizenBearbeiten ? t('abbrechen') : t('bearbeiten')}
             </button>
           </div>
 
@@ -510,11 +512,11 @@ function TripInfo() {
             <div className="fade-in">
               <textarea value={notizen}
                 onChange={(e) => setNotizen(e.target.value)}
-                placeholder="Notizen zur Reise..."
+                placeholder={t('notizenPlatzhalter')}
                 rows={6}
                 style={{ ...inputStyle, resize: 'vertical', fontFamily: 'inherit', lineHeight: '1.6' }}
               />
-              <button onClick={notizenSpeichern} className="btn-press" style={speichernButtonStyle}>Speichern</button>
+              <button onClick={notizenSpeichern} className="btn-press" style={speichernButtonStyle}>{t('speichern')}</button>
             </div>
           ) : (
             <p style={{
@@ -522,7 +524,7 @@ function TripInfo() {
               fontSize: '0.9rem', margin: 0,
               whiteSpace: 'pre-wrap', lineHeight: '1.7',
             }}>
-              {notizen || 'Noch keine Notizen – tippe auf Bearbeiten'}
+              {notizen || t('keineNotizen')}
             </p>
           )}
         </div>

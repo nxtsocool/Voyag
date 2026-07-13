@@ -12,6 +12,9 @@ import TripPersonen from './screens/TripPersonen'
 import TripPackliste from './screens/TripPackliste'
 import TripKosten from './screens/TripKosten'
 import TripFotos from './screens/TripFotos'
+import TripOrte from './screens/TripOrte'
+import { SettingsProvider } from './context/SettingsContext'
+
 
 function App() {
   const [user, setUser] = useState(null)
@@ -29,23 +32,29 @@ function App() {
   }, [])
 
   if (laden) return <p style={{ color: '#fff', padding: '20px' }}>Lädt...</p>
-  if (!user) return <LoginScreen />
 
+  // SettingsProvider umschließt auch den LoginScreen, damit der Sprachwechsler
+  // dort schon vor dem Login funktioniert (sprache wird erst nach Login mit Supabase synchronisiert)
   return (
-    <BrowserRouter>
-      {/* BottomNav nur auf Hauptscreens anzeigen */}
-      <Routes>
-        <Route path="/" element={<><TripsOverview /><BottomNav /></>} />
-        <Route path="/map" element={<><MapScreen /><BottomNav /></>} />
-        <Route path="/settings" element={<><SettingsScreen /><BottomNav /></>} />
-        <Route path="/trip/:id" element={<TripHome />} />
-        <Route path="/trip/:id/info" element={<TripInfo />} />
-        <Route path="/trip/:id/personen" element={<TripPersonen />} />
-        <Route path="/trip/:id/packliste" element={<TripPackliste />} />
-        <Route path="/trip/:id/kosten" element={<TripKosten />} />
-        <Route path="/trip/:id/fotos" element={<TripFotos />} />
-      </Routes>
-    </BrowserRouter>
+    <SettingsProvider>
+      {!user ? <LoginScreen /> : (
+        <BrowserRouter>
+          {/* BottomNav nur auf Hauptscreens anzeigen */}
+          <Routes>
+            <Route path="/" element={<><TripsOverview /><BottomNav /></>} />
+            <Route path="/map" element={<><MapScreen /><BottomNav /></>} />
+            <Route path="/settings" element={<><SettingsScreen /><BottomNav /></>} />
+            <Route path="/trip/:id" element={<TripHome />} />
+            <Route path="/trip/:id/info" element={<TripInfo />} />
+            <Route path="/trip/:id/personen" element={<TripPersonen />} />
+            <Route path="/trip/:id/packliste" element={<TripPackliste />} />
+            <Route path="/trip/:id/kosten" element={<TripKosten />} />
+            <Route path="/trip/:id/fotos" element={<TripFotos />} />
+            <Route path="/trip/:id/orte" element={<TripOrte />} />
+          </Routes>
+        </BrowserRouter>
+      )}
+    </SettingsProvider>
   )
 }
 
