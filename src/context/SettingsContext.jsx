@@ -11,7 +11,7 @@ export function useSettings() {
 export function SettingsProvider({ children }) {
   const [waehrung, setWaehrung] = useState('€')
   const [sprache, setSprache] = useState('de')
-  const [design, setDesign] = useState('dark')
+  const [design, setDesign] = useState('light')
   const [geladen, setGeladen] = useState(false)
 
   // Profil-Einstellungen (inkl. Sprache) aus Supabase laden
@@ -22,7 +22,7 @@ export function SettingsProvider({ children }) {
     if (data) {
       setWaehrung(data.waehrung || '€')
       setSprache(data.sprache || 'de')
-      setDesign(data.design || 'dark')
+      setDesign(data.design || 'light')
     }
   }
 

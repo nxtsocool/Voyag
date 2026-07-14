@@ -437,7 +437,7 @@ export default function SettingsScreen() {
                   flex: 1, fontWeight: '700', fontSize: '1rem',
                 }}>{t('jaLoeschen')}</button>
                 <button onClick={() => setLoeschenOffen(false)} className="btn-press" style={{
-                  backgroundColor: 'var(--sub)', color: '#fff', border: 'none',
+                  backgroundColor: 'var(--sub)', color: 'var(--text)', border: 'none',
                   padding: '14px', minHeight: '44px', boxSizing: 'border-box', borderRadius: '14px', cursor: 'pointer', flex: 1, fontWeight: '600',
                 }}>{t('abbrechen')}</button>
               </div>
@@ -456,8 +456,8 @@ const karteStyle = {
 }
 
 const inputStyle = {
-  width: '100%', padding: '13px 14px', backgroundColor: 'var(--sub)',
-  border: '1.5px solid rgba(255,255,255,0.06)', borderRadius: '12px',
+  width: '100%', padding: '13px 14px', backgroundColor: 'var(--input-bg)',
+  border: '1.5px solid var(--input-border)', borderRadius: '12px',
   color: 'var(--text)', fontSize: '1rem', marginBottom: '10px', boxSizing: 'border-box',
 }
 

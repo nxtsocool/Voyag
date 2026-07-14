@@ -258,7 +258,7 @@ function MapScreen() {
           </div>
         </div>
         {/* Animierter Fortschrittsbalken */}
-        <div style={{ backgroundColor: '#0d1525', borderRadius: '100px', height: '8px', overflow: 'hidden' }}>
+        <div style={{ backgroundColor: 'var(--sub)', borderRadius: '100px', height: '8px', overflow: 'hidden' }}>
           <div style={{
             height: '8px',
             borderRadius: '100px',
@@ -508,8 +508,8 @@ const karteStyle = {
 const inputStyle = {
   width: '100%',
   padding: '13px 14px',
-  backgroundColor: 'var(--sub)',
-  border: '1px solid rgba(255,255,255,0.08)',
+  backgroundColor: 'var(--input-bg)',
+  border: '1px solid var(--input-border)',
   borderRadius: '12px',
   // min. 16px verhindert Auto-Zoom bei Fokus auf iOS Safari
   color: 'var(--text)',

@@ -57,8 +57,8 @@ function TripNav({ tripName }) {
               className="btn-press"
               style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px',
-                backgroundColor: aktiv ? 'var(--gold)' : 'var(--card)',
-                color: aktiv ? 'var(--bg)' : 'var(--text-sub)',
+                backgroundColor: aktiv ? 'var(--gold)' : 'var(--sub)',
+                color: aktiv ? '#ffffff' : 'var(--text-sub)',
                 border: 'none',
                 padding: '10px 16px', minHeight: '44px',
                 borderRadius: '50px',

@@ -251,7 +251,7 @@ export default function TripPersonen() {
                 {verknuepfenId === person.id && (
                   <div className="fade-in" style={{
                     marginTop: '14px', paddingTop: '14px',
-                    borderTop: '1px solid rgba(255,255,255,0.06)',
+                    borderTop: '1px solid var(--border)',
                   }}>
                     <p style={{ color: 'var(--text-sub)', fontSize: '0.82rem', marginBottom: '10px' }}>
                       {t('voyagKontoVerknuepfenText')}
@@ -278,7 +278,7 @@ export default function TripPersonen() {
                       }}>{t('verknuepfen')}</button>
                       <button onClick={() => setVerknuepfenId(null)} className="btn-press" style={{
                         backgroundColor: 'transparent', color: 'var(--text-sub)',
-                        border: '1px solid rgba(255,255,255,0.12)',
+                        border: '1px solid var(--border)',
                         padding: '10px 16px', minHeight: '44px', boxSizing: 'border-box', borderRadius: '12px', cursor: 'pointer',
                         fontSize: '0.88rem', flex: 1,
                       }}>{t('abbrechen')}</button>
@@ -328,7 +328,7 @@ export default function TripPersonen() {
               {t('einladungscodeText')}
             </p>
             <div style={{
-              backgroundColor: '#0d1525',
+              backgroundColor: 'var(--sub)',
               borderRadius: '16px', padding: '20px',
               textAlign: 'center',
               border: '1px solid rgba(201,168,76,0.2)',
@@ -360,8 +360,8 @@ const karteStyle = {
 
 const inputStyle = {
   width: '100%', padding: '13px 14px',
-  backgroundColor: 'var(--sub)',
-  border: '1px solid rgba(255,255,255,0.08)',
+  backgroundColor: 'var(--input-bg)',
+  border: '1px solid var(--input-border)',
   borderRadius: '12px',
   // min. 16px verhindert Auto-Zoom bei Fokus auf iOS Safari
   color: 'var(--text)', fontSize: '16px',

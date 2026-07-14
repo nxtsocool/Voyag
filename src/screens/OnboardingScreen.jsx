@@ -168,7 +168,7 @@ export default function OnboardingScreen({ user, onComplete }) {
                         style={{
                           flex: 1, padding: '20px 12px', borderRadius: '18px',
                           backgroundColor: aktiv ? 'rgba(201,168,76,0.1)' : 'var(--card)',
-                          border: aktiv ? '2px solid rgba(201,168,76,0.6)' : '2px solid rgba(255,255,255,0.06)',
+                          border: aktiv ? '2px solid rgba(201,168,76,0.6)' : '2px solid var(--input-border)',
                           cursor: 'pointer', textAlign: 'center',
                           boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
                           transition: 'border-color 0.2s, background-color 0.2s',
@@ -179,7 +179,7 @@ export default function OnboardingScreen({ user, onComplete }) {
                           fontSize: '1.1rem', fontWeight: '800',
                           color: aktiv ? 'var(--gold)' : 'var(--text-sub)',
                           marginBottom: '6px',
-                          backgroundColor: aktiv ? 'rgba(201,168,76,0.15)' : 'rgba(255,255,255,0.07)',
+                          backgroundColor: aktiv ? 'rgba(201,168,76,0.15)' : 'var(--sub)',
                           borderRadius: '8px', padding: '4px 10px',
                           display: 'inline-block',
                         }}>
@@ -220,7 +220,7 @@ export default function OnboardingScreen({ user, onComplete }) {
                         style={{
                           padding: '14px 6px', borderRadius: '14px',
                           backgroundColor: aktiv ? 'rgba(201,168,76,0.12)' : 'var(--card)',
-                          border: aktiv ? '2px solid rgba(201,168,76,0.55)' : '2px solid rgba(255,255,255,0.06)',
+                          border: aktiv ? '2px solid rgba(201,168,76,0.55)' : '2px solid var(--input-border)',
                           cursor: 'pointer', textAlign: 'center',
                           boxShadow: '0 4px 16px rgba(0,0,0,0.25)',
                           transition: 'border-color 0.2s, background-color 0.2s',

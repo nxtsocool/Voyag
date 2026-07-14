@@ -218,10 +218,10 @@ export default function TripOrte() {
                   }}>
                     <GruppeIcon size={15} color="var(--gold)" />
                   </div>
-                  <p style={{ fontWeight: '700', color: '#fff', margin: 0, fontSize: '0.92rem' }}>
+                  <p style={{ fontWeight: '700', color: 'var(--text)', margin: 0, fontSize: '0.92rem' }}>
                     {t(gruppe.labelKey)}
                   </p>
-                  <span style={{ color: '#4d5a6e', fontSize: '0.78rem', fontWeight: '600' }}>
+                  <span style={{ color: 'var(--text-sub)', fontSize: '0.78rem', fontWeight: '600' }}>
                     ({gruppe.orte.length})
                   </span>
                 </div>
@@ -258,7 +258,7 @@ export default function TripOrte() {
                         <div style={{ flex: 1, minWidth: 0 }}>
                           {/* Name + Buttons */}
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
-                            <p style={{ fontWeight: '800', fontSize: '1.05rem', margin: '0 0 3px', color: ort.besucht ? 'var(--text-sub)' : '#fff', overflowWrap: 'break-word', wordBreak: 'break-word', lineHeight: 1.2, textDecoration: ort.besucht ? 'line-through' : 'none', textDecorationColor: '#4d5a6e' }}>
+                            <p style={{ fontWeight: '800', fontSize: '1.05rem', margin: '0 0 3px', color: ort.besucht ? 'var(--text-sub)' : 'var(--text)', overflowWrap: 'break-word', wordBreak: 'break-word', lineHeight: 1.2, textDecoration: ort.besucht ? 'line-through' : 'none', textDecorationColor: 'var(--text-sub)' }}>
                               {ort.name}
                             </p>
                             <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
@@ -351,7 +351,7 @@ export default function TripOrte() {
                 {bearbeiteOrt ? t('ortBearbeitenTitel') : t('neuerOrtTitel')}
               </h3>
               <button onClick={modalSchliessen} style={{
-                background: 'rgba(255,255,255,0.08)', border: 'none', borderRadius: '50%',
+                background: 'var(--sub)', border: 'none', borderRadius: '50%',
                 width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 cursor: 'pointer', color: 'var(--text-sub)', flexShrink: 0,
               }}>
@@ -381,7 +381,7 @@ export default function TripOrte() {
                       display: 'flex', flexDirection: 'column', alignItems: 'center',
                       justifyContent: 'center', gap: '6px',
                       backgroundColor: aktiv ? 'rgba(201,168,76,0.15)' : 'var(--sub)',
-                      border: aktiv ? '1.5px solid rgba(201,168,76,0.55)' : '1.5px solid rgba(255,255,255,0.06)',
+                      border: aktiv ? '1.5px solid rgba(201,168,76,0.55)' : '1.5px solid var(--input-border)',
                       borderRadius: '14px', padding: '10px 4px', minHeight: '70px',
                       cursor: 'pointer', transition: 'all 0.15s ease', boxSizing: 'border-box',
                     }}
@@ -434,8 +434,8 @@ export default function TripOrte() {
 // ── Style Objekte ──
 
 const inputStyle = {
-  width: '100%', padding: '13px 14px', backgroundColor: 'var(--sub)',
-  border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px',
+  width: '100%', padding: '13px 14px', backgroundColor: 'var(--input-bg)',
+  border: '1px solid var(--input-border)', borderRadius: '12px',
   // min. 16px verhindert Auto-Zoom bei Fokus auf iOS Safari
   color: 'var(--text)', fontSize: '16px', minHeight: '44px',
   marginBottom: '10px', boxSizing: 'border-box',
@@ -450,7 +450,7 @@ const speichernButtonStyle = {
 
 const abbrechenButtonStyle = {
   backgroundColor: 'transparent', color: 'var(--text-sub)',
-  border: '1px solid rgba(255,255,255,0.12)',
+  border: '1px solid var(--border)',
   padding: '14px', minHeight: '48px', borderRadius: '14px',
   cursor: 'pointer', boxSizing: 'border-box', fontWeight: '500',
 }

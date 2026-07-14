@@ -26,7 +26,7 @@ const getRegionFarbe = (code) => {
   const amerika = ['US','CA','MX','GT','BZ','HN','SV','NI','CR','PA','CU','JM','HT','DO','PR','TT','BB','LC','VC','GD','AG','DM','KN','BS','TC','KY','BM','VI','VG','AW','CW','BR','AR','CL','UY','PY','BO','PE','EC','CO','VE','GY','SR','GF']
   // Ozeanien – Dunkelcyan
   const ozeanien = ['AU','NZ','PG','FJ','SB','VU','WS','TO','KI','TV','NR','PW','MH','FM']
-
+  
   if (europa.includes(code)) return { bg: '#0a1628', accent: '#0f2040' }
   if (asien.includes(code)) return { bg: '#150d28', accent: '#1f1240' }
   if (afrika.includes(code)) return { bg: '#0a2010', accent: '#0f3018' }
@@ -34,7 +34,6 @@ const getRegionFarbe = (code) => {
   if (ozeanien.includes(code)) return { bg: '#0a2028', accent: '#0f3038' }
   return { bg: '#1a1a1a', accent: '#252525' }
 }
-
 // Countdown berechnen
 const getCountdown = (datum, t) => {
   if (!datum) return null
@@ -56,9 +55,10 @@ const getFlaggeUrl = (code) => {
 }
 
 function TripsOverview() {
+  const { t, design } = useSettings()
   const navigate = useNavigate()
   const { toasts, setToasts, toast } = useToast()
-  const { t } = useSettings()
+  
 
   const [trips, setTrips] = useState([])
   const [laden, setLaden] = useState(true)
@@ -448,11 +448,13 @@ function TripsOverview() {
                   cursor: 'pointer',
                 }}
               >
-                {/* Banner oben */}
+                {/* Banner oben – im Light Mode hell, im Dark Mode regionaler Dunkel-Gradient */}
                 <div
                   onClick={() => navigate(`/trip/${trip.id}`)}
                   style={{
-                    background: `linear-gradient(135deg, ${farbe.accent} 0%, ${farbe.bg} 100%)`,
+                    background: design === 'light'
+                      ? 'linear-gradient(135deg, #c9a84c 10%, #faf7f2 100%)'
+                      : `linear-gradient(135deg, ${farbe.accent} 0%, ${farbe.bg} 100%)`,
                     padding: '20px',
                     borderRadius: '20px 20px 0 0',
                     display: 'flex', alignItems: 'center', gap: '12px',
@@ -463,6 +465,7 @@ function TripsOverview() {
                   <div style={{
                     width: '48px', height: '36px', borderRadius: '8px',
                     overflow: 'hidden', flexShrink: 0,
+                    boxShadow: design === 'light' ? '0 2px 8px rgba(0,0,0,0.12)' : 'none',
                   }}>
                     <img
                       src={getFlaggeUrl(trip.land_code)}
@@ -476,13 +479,14 @@ function TripsOverview() {
                     <h2 style={{
                       margin: '0 0 3px', fontSize: 'clamp(0.95rem, 4.5vw, 1.15rem)',
                       fontWeight: '800', letterSpacing: '-0.5px',
-                      color: '#ede8de',
+                      color: design === 'light' ? 'var(--text)' : '#ede8de',
                       overflowWrap: 'break-word', wordBreak: 'break-word',
                     }}>
                       {trip.name}
                     </h2>
                     <p style={{
-                      margin: 0, color: 'rgba(255,255,255,0.55)', fontSize: '0.82rem',
+                      margin: 0, fontSize: '0.82rem',
+                      color: design === 'light' ? 'var(--text-sub)' : 'var(--text-sub)',
                       overflowWrap: 'break-word', wordBreak: 'break-word',
                     }}>
                       {landName} · {trip.datum}
@@ -495,8 +499,10 @@ function TripsOverview() {
                       <>
                         <button onClick={(e) => { e.stopPropagation(); bearbeitenOeffnen(trip) }}
                           className="btn-press" style={{
-                            backgroundColor: 'rgba(255,255,255,0.1)', border: 'none',
-                            color: 'rgba(255,255,255,0.7)', borderRadius: '10px',
+                            backgroundColor: design === 'light' ? 'var(--sub)' : 'rgba(255,255,255,0.1)',
+                            border: 'none',
+                            color: design === 'light' ? 'var(--text-sub)' : 'rgba(255,255,255,0.7)',
+                            borderRadius: '10px',
                             width: '44px', height: '44px',
                             cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                           }}>
@@ -515,8 +521,10 @@ function TripsOverview() {
                     ) : (
                       <button onClick={(e) => { e.stopPropagation(); reiseVerlassen(trip.id) }}
                         className="btn-press" style={{
-                          backgroundColor: 'rgba(255,255,255,0.08)', border: 'none',
-                          color: 'rgba(255,255,255,0.5)', padding: '0 12px',
+                          backgroundColor: design === 'light' ? 'var(--sub)' : 'rgba(255,255,255,0.08)',
+                          border: 'none',
+                          color: design === 'light' ? 'var(--text-sub)' : 'rgba(255,255,255,0.5)',
+                          padding: '0 12px',
                           minHeight: '44px', boxSizing: 'border-box',
                           borderRadius: '10px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: '600',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -669,7 +677,7 @@ function TripsOverview() {
                       backgroundColor: ausgewaehlt ? 'rgba(201,168,76,0.08)' : 'var(--sub)',
                       border: ausgewaehlt
                         ? '1.5px solid rgba(201,168,76,0.5)'
-                        : '1.5px solid rgba(255,255,255,0.06)',
+                        : '1.5px solid var(--input-border)',
                       borderRadius: '16px', padding: '14px 16px',
                       cursor: 'pointer', textAlign: 'left',
                       transition: 'all 0.2s ease', width: '100%', boxSizing: 'border-box',
@@ -729,13 +737,13 @@ function TripsOverview() {
 
 const karteStyle = {
   backgroundColor: 'var(--card)', borderRadius: '20px',
-  boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
+  boxShadow: 'var(--shadow)',
   padding: '20px', marginBottom: '12px',
 }
 
 const inputStyle = {
-  width: '100%', padding: '13px 14px', backgroundColor: 'var(--sub)',
-  border: '1.5px solid rgba(255,255,255,0.06)', borderRadius: '12px',
+  width: '100%', padding: '13px 14px', backgroundColor: 'var(--input-bg)',
+  border: '1.5px solid var(--input-border)', borderRadius: '12px',
   color: 'var(--text)', fontSize: '1rem', marginBottom: '10px', boxSizing: 'border-box',
 }
 

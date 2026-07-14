@@ -10,7 +10,7 @@ import { useSettings } from '../context/SettingsContext'
 function TripKosten() {
   const { id } = useParams()
   const { toasts, setToasts, toast } = useToast()
-  const { waehrung, t } = useSettings()
+  const { waehrung, t, design } = useSettings()
   const [trip, setTrip] = useState(null)
   const [ausgaben, setAusgaben] = useState([])
   const [teilnehmer, setTeilnehmer] = useState([])
@@ -231,27 +231,34 @@ function TripKosten() {
 
       <div style={{ padding: '0 clamp(14px, 4vw, 20px)', maxWidth: '600px', margin: '0 auto', boxSizing: 'border-box' }}>
 
-        {/* Kreditkarten-Style Gesamtanzeige */}
+        {/* Kreditkarten-Style Gesamtanzeige – im Light Mode goldenes Gradient, sonst dunkel-navy */}
         <div className="fade-in" style={{
-          background: 'linear-gradient(135deg, #1a2235 0%, #0e1724 50%, #111827 100%)',
+          background: design === 'light'
+            ? 'linear-gradient(135deg, #b8922a 0%, #8a6a1e 50%, #c9a84c 100%)'
+            : 'linear-gradient(135deg, #1a2235 0%, #0e1724 50%, #111827 100%)',
           borderRadius: '24px', padding: 'clamp(22px, 5vw, 32px)',
           marginBottom: '16px', position: 'relative', overflow: 'hidden',
-          boxSizing: 'border-box', boxShadow: '0 10px 40px rgba(0,0,0,0.5)',
+          boxSizing: 'border-box',
+          boxShadow: design === 'light'
+            ? '0 10px 40px rgba(184,146,42,0.35)'
+            : '0 10px 40px rgba(0,0,0,0.5)',
         }}>
           <div style={{ position: 'absolute', top: '-30px', right: '-30px', width: '140px', height: '140px', borderRadius: '50%', border: '1px solid rgba(201,168,76,0.12)', pointerEvents: 'none' }} />
           <div style={{ position: 'absolute', top: '10px', right: '10px', width: '70px', height: '70px', borderRadius: '50%', border: '1px solid rgba(201,168,76,0.08)', pointerEvents: 'none' }} />
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '22px' }}>
-            <p style={{ color: 'var(--text-sub)', fontSize: '0.7rem', fontWeight: '600', letterSpacing: '0.15em', textTransform: 'uppercase', margin: 0 }}>
+            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.7rem', fontWeight: '600', letterSpacing: '0.15em', textTransform: 'uppercase', margin: 0 }}>
               {t('gesamtausgaben')}
             </p>
-            <Wallet size={18} color="rgba(201,168,76,0.5)" />
+            <Wallet size={18} color="rgba(255,255,255,0.6)" />
           </div>
 
           <h2 style={{
-            fontSize: 'clamp(2.2rem, 9vw, 3.2rem)', color: 'var(--gold)', margin: '0 0 20px',
+            fontSize: 'clamp(2.2rem, 9vw, 3.2rem)',
+            color: design === 'light' ? 'rgba(255,255,255,0.95)' : 'var(--gold)',
+            margin: '0 0 20px',
             fontWeight: '800', letterSpacing: '-1.5px', overflowWrap: 'break-word',
-            textShadow: '0 0 40px rgba(201,168,76,0.2)',
+            textShadow: design === 'light' ? '0 2px 12px rgba(0,0,0,0.2)' : '0 0 40px rgba(201,168,76,0.2)',
           }}>
             {gesamt.toFixed(2)}{waehrung}
           </h2>
@@ -259,18 +266,18 @@ function TripKosten() {
           {teilnehmer.length > 0 && (
             <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
               <div>
-                <p style={{ color: 'var(--text-sub)', fontSize: '0.65rem', margin: '0 0 3px', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: '600' }}>{t('teilnehmerLabel')}</p>
-                <p style={{ color: 'var(--text)', fontWeight: '700', margin: 0, fontSize: '0.95rem' }}>{teilnehmer.length}</p>
+                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.65rem', margin: '0 0 3px', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: '600' }}>{t('teilnehmerLabel')}</p>
+                <p style={{ color: '#ffffff', fontWeight: '700', margin: 0, fontSize: '0.95rem' }}>{teilnehmer.length}</p>
               </div>
               <div style={{ width: '1px', backgroundColor: 'rgba(255,255,255,0.1)' }} />
               <div>
-                <p style={{ color: 'var(--text-sub)', fontSize: '0.65rem', margin: '0 0 3px', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: '600' }}>{t('proPerson')}</p>
-                <p style={{ color: 'var(--text)', fontWeight: '700', margin: 0, fontSize: '0.95rem' }}>{(gesamt / teilnehmer.length).toFixed(2)}{waehrung}</p>
+                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.65rem', margin: '0 0 3px', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: '600' }}>{t('proPerson')}</p>
+                <p style={{ color: '#ffffff', fontWeight: '700', margin: 0, fontSize: '0.95rem' }}>{(gesamt / teilnehmer.length).toFixed(2)}{waehrung}</p>
               </div>
               <div style={{ width: '1px', backgroundColor: 'rgba(255,255,255,0.1)' }} />
               <div>
-                <p style={{ color: 'var(--text-sub)', fontSize: '0.65rem', margin: '0 0 3px', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: '600' }}>{t('ausgabenLabel')}</p>
-                <p style={{ color: 'var(--text)', fontWeight: '700', margin: 0, fontSize: '0.95rem' }}>{ausgaben.length}</p>
+                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.65rem', margin: '0 0 3px', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: '600' }}>{t('ausgabenLabel')}</p>
+                <p style={{ color: '#ffffff', fontWeight: '700', margin: 0, fontSize: '0.95rem' }}>{ausgaben.length}</p>
               </div>
             </div>
           )}
@@ -326,7 +333,7 @@ function TripKosten() {
                         display: 'flex', alignItems: 'flex-start', gap: '12px',
                         paddingBottom: index < ausgabenDesTages.length - 1 ? '16px' : '0',
                         marginBottom: index < ausgabenDesTages.length - 1 ? '16px' : '0',
-                        borderBottom: index < ausgabenDesTages.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
+                        borderBottom: index < ausgabenDesTages.length - 1 ? '1px solid var(--border)' : 'none',
                       }}>
                         <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: 'var(--gold)', marginTop: '6px', flexShrink: 0, boxShadow: '0 0 8px rgba(201,168,76,0.4)' }} />
 
@@ -389,7 +396,7 @@ function TripKosten() {
                       {positiv ? '+' : ''}{saldo.toFixed(2)}{waehrung}
                     </p>
                   </div>
-                  <div style={{ backgroundColor: '#0d1525', borderRadius: '6px', height: '5px', overflow: 'hidden' }}>
+                  <div style={{ backgroundColor: 'var(--sub)', borderRadius: '6px', height: '5px', overflow: 'hidden' }}>
                     <div style={{
                       height: '5px', borderRadius: '6px', width: `${balkenBreite}%`,
                       backgroundColor: positiv ? '#4caf50' : '#e94560',
@@ -490,7 +497,7 @@ function TripKosten() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <h3 style={{ margin: 0, fontWeight: '800', fontSize: '1.2rem' }}>{t('neueAusgabeTitel')}</h3>
               <button onClick={() => setFormularOffen(false)} style={{
-                background: 'rgba(255,255,255,0.08)', border: 'none', borderRadius: '50%',
+                background: 'var(--sub)', border: 'none', borderRadius: '50%',
                 width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 cursor: 'pointer', color: 'var(--text-sub)',
               }}>
@@ -535,7 +542,7 @@ function TripKosten() {
                   style={{
                     display: 'flex', alignItems: 'center', gap: '12px',
                     padding: '12px 0', minHeight: '44px',
-                    borderBottom: '1px solid rgba(255,255,255,0.05)',
+                    borderBottom: '1px solid var(--border)',
                     cursor: 'pointer', boxSizing: 'border-box',
                   }}
                 >
@@ -574,8 +581,8 @@ const karteStyle = {
 }
 
 const inputStyle = {
-  width: '100%', padding: '13px 14px', backgroundColor: 'var(--sub)',
-  border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px',
+  width: '100%', padding: '13px 14px', backgroundColor: 'var(--input-bg)',
+  border: '1px solid var(--input-border)', borderRadius: '12px',
   // min. 16px verhindert Auto-Zoom bei Fokus auf iOS Safari
   color: 'var(--text)', fontSize: '16px', minHeight: '44px',
   marginBottom: '10px', boxSizing: 'border-box',
@@ -590,7 +597,7 @@ const speichernButtonStyle = {
 
 const abbrechenButtonStyle = {
   backgroundColor: 'transparent', color: 'var(--text-sub)',
-  border: '1px solid rgba(255,255,255,0.12)',
+  border: '1px solid var(--border)',
   padding: '14px', minHeight: '48px', borderRadius: '14px',
   cursor: 'pointer', boxSizing: 'border-box', fontWeight: '500',
 }

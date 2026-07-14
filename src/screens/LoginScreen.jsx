@@ -424,7 +424,7 @@ function LoginScreen({ emailNichtBestaetigt }) {
                   return (
                     <div key={stufe} style={{
                       flex: 1, height: '4px', borderRadius: '2px',
-                      backgroundColor: aktiv ? farbe : 'rgba(255,255,255,0.1)',
+                      backgroundColor: aktiv ? farbe : 'var(--input-border)',
                       transition: 'background-color 0.25s ease',
                     }} />
                   )
@@ -456,7 +456,7 @@ function LoginScreen({ emailNichtBestaetigt }) {
                   ...inputStyle,
                   paddingLeft: '44px',
                   borderColor: passwortBestaetigung && passwort !== passwortBestaetigung
-                    ? 'rgba(233,69,96,0.5)' : 'rgba(255,255,255,0.08)',
+                    ? 'rgba(233,69,96,0.5)' : undefined,
                 }}
               />
             </div>
@@ -506,11 +506,11 @@ function LoginScreen({ emailNichtBestaetigt }) {
 
 const inputStyle = {
   width: '100%', padding: '16px',
-  backgroundColor: 'var(--card)',
-  border: '1px solid rgba(255,255,255,0.08)',
+  backgroundColor: 'var(--input-bg)',
+  border: '1px solid var(--input-border)',
   borderRadius: '14px', color: 'var(--text)',
   fontSize: '1rem', boxSizing: 'border-box',
-  boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
+  boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
 }
 
 export default LoginScreen

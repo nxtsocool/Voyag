@@ -120,7 +120,7 @@ export default function TripPackliste() {
 
             {/* Dicker animierter Fortschrittsbalken */}
             <div style={{
-              backgroundColor: '#0d1525', borderRadius: '100px',
+              backgroundColor: 'var(--sub)', borderRadius: '100px',
               height: '12px', overflow: 'hidden',
             }}>
               <div style={{
@@ -157,7 +157,7 @@ export default function TripPackliste() {
               <div key={item.id} className={`fade-in-${Math.min(index + 1, 5)}`} style={{
                 paddingBottom: index < packliste.length - 1 ? '14px' : '0',
                 marginBottom: index < packliste.length - 1 ? '14px' : '0',
-                borderBottom: index < packliste.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
+                borderBottom: index < packliste.length - 1 ? '1px solid var(--border)' : 'none',
               }}>
                 {/* Bearbeiten Formular */}
                 {bearbeiteItem?.id === item.id ? (
@@ -177,7 +177,7 @@ export default function TripPackliste() {
                       }}>{t('speichern')}</button>
                       <button onClick={() => setBearbeiteItem(null)} className="btn-press" style={{
                         backgroundColor: 'transparent', color: 'var(--text-sub)',
-                        border: '1px solid rgba(255,255,255,0.12)',
+                        border: '1px solid var(--border)',
                         padding: '12px', minHeight: '44px', borderRadius: '12px',
                         cursor: 'pointer', flex: 1, boxSizing: 'border-box',
                       }}>{t('abbrechen')}</button>
@@ -267,8 +267,8 @@ export default function TripPackliste() {
 
 const inputStyle = {
   width: '100%', padding: '13px 14px',
-  backgroundColor: 'var(--sub)',
-  border: '1px solid rgba(255,255,255,0.08)',
+  backgroundColor: 'var(--input-bg)',
+  border: '1px solid var(--input-border)',
   borderRadius: '12px',
   // min. 16px verhindert Auto-Zoom bei Fokus auf iOS Safari
   color: 'var(--text)', fontSize: '16px',

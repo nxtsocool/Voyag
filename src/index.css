@@ -1,25 +1,39 @@
-/* ── CSS Design-Variablen (Dark Mode = Default) ── */
-:root {
-  --bg:       #080d1a;
-  --card:     #111827;
-  --sub:      #1a2235;
-  --text:     #ffffff;
-  --text-sub: #8892a4;
-  --gold:     #c9a84c;
-  --border:   rgba(201,168,76,0.15);
-  --shadow:   0 4px 20px rgba(0,0,0,0.3);
+/* ── CSS Design-Variablen ── */
+:root, [data-theme="dark"] {
+  --bg:           #080d1a;
+  --card:         #111827;
+  --sub:          #1a2235;
+  --text:         #ffffff;
+  --text-sub:     #8892a4;
+  --gold:         #c9a84c;
+  --gold-rgb:     201, 168, 76;
+  --border:       rgba(201,168,76,0.15);
+  --shadow:       0 4px 20px rgba(0,0,0,0.3);
+  --error:        #e94560;
+  --success:      #4caf50;
+  --card-hover:   #1a2235;
+  --input-bg:     #1a2235;
+  --input-border: rgba(255,255,255,0.08);
+  --nav-bg:       #111827;
 }
 
 /* Light Mode – warmes Creme mit gedämpftem Gold */
 [data-theme="light"] {
-  --bg:       #f5f0e8;
-  --card:     #faf7f2;
-  --sub:      #ede8de;
-  --text:     #1a1410;
-  --text-sub: #6b5f4e;
-  --gold:     #b8922a;
-  --border:   rgba(139,110,60,0.15);
-  --shadow:   0 4px 20px rgba(139,110,60,0.12);
+  --bg:           #f5f0e8;
+  --card:         #faf7f2;
+  --sub:          #ede8de;
+  --text:         #1a1410;
+  --text-sub:     #6b5f4e;
+  --gold:         #b8922a;
+  --gold-rgb:     184, 146, 42;
+  --border:       rgba(139,110,60,0.2);
+  --shadow:       0 4px 20px rgba(139,110,60,0.15);
+  --error:        #c0392b;
+  --success:      #27ae60;
+  --card-hover:   #ede8de;
+  --input-bg:     #ede8de;
+  --input-border: rgba(139,110,60,0.2);
+  --nav-bg:       #faf7f2;
 }
 
 * {
@@ -113,8 +127,14 @@ button, a, input, select, textarea {
 /* Input Focus */
 input:focus, select:focus, textarea:focus {
   outline: none;
-  border-color: rgba(201,168,76,0.5) !important;
-  box-shadow: 0 0 0 3px rgba(201,168,76,0.1);
+  border-color: rgba(var(--gold-rgb), 0.5) !important;
+  box-shadow: 0 0 0 3px rgba(var(--gold-rgb), 0.1);
+}
+
+/* Placeholder-Farbe im Light Mode */
+[data-theme="light"] input::placeholder,
+[data-theme="light"] textarea::placeholder {
+  color: #9e8e7a;
 }
 
 /* Scrollbar */

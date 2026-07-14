@@ -132,16 +132,16 @@ function TripHome() {
             rgba(8,13,26,0.92) 75%, 
             #080d1a 100%
           ), url(https://flagcdn.com/w640/${trip.land_code.toLowerCase()}.png) center top/cover no-repeat`
-        : 'linear-gradient(135deg, #111827 0%, #1a2235 100%)',
+        : 'linear-gradient(135deg, var(--card) 0%, var(--sub) 100%)',
       }}>
 
         {/* Zurück Button – eleganter Kreis */}
         <button onClick={() => navigate('/')} className="btn-press" style={{
           position: 'absolute', top: '20px', left: '20px',
-          background: 'var(--card)',
+          background: 'rgba(0,0,0,0.3)',
           backdropFilter: 'blur(12px)',
-          border: '1px solid var(--gold)',
-          color: 'var(--gold)', cursor: 'pointer',
+          border: '1px solid rgba(255,255,255,0.2)',
+          color: '#ffffff', cursor: 'pointer',
           width: '46px', height: '46px', borderRadius: '50%',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
@@ -154,7 +154,7 @@ function TripHome() {
         <div style={{ padding: '88px 24px 36px', position: 'relative', zIndex: 1 }}>
           {landName && (
             <p style={{
-              color: 'var(--card)',
+              color: 'rgba(255,255,255,0.75)',
               fontSize: '0.7rem', fontWeight: '700',
               letterSpacing: '0.2em', textTransform: 'uppercase',
               margin: '0 0 10px', opacity: 0.9,
@@ -173,14 +173,14 @@ function TripHome() {
             {trip.name}
           </h1>
 
-          <p style={{ color: 'var(--text-sub)', margin: '0 0 28px', fontSize: '0.88rem', letterSpacing: '0.02em' }}>
+          <p style={{ color: 'rgba(255,255,255,0.6)', margin: '0 0 28px', fontSize: '0.88rem', letterSpacing: '0.02em' }}>
             {trip.datum}
           </p>
 
           {/* Countdown Block – sehr prominent */}
           <div style={{
             display: 'inline-flex', alignItems: 'center',
-            background: 'rgba(17,24,39,0.75)',
+            background: 'rgba(0,0,0,0.5)',
             backdropFilter: 'blur(16px)',
             border: '1px solid rgba(201,168,76,0.22)',
             borderRadius: '22px',
@@ -234,7 +234,7 @@ function TripHome() {
           <p style={kachelTitelStyle}>{t('navPackliste')}</p>
           <p style={kachelSubStyle}>{t('packlisteFortschrittKurz')(packlisteErledigt, packliste.length)}</p>
           {packliste.length > 0 && (
-            <div style={{ marginTop: '12px', backgroundColor: '#0d1525', borderRadius: '6px', height: '4px', overflow: 'hidden' }}>
+            <div style={{ marginTop: '12px', backgroundColor: 'var(--sub)', borderRadius: '6px', height: '4px', overflow: 'hidden' }}>
               <div style={{
                 backgroundColor: 'var(--gold)', borderRadius: '6px', height: '4px',
                 width: `${packlisteProzent}%`, transition: 'width 0.6s ease',
@@ -274,8 +274,9 @@ const kachelStyle = {
   boxSizing: 'border-box',
   display: 'flex',
   flexDirection: 'column',
-  boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
+  boxShadow: 'var(--shadow)',
 }
+
 
 const iconWrapStyle = {
   width: '46px', height: '46px',
