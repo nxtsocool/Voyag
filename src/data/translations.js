@@ -233,8 +233,10 @@ export const translations = {
     schonAccount: 'Schon einen Account?',
     nochKeinAccount: 'Noch kein Account?',
     registrieren: 'Registrieren',
+    deinNamePlatzhalter: 'Dein Name',
     passwortBestaetigenFeld: 'Passwort bestätigen',
     passwortNichtUebereinstimmend: 'Die Passwörter stimmen nicht überein',
+    nameErforderlich: 'Bitte gib deinen Namen ein.',
     emailNichtBestaetigt: 'Bitte bestätige zuerst deine Email-Adresse.',
     passwortSchwach: 'Schwach',
     passwortMittel: 'Mittel',
@@ -242,6 +244,17 @@ export const translations = {
     emailBestaetigenTitel: 'Email bestätigen',
     emailBestaetigenText: (email) => `Wir haben dir eine Email an ${email} geschickt. Bitte bestätige deine Email-Adresse um fortzufahren.`,
     zurueckZumLogin: 'Zurück zum Login',
+
+    // Onboarding
+    onboardingWillkommen: (name) => `Willkommen, ${name}! 👋`,
+    onboardingWillkommenSubtitel: 'Voyag hilft dir deine Gruppenreisen zu organisieren – Kosten teilen, Packlisten, Fotos und mehr.',
+    onboardingLosGehts: "Los geht's →",
+    onboardingSpracheTitel: 'Deine Sprache',
+    onboardingWeiter: 'Weiter →',
+    onboardingWaehrungTitel: 'Deine Währung',
+    onboardingFertigTitel: 'Alles bereit! 🚀',
+    onboardingFertigSubtitel: 'Erstelle jetzt deine erste Reise und lade deine Freunde ein.',
+    onboardingErsteReiseBtn: 'Erste Reise erstellen →',
 
     // Allgemein
     speichern: 'Speichern',
@@ -483,8 +496,10 @@ export const translations = {
     schonAccount: 'Already have an account?',
     nochKeinAccount: "Don't have an account?",
     registrieren: 'Register',
+    deinNamePlatzhalter: 'Your name',
     passwortBestaetigenFeld: 'Confirm password',
     passwortNichtUebereinstimmend: 'Passwords do not match',
+    nameErforderlich: 'Please enter your name.',
     emailNichtBestaetigt: 'Please confirm your email address first.',
     passwortSchwach: 'Weak',
     passwortMittel: 'Medium',
@@ -492,6 +507,17 @@ export const translations = {
     emailBestaetigenTitel: 'Confirm email',
     emailBestaetigenText: (email) => `We sent an email to ${email}. Please confirm your email address to continue.`,
     zurueckZumLogin: 'Back to login',
+
+    // Onboarding
+    onboardingWillkommen: (name) => `Welcome, ${name}! 👋`,
+    onboardingWillkommenSubtitel: 'Voyag helps you organize group trips – split costs, packing lists, photos and more.',
+    onboardingLosGehts: "Let's go →",
+    onboardingSpracheTitel: 'Your Language',
+    onboardingWeiter: 'Next →',
+    onboardingWaehrungTitel: 'Your Currency',
+    onboardingFertigTitel: 'All set! 🚀',
+    onboardingFertigSubtitel: 'Create your first trip now and invite your friends.',
+    onboardingErsteReiseBtn: 'Create first trip →',
 
     // Allgemein
     speichern: 'Save',

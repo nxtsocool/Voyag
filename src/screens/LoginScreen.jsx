@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '../supabase'
-import { Mail, Lock, Eye, EyeOff, ChevronLeft } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, ChevronLeft, User } from 'lucide-react'
 import { useSettings } from '../context/SettingsContext'
 
 // Passwort-Stärke berechnen: schwach / mittel / stark
@@ -11,9 +11,10 @@ const passwortStaerkeBerechnen = (pw) => {
   return 'mittel'
 }
 
-function LoginScreen() {
+function LoginScreen({ emailNichtBestaetigt }) {
   const { t, sprache, setSprache } = useSettings()
   const [email, setEmail] = useState('')
+  const [name, setName] = useState('')
   const [passwort, setPasswort] = useState('')
   const [passwortBestaetigung, setPasswortBestaetigung] = useState('')
   const [isRegistrieren, setIsRegistrieren] = useState(false)
@@ -25,21 +26,29 @@ function LoginScreen() {
 
   const staerke = passwortStaerkeBerechnen(passwort)
 
+  // Fehlermeldung anzeigen wenn App.jsx meldet dass Email nicht bestätigt ist
+  useEffect(() => {
+    if (emailNichtBestaetigt) setFehler(t('emailNichtBestaetigt'))
+  }, [emailNichtBestaetigt])
+
   const handleSubmit = async () => {
     setFehler('')
 
     if (isRegistrieren) {
-      // Passwort-Bestätigung prüfen
-      if (passwort !== passwortBestaetigung) {
-        setFehler(t('passwortNichtUebereinstimmend'))
-        return
-      }
+      if (!name.trim()) { setFehler(t('nameErforderlich')); return }
+      if (passwort !== passwortBestaetigung) { setFehler(t('passwortNichtUebereinstimmend')); return }
       setLaden(true)
-      const { error } = await supabase.auth.signUp({ email, password: passwort })
+      // Name in user_metadata speichern – kein aktiver Session nach signUp (Email-Bestätigung
+      // ausstehend), daher kein direkter profiles-upsert möglich. App.jsx liest den Namen
+      // nach dem ersten Login aus currentUser.user_metadata.name.
+      const { error } = await supabase.auth.signUp({
+        email,
+        password: passwort,
+        options: { data: { name: name.trim() } },
+      })
       if (error) {
         setFehler(error.message)
       } else {
-        // Bestätigungs-Email wurde gesendet → Bestätigungsseite zeigen
         setRegistrierteEmail(email)
         setRegistrierungErfolgreich(true)
       }
@@ -63,6 +72,7 @@ function LoginScreen() {
     setRegistrierungErfolgreich(false)
     setIsRegistrieren(false)
     setEmail('')
+    setName('')
     setPasswort('')
     setPasswortBestaetigung('')
     setFehler('')
@@ -353,6 +363,23 @@ function LoginScreen() {
               style={{ ...inputStyle, paddingLeft: '44px' }}
             />
           </div>
+
+          {/* Name – nur beim Registrieren */}
+          {isRegistrieren && (
+            <div className="fade-in" style={{ position: 'relative', marginBottom: '12px' }}>
+              <User size={16} color="#8892a4" style={{
+                position: 'absolute', left: '16px', top: '50%',
+                transform: 'translateY(-50%)', pointerEvents: 'none',
+              }} />
+              <input
+                placeholder={t('deinNamePlatzhalter')}
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                style={{ ...inputStyle, paddingLeft: '44px' }}
+              />
+            </div>
+          )}
 
           {/* Passwort */}
           <div className="input-animation-2" style={{ position: 'relative', marginBottom: isRegistrieren ? '8px' : '24px' }}>

@@ -370,7 +370,7 @@ export default function SettingsScreen() {
             <div style={{ marginTop: '16px' }}>
               <div style={infoZeileStyle}>
                 <span style={{ color: '#8892a4', fontSize: '0.85rem' }}>{t('versionLabel')}</span>
-                <span style={{ fontSize: '0.85rem', fontWeight: '500', color: '#c9a84c' }}>1.0.0</span>
+                <span style={{ fontSize: '0.85rem', fontWeight: '500', color: '#c9a84c' }}>V0.6.1</span>
               </div>
               <div style={infoZeileStyle}>
                 <span style={{ color: '#8892a4', fontSize: '0.85rem' }}>{t('entwicklerLabel')}</span>

@@ -5,6 +5,7 @@ import TripsOverview from './screens/TripsOverview'
 import MapScreen from './screens/MapScreen'
 import SettingsScreen from './screens/SettingsScreen'
 import LoginScreen from './screens/LoginScreen'
+import OnboardingScreen from './screens/OnboardingScreen'
 import BottomNav from './components/BottomNav'
 import TripHome from './screens/TripHome'
 import TripInfo from './screens/TripInfo'
@@ -20,35 +21,47 @@ function App() {
   const [user, setUser] = useState(null)
   const [laden, setLaden] = useState(true)
   const [emailNichtBestaetigt, setEmailNichtBestaetigt] = useState(false)
+  const [onboardingNoetig, setOnboardingNoetig] = useState(false)
 
   useEffect(() => {
     const benutzerVerarbeiten = async (event, session) => {
       const currentUser = session?.user ?? null
 
-      // Email noch nicht bestätigt
+      // Email noch nicht bestätigt → ausloggen und Hinweis merken
       if (currentUser && !currentUser.email_confirmed_at) {
         await supabase.auth.signOut()
-        setEmailNichtBestaetigt(true) // ← merken dass wir auf Bestätigung warten
+        setEmailNichtBestaetigt(true)
         setUser(null)
         setLaden(false)
         return
       }
 
-      // Email bestätigt oder kein User
       setEmailNichtBestaetigt(false)
 
-      if (event === 'SIGNED_IN' && currentUser) {
+      if (currentUser) {
+        // Profil laden und Onboarding-Status prüfen
         const { data: profil } = await supabase
-          .from('profiles').select('id').eq('id', currentUser.id).maybeSingle()
+          .from('profiles')
+          .select('id, onboarding_done')
+          .eq('id', currentUser.id)
+          .maybeSingle()
 
         if (!profil) {
+          // Kein Profil vorhanden → mit Namen aus user_metadata anlegen, Onboarding starten
+          const metaName = currentUser.user_metadata?.name || ''
           await supabase.from('profiles').insert([{
             id: currentUser.id,
             email: currentUser.email,
-            name: '',
+            name: metaName,
             bio: '',
+            onboarding_done: false,
           }])
+          setOnboardingNoetig(true)
+        } else {
+          setOnboardingNoetig(!profil.onboarding_done)
         }
+      } else {
+        setOnboardingNoetig(false)
       }
 
       setUser(currentUser)
@@ -72,6 +85,8 @@ function App() {
     <SettingsProvider>
       {!user ? (
         <LoginScreen emailNichtBestaetigt={emailNichtBestaetigt} />
+      ) : onboardingNoetig ? (
+        <OnboardingScreen user={user} onComplete={() => setOnboardingNoetig(false)} />
       ) : (
         <BrowserRouter>
           <Routes>
