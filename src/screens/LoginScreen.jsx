@@ -1,28 +1,115 @@
 import { useState } from 'react'
 import { supabase } from '../supabase'
-import { Mail, Lock, Eye, EyeOff } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, ChevronLeft } from 'lucide-react'
 import { useSettings } from '../context/SettingsContext'
+
+// Passwort-Stärke berechnen: schwach / mittel / stark
+const passwortStaerkeBerechnen = (pw) => {
+  if (!pw) return null
+  if (pw.length < 6) return 'schwach'
+  if (pw.length > 10 || /[^a-zA-Z0-9]/.test(pw)) return 'stark'
+  return 'mittel'
+}
 
 function LoginScreen() {
   const { t, sprache, setSprache } = useSettings()
   const [email, setEmail] = useState('')
   const [passwort, setPasswort] = useState('')
+  const [passwortBestaetigung, setPasswortBestaetigung] = useState('')
   const [isRegistrieren, setIsRegistrieren] = useState(false)
   const [laden, setLaden] = useState(false)
   const [fehler, setFehler] = useState('')
   const [passwortSichtbar, setPasswortSichtbar] = useState(false)
+  const [registrierungErfolgreich, setRegistrierungErfolgreich] = useState(false)
+  const [registrierteEmail, setRegistrierteEmail] = useState('')
+
+  const staerke = passwortStaerkeBerechnen(passwort)
 
   const handleSubmit = async () => {
-    setLaden(true)
     setFehler('')
+
     if (isRegistrieren) {
+      // Passwort-Bestätigung prüfen
+      if (passwort !== passwortBestaetigung) {
+        setFehler(t('passwortNichtUebereinstimmend'))
+        return
+      }
+      setLaden(true)
       const { error } = await supabase.auth.signUp({ email, password: passwort })
-      if (error) setFehler(error.message)
+      if (error) {
+        setFehler(error.message)
+      } else {
+        // Bestätigungs-Email wurde gesendet → Bestätigungsseite zeigen
+        setRegistrierteEmail(email)
+        setRegistrierungErfolgreich(true)
+      }
+      setLaden(false)
     } else {
-      const { error } = await supabase.auth.signInWithPassword({ email, password: passwort })
-      if (error) setFehler(t('loginFehlerFalsch'))
+      setLaden(true)
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password: passwort })
+      if (error) {
+        setFehler(t('loginFehlerFalsch'))
+      } else if (data.user && !data.user.email_confirmed_at) {
+        // Email noch nicht bestätigt → ausloggen und Hinweis zeigen
+        await supabase.auth.signOut()
+        setFehler(t('emailNichtBestaetigt'))
+      }
+      setLaden(false)
     }
-    setLaden(false)
+  }
+
+  // Formular zurücksetzen und zum Login wechseln
+  const zurueckZumLogin = () => {
+    setRegistrierungErfolgreich(false)
+    setIsRegistrieren(false)
+    setEmail('')
+    setPasswort('')
+    setPasswortBestaetigung('')
+    setFehler('')
+  }
+
+  // ── Bestätigungsseite nach erfolgreicher Registrierung ──
+  if (registrierungErfolgreich) {
+    return (
+      <div style={{
+        minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        backgroundColor: '#080d1a',
+        backgroundImage: 'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(201,168,76,0.14) 0%, transparent 70%)',
+        padding: '20px', boxSizing: 'border-box',
+      }}>
+        <div className="fade-in" style={{ width: '100%', maxWidth: '400px', textAlign: 'center', boxSizing: 'border-box' }}>
+          {/* Briefumschlag-Icon in goldenem Kreis */}
+          <div style={{
+            width: '96px', height: '96px', borderRadius: '50%',
+            backgroundColor: 'rgba(201,168,76,0.12)',
+            border: '2px solid rgba(201,168,76,0.3)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            margin: '0 auto 28px',
+          }}>
+            <Mail size={40} color="#c9a84c" />
+          </div>
+
+          <h2 style={{ fontSize: '1.6rem', fontWeight: '800', margin: '0 0 16px', letterSpacing: '-0.5px' }}>
+            {t('emailBestaetigenTitel')}
+          </h2>
+
+          <p style={{ color: '#8892a4', fontSize: '0.92rem', lineHeight: 1.6, margin: '0 0 36px' }}>
+            {t('emailBestaetigenText')(registrierteEmail)}
+          </p>
+
+          <button onClick={zurueckZumLogin} className="btn-press" style={{
+            backgroundColor: '#c9a84c', color: '#080d1a',
+            border: 'none', padding: '16px 32px', borderRadius: '16px',
+            fontSize: '1rem', fontWeight: '700', cursor: 'pointer',
+            display: 'inline-flex', alignItems: 'center', gap: '8px',
+            boxShadow: '0 6px 24px rgba(201,168,76,0.35)',
+          }}>
+            <ChevronLeft size={18} />
+            {t('zurueckZumLogin')}
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -268,7 +355,7 @@ function LoginScreen() {
           </div>
 
           {/* Passwort */}
-          <div className="input-animation-2" style={{ position: 'relative', marginBottom: '24px' }}>
+          <div className="input-animation-2" style={{ position: 'relative', marginBottom: isRegistrieren ? '8px' : '24px' }}>
             <Lock size={16} color="#8892a4" style={{
               position: 'absolute', left: '16px', top: '50%',
               transform: 'translateY(-50%)', pointerEvents: 'none',
@@ -295,6 +382,58 @@ function LoginScreen() {
               {passwortSichtbar ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>
+
+          {/* Passwort-Stärke Balken – nur beim Registrieren und wenn Passwort eingegeben */}
+          {isRegistrieren && passwort && (
+            <div className="fade-in" style={{ marginBottom: '12px' }}>
+              <div style={{ display: 'flex', gap: '5px', marginBottom: '6px' }}>
+                {['schwach', 'mittel', 'stark'].map((stufe, i) => {
+                  const aktiv = staerke === 'stark' ? true
+                    : staerke === 'mittel' ? i < 2
+                    : i < 1
+                  const farbe = staerke === 'stark' ? '#4caf50'
+                    : staerke === 'mittel' ? '#c9a84c'
+                    : '#e94560'
+                  return (
+                    <div key={stufe} style={{
+                      flex: 1, height: '4px', borderRadius: '2px',
+                      backgroundColor: aktiv ? farbe : 'rgba(255,255,255,0.1)',
+                      transition: 'background-color 0.25s ease',
+                    }} />
+                  )
+                })}
+              </div>
+              <p style={{
+                fontSize: '0.75rem', margin: 0, fontWeight: '600',
+                color: staerke === 'stark' ? '#4caf50' : staerke === 'mittel' ? '#c9a84c' : '#e94560',
+              }}>
+                {t(`passwort${staerke.charAt(0).toUpperCase() + staerke.slice(1)}`)}
+              </p>
+            </div>
+          )}
+
+          {/* Passwort bestätigen – nur beim Registrieren */}
+          {isRegistrieren && (
+            <div className="input-animation-2" style={{ position: 'relative', marginBottom: '24px' }}>
+              <Lock size={16} color="#8892a4" style={{
+                position: 'absolute', left: '16px', top: '50%',
+                transform: 'translateY(-50%)', pointerEvents: 'none',
+              }} />
+              <input
+                placeholder={t('passwortBestaetigenFeld')}
+                type={passwortSichtbar ? 'text' : 'password'}
+                value={passwortBestaetigung}
+                onChange={(e) => setPasswortBestaetigung(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+                style={{
+                  ...inputStyle,
+                  paddingLeft: '44px',
+                  borderColor: passwortBestaetigung && passwort !== passwortBestaetigung
+                    ? 'rgba(233,69,96,0.5)' : 'rgba(255,255,255,0.08)',
+                }}
+              />
+            </div>
+          )}
 
           {/* Login Button */}
           <div className="button-animation">

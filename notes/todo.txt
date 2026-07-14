@@ -8,13 +8,10 @@ BUGFIX
 
 IDEEN
 
-- Eigenes Konto mit Name usw
-- Passwort zurücksetzen
 - Andere Konten anzeigen mit Reisen Karte usw
 - Endabrechnung
 - Karten für einzelne Teilnehmer mit Notizfenster
-- Reise bearbeiten
-- Bestätigen vor dem Löschen einer Reise
+- Reisekalender
 
 
 

@@ -101,22 +101,31 @@ export default function SettingsScreen() {
   }
 
   const accountLoeschen = async () => {
-    await supabase.from('visited_countries').delete().eq('user_id', user.id)
-    await supabase.from('trip_members').delete().eq('user_id', user.id)
-    const { data: trips } = await supabase.from('trips').select('id').eq('user_id', user.id)
-    if (trips) {
-      for (const trip of trips) {
-        await supabase.from('ausgaben').delete().eq('trip_id', trip.id)
-        await supabase.from('teilnehmer').delete().eq('trip_id', trip.id)
-        await supabase.from('packliste').delete().eq('trip_id', trip.id)
-        await supabase.from('trip_links').delete().eq('trip_id', trip.id)
-        await supabase.from('trip_fluege').delete().eq('trip_id', trip.id)
-        await supabase.from('trip_unterkuenfte').delete().eq('trip_id', trip.id)
-      }
+  // Erst alle Daten löschen
+  await supabase.from('visited_countries').delete().eq('user_id', user.id)
+  await supabase.from('trip_members').delete().eq('user_id', user.id)
+  
+  const { data: trips } = await supabase.from('trips').select('id').eq('user_id', user.id)
+  if (trips) {
+    for (const trip of trips) {
+      await supabase.from('ausgaben').delete().eq('trip_id', trip.id)
+      await supabase.from('teilnehmer').delete().eq('trip_id', trip.id)
+      await supabase.from('packliste').delete().eq('trip_id', trip.id)
+      await supabase.from('trip_links').delete().eq('trip_id', trip.id)
+      await supabase.from('trip_fluege').delete().eq('trip_id', trip.id)
+      await supabase.from('trip_unterkuenfte').delete().eq('trip_id', trip.id)
+      await supabase.from('trip_orte').delete().eq('trip_id', trip.id)
+      await supabase.from('trip_photos').delete().eq('trip_id', trip.id)
     }
-    await supabase.from('trips').delete().eq('user_id', user.id)
-    await supabase.from('profiles').delete().eq('id', user.id)
-    await supabase.auth.signOut()
+  }
+  await supabase.from('trips').delete().eq('user_id', user.id)
+  await supabase.from('profiles').delete().eq('id', user.id)
+  
+  // Dann den Auth User selbst löschen via SQL Funktion
+  await supabase.rpc('delete_own_account')
+  
+  // Ausloggen
+  await supabase.auth.signOut()
   }
 
   const ausloggen = async () => await supabase.auth.signOut()

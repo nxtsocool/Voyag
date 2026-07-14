@@ -19,27 +19,61 @@ import { SettingsProvider } from './context/SettingsContext'
 function App() {
   const [user, setUser] = useState(null)
   const [laden, setLaden] = useState(true)
+  const [emailNichtBestaetigt, setEmailNichtBestaetigt] = useState(false)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
+    const benutzerVerarbeiten = async (event, session) => {
+      const currentUser = session?.user ?? null
+
+      // Email noch nicht bestätigt
+      if (currentUser && !currentUser.email_confirmed_at) {
+        await supabase.auth.signOut()
+        setEmailNichtBestaetigt(true) // ← merken dass wir auf Bestätigung warten
+        setUser(null)
+        setLaden(false)
+        return
+      }
+
+      // Email bestätigt oder kein User
+      setEmailNichtBestaetigt(false)
+
+      if (event === 'SIGNED_IN' && currentUser) {
+        const { data: profil } = await supabase
+          .from('profiles').select('id').eq('id', currentUser.id).maybeSingle()
+
+        if (!profil) {
+          await supabase.from('profiles').insert([{
+            id: currentUser.id,
+            email: currentUser.email,
+            name: '',
+            bio: '',
+          }])
+        }
+      }
+
+      setUser(currentUser)
       setLaden(false)
+    }
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      benutzerVerarbeiten('INITIAL', session).finally(() => setLaden(false))
     })
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      benutzerVerarbeiten(event, session)
     })
+
     return () => subscription.unsubscribe()
   }, [])
 
   if (laden) return <p style={{ color: '#fff', padding: '20px' }}>Lädt...</p>
 
-  // SettingsProvider umschließt auch den LoginScreen, damit der Sprachwechsler
-  // dort schon vor dem Login funktioniert (sprache wird erst nach Login mit Supabase synchronisiert)
   return (
     <SettingsProvider>
-      {!user ? <LoginScreen /> : (
+      {!user ? (
+        <LoginScreen emailNichtBestaetigt={emailNichtBestaetigt} />
+      ) : (
         <BrowserRouter>
-          {/* BottomNav nur auf Hauptscreens anzeigen */}
           <Routes>
             <Route path="/" element={<><TripsOverview /><BottomNav /></>} />
             <Route path="/map" element={<><MapScreen /><BottomNav /></>} />

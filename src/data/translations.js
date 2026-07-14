@@ -233,6 +233,15 @@ export const translations = {
     schonAccount: 'Schon einen Account?',
     nochKeinAccount: 'Noch kein Account?',
     registrieren: 'Registrieren',
+    passwortBestaetigenFeld: 'Passwort bestätigen',
+    passwortNichtUebereinstimmend: 'Die Passwörter stimmen nicht überein',
+    emailNichtBestaetigt: 'Bitte bestätige zuerst deine Email-Adresse.',
+    passwortSchwach: 'Schwach',
+    passwortMittel: 'Mittel',
+    passwortStark: 'Stark',
+    emailBestaetigenTitel: 'Email bestätigen',
+    emailBestaetigenText: (email) => `Wir haben dir eine Email an ${email} geschickt. Bitte bestätige deine Email-Adresse um fortzufahren.`,
+    zurueckZumLogin: 'Zurück zum Login',
 
     // Allgemein
     speichern: 'Speichern',
@@ -474,6 +483,15 @@ export const translations = {
     schonAccount: 'Already have an account?',
     nochKeinAccount: "Don't have an account?",
     registrieren: 'Register',
+    passwortBestaetigenFeld: 'Confirm password',
+    passwortNichtUebereinstimmend: 'Passwords do not match',
+    emailNichtBestaetigt: 'Please confirm your email address first.',
+    passwortSchwach: 'Weak',
+    passwortMittel: 'Medium',
+    passwortStark: 'Strong',
+    emailBestaetigenTitel: 'Confirm email',
+    emailBestaetigenText: (email) => `We sent an email to ${email}. Please confirm your email address to continue.`,
+    zurueckZumLogin: 'Back to login',
 
     // Allgemein
     speichern: 'Save',
