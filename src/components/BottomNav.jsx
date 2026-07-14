@@ -21,7 +21,7 @@ function BottomNav() {
       transform: 'translateX(-50%)',
       width: 'calc(100% - 28px)',
       maxWidth: '560px',
-      backgroundColor: '#111827',
+      backgroundColor: 'var(--card)',
       borderRadius: '26px',
       padding: '6px 8px calc(6px + env(safe-area-inset-bottom))',
       display: 'flex',
@@ -53,10 +53,10 @@ function BottomNav() {
               position: 'relative',
             }}
           >
-            <Icon size={22} color={aktiv ? '#c9a84c' : '#8892a4'} />
+            <Icon size={22} color={aktiv ? 'var(--gold)' : 'var(--text-sub)'} />
             <span style={{
               fontSize: '10px',
-              color: aktiv ? '#c9a84c' : '#8892a4',
+              color: aktiv ? 'var(--gold)' : 'var(--text-sub)',
               fontWeight: aktiv ? '700' : '400',
               letterSpacing: '0.02em',
             }}>
@@ -66,7 +66,7 @@ function BottomNav() {
               <div style={{
                 width: '4px', height: '4px',
                 borderRadius: '50%',
-                backgroundColor: '#c9a84c',
+                backgroundColor: 'var(--gold)',
                 marginTop: '1px',
               }} />
             )}

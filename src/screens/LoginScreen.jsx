@@ -83,7 +83,7 @@ function LoginScreen({ emailNichtBestaetigt }) {
     return (
       <div style={{
         minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        backgroundColor: '#080d1a',
+        backgroundColor: 'var(--bg)',
         backgroundImage: 'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(201,168,76,0.14) 0%, transparent 70%)',
         padding: '20px', boxSizing: 'border-box',
       }}>
@@ -96,19 +96,19 @@ function LoginScreen({ emailNichtBestaetigt }) {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             margin: '0 auto 28px',
           }}>
-            <Mail size={40} color="#c9a84c" />
+            <Mail size={40} color="var(--gold)" />
           </div>
 
           <h2 style={{ fontSize: '1.6rem', fontWeight: '800', margin: '0 0 16px', letterSpacing: '-0.5px' }}>
             {t('emailBestaetigenTitel')}
           </h2>
 
-          <p style={{ color: '#8892a4', fontSize: '0.92rem', lineHeight: 1.6, margin: '0 0 36px' }}>
+          <p style={{ color: 'var(--text-sub)', fontSize: '0.92rem', lineHeight: 1.6, margin: '0 0 36px' }}>
             {t('emailBestaetigenText')(registrierteEmail)}
           </p>
 
           <button onClick={zurueckZumLogin} className="btn-press" style={{
-            backgroundColor: '#c9a84c', color: '#080d1a',
+            backgroundColor: 'var(--gold)', color: 'var(--bg)',
             border: 'none', padding: '16px 32px', borderRadius: '16px',
             fontSize: '1rem', fontWeight: '700', cursor: 'pointer',
             display: 'inline-flex', alignItems: 'center', gap: '8px',
@@ -226,7 +226,7 @@ function LoginScreen({ emailNichtBestaetigt }) {
         zIndex: 10,
         display: 'flex',
         gap: '4px',
-        backgroundColor: '#111827',
+        backgroundColor: 'var(--card)',
         borderRadius: '50px',
         padding: '4px',
         boxShadow: '0 4px 16px rgba(0,0,0,0.35)',
@@ -247,8 +247,8 @@ function LoginScreen({ emailNichtBestaetigt }) {
                 fontSize: '0.72rem',
                 fontWeight: '700',
                 letterSpacing: '0.04em',
-                backgroundColor: aktiv ? '#c9a84c' : 'transparent',
-                color: aktiv ? '#0a0f1e' : '#8892a4',
+                backgroundColor: aktiv ? 'var(--gold)' : 'transparent',
+                color: aktiv ? '#0a0f1e' : 'var(--text-sub)',
                 transition: 'background-color 0.25s ease, color 0.25s ease',
               }}
             >
@@ -263,7 +263,7 @@ function LoginScreen({ emailNichtBestaetigt }) {
       <div style={{
         minHeight: '100vh',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        backgroundColor: '#080d1a',
+        backgroundColor: 'var(--bg)',
         backgroundImage: 'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(201,168,76,0.14) 0%, transparent 70%)',
         padding: '20px', boxSizing: 'border-box',
       }}>
@@ -281,7 +281,7 @@ function LoginScreen({ emailNichtBestaetigt }) {
               {/* "V" */}
               <span className="voy-animation" style={{
                 fontSize: 'clamp(2.8rem, 11vw, 3.8rem)',
-                fontWeight: '800', color: '#ffffff',
+                fontWeight: '800', color: 'var(--text)',
                 letterSpacing: '-2px', lineHeight: 1,
               }}>
                 V
@@ -297,25 +297,25 @@ function LoginScreen({ emailNichtBestaetigt }) {
                   style={{ verticalAlign: 'middle', width: 'clamp(36px, 9vw, 52px)', height: 'clamp(36px, 9vw, 52px)' }}
                 >
                   {/* Äußerer Ring */}
-                  <circle cx="30" cy="30" r="27" fill="none" stroke="#c9a84c" stroke-width="4"/>
+                  <circle cx="30" cy="30" r="27" fill="none" stroke="var(--gold)" stroke-width="4"/>
                   {/* Innerer Ring dezent */}
-                  <circle cx="30" cy="30" r="18" fill="none" stroke="#c9a84c" stroke-width="0.8" opacity="0.3"/>
+                  <circle cx="30" cy="30" r="18" fill="none" stroke="var(--gold)" stroke-width="0.8" opacity="0.3"/>
                   {/* Nordnadel gold */}
-                  <polygon className="nadel-puls" points="30,5 34,30 30,26 26,30" fill="#c9a84c"/>
+                  <polygon className="nadel-puls" points="30,5 34,30 30,26 26,30" fill="var(--gold)"/>
                   {/* Südnadel weiß */}
                   <polygon points="30,55 34,30 30,34 26,30" fill="#ffffff" opacity="0.15"/>
                   {/* Mittelpunkt */}
-                  <circle cx="30" cy="30" r="4" fill="#c9a84c"/>
-                  <circle cx="30" cy="30" r="2" fill="#080d1a"/>
+                  <circle cx="30" cy="30" r="4" fill="var(--gold)"/>
+                  <circle cx="30" cy="30" r="2" fill="var(--bg)"/>
                   {/* N oben */}
-                  <circle cx="30" cy="5" r="2" fill="#c9a84c"/>
+                  <circle cx="30" cy="5" r="2" fill="var(--gold)"/>
                 </svg>
               </span>
 
               {/* "y" */}
               <span className="voy-animation" style={{
                 fontSize: 'clamp(2.8rem, 11vw, 3.8rem)',
-                fontWeight: '800', color: '#ffffff',
+                fontWeight: '800', color: 'var(--text)',
                 letterSpacing: '-2px', lineHeight: 1,
               }}>
                 y
@@ -324,7 +324,7 @@ function LoginScreen({ emailNichtBestaetigt }) {
               {/* "ag" gold */}
               <span className="ag-animation" style={{
                 fontSize: 'clamp(2.8rem, 11vw, 3.8rem)',
-                fontWeight: '800', color: '#c9a84c',
+                fontWeight: '800', color: 'var(--gold)',
                 letterSpacing: '-2px', lineHeight: 1,
               }}>
                 ag
@@ -333,7 +333,7 @@ function LoginScreen({ emailNichtBestaetigt }) {
 
             {/* Tagline */}
             <p className="tagline-animation" style={{
-              color: '#8892a4', fontSize: '0.82rem', margin: 0,
+              color: 'var(--text-sub)', fontSize: '0.82rem', margin: 0,
               letterSpacing: '0.2em', textTransform: 'uppercase',
             }}>
               {isRegistrieren ? t('erstelleAccountTagline') : t('travelTagline')}
@@ -353,7 +353,7 @@ function LoginScreen({ emailNichtBestaetigt }) {
 
           {/* Email */}
           <div className="input-animation-1" style={{ position: 'relative', marginBottom: '12px' }}>
-            <Mail size={16} color="#8892a4" style={{
+            <Mail size={16} color="var(--text-sub)" style={{
               position: 'absolute', left: '16px', top: '50%',
               transform: 'translateY(-50%)', pointerEvents: 'none',
             }} />
@@ -367,7 +367,7 @@ function LoginScreen({ emailNichtBestaetigt }) {
           {/* Name – nur beim Registrieren */}
           {isRegistrieren && (
             <div className="fade-in" style={{ position: 'relative', marginBottom: '12px' }}>
-              <User size={16} color="#8892a4" style={{
+              <User size={16} color="var(--text-sub)" style={{
                 position: 'absolute', left: '16px', top: '50%',
                 transform: 'translateY(-50%)', pointerEvents: 'none',
               }} />
@@ -383,7 +383,7 @@ function LoginScreen({ emailNichtBestaetigt }) {
 
           {/* Passwort */}
           <div className="input-animation-2" style={{ position: 'relative', marginBottom: isRegistrieren ? '8px' : '24px' }}>
-            <Lock size={16} color="#8892a4" style={{
+            <Lock size={16} color="var(--text-sub)" style={{
               position: 'absolute', left: '16px', top: '50%',
               transform: 'translateY(-50%)', pointerEvents: 'none',
             }} />
@@ -401,7 +401,7 @@ function LoginScreen({ emailNichtBestaetigt }) {
                 position: 'absolute', right: '4px', top: '50%',
                 transform: 'translateY(-50%)',
                 background: 'none', border: 'none', cursor: 'pointer',
-                color: '#8892a4',
+                color: 'var(--text-sub)',
                 width: '44px', height: '44px',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}
@@ -419,7 +419,7 @@ function LoginScreen({ emailNichtBestaetigt }) {
                     : staerke === 'mittel' ? i < 2
                     : i < 1
                   const farbe = staerke === 'stark' ? '#4caf50'
-                    : staerke === 'mittel' ? '#c9a84c'
+                    : staerke === 'mittel' ? 'var(--gold)'
                     : '#e94560'
                   return (
                     <div key={stufe} style={{
@@ -432,7 +432,7 @@ function LoginScreen({ emailNichtBestaetigt }) {
               </div>
               <p style={{
                 fontSize: '0.75rem', margin: 0, fontWeight: '600',
-                color: staerke === 'stark' ? '#4caf50' : staerke === 'mittel' ? '#c9a84c' : '#e94560',
+                color: staerke === 'stark' ? '#4caf50' : staerke === 'mittel' ? 'var(--gold)' : '#e94560',
               }}>
                 {t(`passwort${staerke.charAt(0).toUpperCase() + staerke.slice(1)}`)}
               </p>
@@ -442,7 +442,7 @@ function LoginScreen({ emailNichtBestaetigt }) {
           {/* Passwort bestätigen – nur beim Registrieren */}
           {isRegistrieren && (
             <div className="input-animation-2" style={{ position: 'relative', marginBottom: '24px' }}>
-              <Lock size={16} color="#8892a4" style={{
+              <Lock size={16} color="var(--text-sub)" style={{
                 position: 'absolute', left: '16px', top: '50%',
                 transform: 'translateY(-50%)', pointerEvents: 'none',
               }} />
@@ -465,7 +465,7 @@ function LoginScreen({ emailNichtBestaetigt }) {
           {/* Login Button */}
           <div className="button-animation">
             <button onClick={handleSubmit} className="btn-press" style={{
-              backgroundColor: '#c9a84c', color: '#080d1a',
+              backgroundColor: 'var(--gold)', color: 'var(--bg)',
               border: 'none', padding: '16px', borderRadius: '16px',
               fontSize: '1rem', fontWeight: '700',
               cursor: laden ? 'not-allowed' : 'pointer',
@@ -483,17 +483,17 @@ function LoginScreen({ emailNichtBestaetigt }) {
             className="switch-animation"
             onClick={() => { setIsRegistrieren(!isRegistrieren); setFehler('') }}
             style={{
-              color: '#8892a4', textAlign: 'center', cursor: 'pointer',
+              color: 'var(--text-sub)', textAlign: 'center', cursor: 'pointer',
               fontSize: '0.88rem', padding: '10px 0', margin: 0,
             }}
           >
             {isRegistrieren ? (
               <>{t('schonAccount')}{' '}
-                <span style={{ color: '#c9a84c', fontWeight: '600' }}>{t('einloggen')}</span>
+                <span style={{ color: 'var(--gold)', fontWeight: '600' }}>{t('einloggen')}</span>
               </>
             ) : (
               <>{t('nochKeinAccount')}{' '}
-                <span style={{ color: '#c9a84c', fontWeight: '600' }}>{t('registrieren')}</span>
+                <span style={{ color: 'var(--gold)', fontWeight: '600' }}>{t('registrieren')}</span>
               </>
             )}
           </p>
@@ -506,9 +506,9 @@ function LoginScreen({ emailNichtBestaetigt }) {
 
 const inputStyle = {
   width: '100%', padding: '16px',
-  backgroundColor: '#111827',
+  backgroundColor: 'var(--card)',
   border: '1px solid rgba(255,255,255,0.08)',
-  borderRadius: '14px', color: '#ffffff',
+  borderRadius: '14px', color: 'var(--text)',
   fontSize: '1rem', boxSizing: 'border-box',
   boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
 }

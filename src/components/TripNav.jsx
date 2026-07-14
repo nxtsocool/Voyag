@@ -25,7 +25,7 @@ function TripNav({ tripName }) {
         <button onClick={() => navigate(`/trip/${id}`)} className="btn-press" style={{
           background: 'rgba(201,168,76,0.1)',
           border: '1px solid rgba(201,168,76,0.2)',
-          color: '#c9a84c', cursor: 'pointer',
+          color: 'var(--gold)', cursor: 'pointer',
           width: '44px', height: '44px', borderRadius: '50%',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           flexShrink: 0,
@@ -57,8 +57,8 @@ function TripNav({ tripName }) {
               className="btn-press"
               style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px',
-                backgroundColor: aktiv ? '#c9a84c' : '#111827',
-                color: aktiv ? '#080d1a' : '#8892a4',
+                backgroundColor: aktiv ? 'var(--gold)' : 'var(--card)',
+                color: aktiv ? 'var(--bg)' : 'var(--text-sub)',
                 border: 'none',
                 padding: '10px 16px', minHeight: '44px',
                 borderRadius: '50px',

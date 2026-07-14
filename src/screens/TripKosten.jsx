@@ -242,14 +242,14 @@ function TripKosten() {
           <div style={{ position: 'absolute', top: '10px', right: '10px', width: '70px', height: '70px', borderRadius: '50%', border: '1px solid rgba(201,168,76,0.08)', pointerEvents: 'none' }} />
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '22px' }}>
-            <p style={{ color: '#8892a4', fontSize: '0.7rem', fontWeight: '600', letterSpacing: '0.15em', textTransform: 'uppercase', margin: 0 }}>
+            <p style={{ color: 'var(--text-sub)', fontSize: '0.7rem', fontWeight: '600', letterSpacing: '0.15em', textTransform: 'uppercase', margin: 0 }}>
               {t('gesamtausgaben')}
             </p>
             <Wallet size={18} color="rgba(201,168,76,0.5)" />
           </div>
 
           <h2 style={{
-            fontSize: 'clamp(2.2rem, 9vw, 3.2rem)', color: '#c9a84c', margin: '0 0 20px',
+            fontSize: 'clamp(2.2rem, 9vw, 3.2rem)', color: 'var(--gold)', margin: '0 0 20px',
             fontWeight: '800', letterSpacing: '-1.5px', overflowWrap: 'break-word',
             textShadow: '0 0 40px rgba(201,168,76,0.2)',
           }}>
@@ -259,18 +259,18 @@ function TripKosten() {
           {teilnehmer.length > 0 && (
             <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
               <div>
-                <p style={{ color: '#8892a4', fontSize: '0.65rem', margin: '0 0 3px', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: '600' }}>{t('teilnehmerLabel')}</p>
-                <p style={{ color: '#fff', fontWeight: '700', margin: 0, fontSize: '0.95rem' }}>{teilnehmer.length}</p>
+                <p style={{ color: 'var(--text-sub)', fontSize: '0.65rem', margin: '0 0 3px', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: '600' }}>{t('teilnehmerLabel')}</p>
+                <p style={{ color: 'var(--text)', fontWeight: '700', margin: 0, fontSize: '0.95rem' }}>{teilnehmer.length}</p>
               </div>
               <div style={{ width: '1px', backgroundColor: 'rgba(255,255,255,0.1)' }} />
               <div>
-                <p style={{ color: '#8892a4', fontSize: '0.65rem', margin: '0 0 3px', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: '600' }}>{t('proPerson')}</p>
-                <p style={{ color: '#fff', fontWeight: '700', margin: 0, fontSize: '0.95rem' }}>{(gesamt / teilnehmer.length).toFixed(2)}{waehrung}</p>
+                <p style={{ color: 'var(--text-sub)', fontSize: '0.65rem', margin: '0 0 3px', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: '600' }}>{t('proPerson')}</p>
+                <p style={{ color: 'var(--text)', fontWeight: '700', margin: 0, fontSize: '0.95rem' }}>{(gesamt / teilnehmer.length).toFixed(2)}{waehrung}</p>
               </div>
               <div style={{ width: '1px', backgroundColor: 'rgba(255,255,255,0.1)' }} />
               <div>
-                <p style={{ color: '#8892a4', fontSize: '0.65rem', margin: '0 0 3px', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: '600' }}>{t('ausgabenLabel')}</p>
-                <p style={{ color: '#fff', fontWeight: '700', margin: 0, fontSize: '0.95rem' }}>{ausgaben.length}</p>
+                <p style={{ color: 'var(--text-sub)', fontSize: '0.65rem', margin: '0 0 3px', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: '600' }}>{t('ausgabenLabel')}</p>
+                <p style={{ color: 'var(--text)', fontWeight: '700', margin: 0, fontSize: '0.95rem' }}>{ausgaben.length}</p>
               </div>
             </div>
           )}
@@ -284,8 +284,8 @@ function TripKosten() {
             {ausgabenNachDatum().map(([datum, ausgabenDesTages], gruppenIndex) => (
               <div key={datum} style={{ marginBottom: gruppenIndex < ausgabenNachDatum().length - 1 ? '24px' : '0' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
-                  <Calendar size={12} color="#8892a4" />
-                  <p style={{ color: '#8892a4', fontSize: '0.72rem', fontWeight: '700', margin: 0, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  <Calendar size={12} color="var(--text-sub)" />
+                  <p style={{ color: 'var(--text-sub)', fontSize: '0.72rem', fontWeight: '700', margin: 0, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                     {datumFormatieren(datum)}
                   </p>
                 </div>
@@ -328,18 +328,18 @@ function TripKosten() {
                         marginBottom: index < ausgabenDesTages.length - 1 ? '16px' : '0',
                         borderBottom: index < ausgabenDesTages.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
                       }}>
-                        <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#c9a84c', marginTop: '6px', flexShrink: 0, boxShadow: '0 0 8px rgba(201,168,76,0.4)' }} />
+                        <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: 'var(--gold)', marginTop: '6px', flexShrink: 0, boxShadow: '0 0 8px rgba(201,168,76,0.4)' }} />
 
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
                             <p style={{ fontWeight: '600', margin: '0 0 4px', overflowWrap: 'break-word', wordBreak: 'break-word', minWidth: 0, fontSize: '0.95rem' }}>
                               {ausgabe.beschreibung}
                             </p>
-                            <span style={{ fontSize: '1.1rem', color: '#c9a84c', fontWeight: '700', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                            <span style={{ fontSize: '1.1rem', color: 'var(--gold)', fontWeight: '700', whiteSpace: 'nowrap', flexShrink: 0 }}>
                               {Number(ausgabe.betrag).toFixed(2)}{waehrung}
                             </span>
                           </div>
-                          <p style={{ color: '#8892a4', fontSize: '0.78rem', margin: 0, overflowWrap: 'break-word', wordBreak: 'break-word' }}>
+                          <p style={{ color: 'var(--text-sub)', fontSize: '0.78rem', margin: 0, overflowWrap: 'break-word', wordBreak: 'break-word' }}>
                             {t('bezahltVonText')(ausgabe.bezahlt_von)}
                             {ausgabe.fuer && ausgabe.fuer.length > 0 && (
                               <span> · {t('fuerWenText')(Array.isArray(ausgabe.fuer) ? ausgabe.fuer.join(', ') : ausgabe.fuer)}</span>
@@ -349,7 +349,7 @@ function TripKosten() {
 
                         <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
                           <button onClick={() => setBearbeiteAusgabe({ ...ausgabe, datum: ausgabe.datum || new Date().toISOString().split('T')[0] })} className="btn-press" style={ikonButtonStyle}>
-                            <SquarePen size={13} color="#c9a84c" />
+                            <SquarePen size={13} color="var(--gold)" />
                           </button>
                           <button onClick={() => ausgabeLoeschen(ausgabe.id)} className="btn-press" style={ikonButtonStyleRot}>
                             <Trash2 size={13} color="#e94560" />
@@ -365,7 +365,7 @@ function TripKosten() {
         )}
 
         {ausgaben.length === 0 && (
-          <p className="fade-in" style={{ color: '#8892a4', textAlign: 'center', marginBottom: '16px', fontStyle: 'italic', fontSize: '0.9rem' }}>
+          <p className="fade-in" style={{ color: 'var(--text-sub)', textAlign: 'center', marginBottom: '16px', fontStyle: 'italic', fontSize: '0.9rem' }}>
             {t('keineAusgaben')}
           </p>
         )}
@@ -411,7 +411,7 @@ function TripKosten() {
               {schulden.length > 0 && (
                 <button onClick={() => setAbrechnenOffen(!abrechnenOffen)} className="btn-press" style={{
                   backgroundColor: 'transparent', border: '1px solid rgba(201,168,76,0.3)',
-                  color: '#c9a84c', padding: '0 12px', minHeight: '44px', boxSizing: 'border-box',
+                  color: 'var(--gold)', padding: '0 12px', minHeight: '44px', boxSizing: 'border-box',
                   borderRadius: '8px', display: 'flex', alignItems: 'center',
                   cursor: 'pointer', fontSize: '0.8rem', fontWeight: '600',
                 }}>
@@ -429,13 +429,13 @@ function TripKosten() {
             ) : (
               schulden.map((s, index) => (
                 <div key={index} style={{
-                  backgroundColor: '#1a2235', borderRadius: '12px', padding: '12px 14px',
+                  backgroundColor: 'var(--sub)', borderRadius: '12px', padding: '12px 14px',
                   marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap',
                 }}>
-                  <span style={{ color: '#fff', fontWeight: '700', overflowWrap: 'break-word', wordBreak: 'break-word' }}>{s.von}</span>
-                  <span style={{ color: '#8892a4', fontSize: '0.82rem' }}>{t('schuldet')}</span>
-                  <span style={{ color: '#fff', fontWeight: '700', overflowWrap: 'break-word', wordBreak: 'break-word' }}>{s.an}</span>
-                  <span style={{ color: '#c9a84c', fontWeight: '800', marginLeft: 'auto' }}>{s.betrag}{waehrung}</span>
+                  <span style={{ color: 'var(--text)', fontWeight: '700', overflowWrap: 'break-word', wordBreak: 'break-word' }}>{s.von}</span>
+                  <span style={{ color: 'var(--text-sub)', fontSize: '0.82rem' }}>{t('schuldet')}</span>
+                  <span style={{ color: 'var(--text)', fontWeight: '700', overflowWrap: 'break-word', wordBreak: 'break-word' }}>{s.an}</span>
+                  <span style={{ color: 'var(--gold)', fontWeight: '800', marginLeft: 'auto' }}>{s.betrag}{waehrung}</span>
 
                   {abrechnenOffen && (
                     <button onClick={() => schuldAbrechnen(s)} className="btn-press" style={{
@@ -462,7 +462,7 @@ function TripKosten() {
         style={{
           position: 'fixed', bottom: 'calc(92px + env(safe-area-inset-bottom))', right: '20px',
           width: '58px', height: '58px', borderRadius: '50%',
-          backgroundColor: '#c9a84c', border: 'none', cursor: 'pointer',
+          backgroundColor: 'var(--gold)', border: 'none', cursor: 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           boxShadow: '0 8px 24px rgba(201,168,76,0.5)',
           zIndex: 90,
@@ -480,19 +480,19 @@ function TripKosten() {
           zIndex: 1000,
         }}>
           <div className="fade-in" style={{
-            backgroundColor: '#111827', borderRadius: '24px 24px 0 0',
+            backgroundColor: 'var(--card)', borderRadius: '24px 24px 0 0',
             padding: '24px 20px 32px', width: '100%', maxWidth: '600px',
             maxHeight: '85vh', overflowY: 'auto', boxSizing: 'border-box',
           }}>
             {/* Griff oben */}
-            <div style={{ width: '40px', height: '4px', backgroundColor: '#1a2235', borderRadius: '2px', margin: '0 auto 20px' }} />
+            <div style={{ width: '40px', height: '4px', backgroundColor: 'var(--sub)', borderRadius: '2px', margin: '0 auto 20px' }} />
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <h3 style={{ margin: 0, fontWeight: '800', fontSize: '1.2rem' }}>{t('neueAusgabeTitel')}</h3>
               <button onClick={() => setFormularOffen(false)} style={{
                 background: 'rgba(255,255,255,0.08)', border: 'none', borderRadius: '50%',
                 width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer', color: '#8892a4',
+                cursor: 'pointer', color: 'var(--text-sub)',
               }}>
                 <X size={16} />
               </button>
@@ -517,7 +517,7 @@ function TripKosten() {
               {teilnehmer.map(person => <option key={person.id} value={person.name}>{person.name}</option>)}
             </select>
 
-            <p style={{ color: '#8892a4', marginBottom: '10px', fontSize: '0.82rem' }}>
+            <p style={{ color: 'var(--text-sub)', marginBottom: '10px', fontSize: '0.82rem' }}>
               {t('fuerWenLeerAlle')}
             </p>
             {teilnehmer.map(person => {
@@ -541,13 +541,13 @@ function TripKosten() {
                 >
                   <div style={{
                     width: '22px', height: '22px', borderRadius: '50%',
-                    backgroundColor: istGewaehlt ? '#c9a84c' : 'transparent',
-                    border: istGewaehlt ? '2px solid #c9a84c' : '2px solid rgba(255,255,255,0.2)',
+                    backgroundColor: istGewaehlt ? 'var(--gold)' : 'transparent',
+                    border: istGewaehlt ? '2px solid var(--gold)' : '2px solid rgba(255,255,255,0.2)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                   }}>
                     {istGewaehlt && <span style={{ fontSize: '11px', color: '#0a0f1e', fontWeight: '700' }}>✓</span>}
                   </div>
-                  <p style={{ margin: 0, color: '#ffffff', minWidth: 0, overflowWrap: 'break-word', wordBreak: 'break-word', fontSize: '0.95rem' }}>
+                  <p style={{ margin: 0, color: 'var(--text)', minWidth: 0, overflowWrap: 'break-word', wordBreak: 'break-word', fontSize: '0.95rem' }}>
                     {person.name}
                   </p>
                 </div>
@@ -568,28 +568,28 @@ function TripKosten() {
 }
 
 const karteStyle = {
-  backgroundColor: '#111827', borderRadius: '22px',
+  backgroundColor: 'var(--card)', borderRadius: '22px',
   padding: 'clamp(18px, 4vw, 24px)', marginBottom: '16px',
   boxSizing: 'border-box', boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
 }
 
 const inputStyle = {
-  width: '100%', padding: '13px 14px', backgroundColor: '#1a2235',
+  width: '100%', padding: '13px 14px', backgroundColor: 'var(--sub)',
   border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px',
   // min. 16px verhindert Auto-Zoom bei Fokus auf iOS Safari
-  color: '#ffffff', fontSize: '16px', minHeight: '44px',
+  color: 'var(--text)', fontSize: '16px', minHeight: '44px',
   marginBottom: '10px', boxSizing: 'border-box',
 }
 
 const speichernButtonStyle = {
-  backgroundColor: '#c9a84c', color: '#0a0f1e', border: 'none',
+  backgroundColor: 'var(--gold)', color: '#0a0f1e', border: 'none',
   padding: '14px', minHeight: '48px', borderRadius: '14px',
   cursor: 'pointer', fontWeight: '700', fontSize: '0.95rem',
   boxSizing: 'border-box', boxShadow: '0 4px 16px rgba(201,168,76,0.3)',
 }
 
 const abbrechenButtonStyle = {
-  backgroundColor: 'transparent', color: '#8892a4',
+  backgroundColor: 'transparent', color: 'var(--text-sub)',
   border: '1px solid rgba(255,255,255,0.12)',
   padding: '14px', minHeight: '48px', borderRadius: '14px',
   cursor: 'pointer', boxSizing: 'border-box', fontWeight: '500',

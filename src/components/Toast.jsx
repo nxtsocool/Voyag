@@ -5,7 +5,7 @@ import { CheckCircle, XCircle, Info, X } from 'lucide-react'
 const toastConfig = {
   success: { farbe: '#4caf50', hintergrund: 'rgba(76,175,80,0.1)', border: 'rgba(76,175,80,0.2)', Icon: CheckCircle },
   error: { farbe: '#e94560', hintergrund: 'rgba(233,69,96,0.1)', border: 'rgba(233,69,96,0.2)', Icon: XCircle },
-  info: { farbe: '#c9a84c', hintergrund: 'rgba(201,168,76,0.1)', border: 'rgba(201,168,76,0.2)', Icon: Info },
+  info: { farbe: 'var(--gold)', hintergrund: 'rgba(201,168,76,0.1)', border: 'rgba(201,168,76,0.2)', Icon: Info },
 }
 
 export default function Toast({ toasts, setToasts }) {
@@ -25,7 +25,7 @@ export default function Toast({ toasts, setToasts }) {
           <div
             key={toast.id}
             style={{
-              backgroundColor: '#111827',
+              backgroundColor: 'var(--card)',
               border: `1px solid ${config.border}`,
               borderRadius: '16px',
               padding: '14px 16px',
@@ -41,7 +41,7 @@ export default function Toast({ toasts, setToasts }) {
             {/* Nachricht */}
             <p style={{
               margin: 0, flex: 1, fontSize: '0.9rem',
-              fontWeight: '600', color: '#ffffff',
+              fontWeight: '600', color: 'var(--text)',
             }}>
               {toast.nachricht}
             </p>
@@ -51,7 +51,7 @@ export default function Toast({ toasts, setToasts }) {
               onClick={() => setToasts(t => t.filter(t => t.id !== toast.id))}
               style={{
                 background: 'none', border: 'none',
-                color: '#8892a4', cursor: 'pointer',
+                color: 'var(--text-sub)', cursor: 'pointer',
                 flexShrink: 0,
                 width: '44px', height: '44px', margin: '-12px -4px',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',

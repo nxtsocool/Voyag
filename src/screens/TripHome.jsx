@@ -82,10 +82,10 @@ function TripHome() {
   // Countdown Anzeige je nach Status
   const renderCountdown = () => {
     if (tage === null) return (
-      <span style={{ color: '#c9a84c', fontWeight: '600', fontSize: '0.95rem' }}>{trip.datum}</span>
+      <span style={{ color: 'var(--gold)', fontWeight: '600', fontSize: '0.95rem' }}>{trip.datum}</span>
     )
     if (tage === 0) return (
-      <span style={{ color: '#c9a84c', fontWeight: '700', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+      <span style={{ color: 'var(--gold)', fontWeight: '700', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
         {t('heuteGehtsLos')} <Rocket size={18} />
       </span>
     )
@@ -99,7 +99,7 @@ function TripHome() {
         const nochAktiv = enddatum && enddatum >= new Date()
 
         return (
-          <span style={{ color: '#c9a84c', fontWeight: '700', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span style={{ color: 'var(--gold)', fontWeight: '700', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
             {nochAktiv ? t('reiseLaeuft') : t('reiseAbgeschlossenAusruf')} <PartyPopper size={18} />
           </span>
         )
@@ -108,7 +108,7 @@ function TripHome() {
     // Reise steht noch bevor (tage > 0)
     if (tage > 0) {
       return (
-        <span style={{ color: '#c9a84c', fontWeight: '700', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <span style={{ color: 'var(--gold)', fontWeight: '700', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
           {t('nochTageBisAbreise')(tage)}
         </span>
       )
@@ -138,10 +138,10 @@ function TripHome() {
         {/* Zurück Button – eleganter Kreis */}
         <button onClick={() => navigate('/')} className="btn-press" style={{
           position: 'absolute', top: '20px', left: '20px',
-          background: 'rgba(8,13,26,0.6)',
+          background: 'var(--card)',
           backdropFilter: 'blur(12px)',
-          border: '1px solid rgba(255,255,255,0.12)',
-          color: '#ffffff', cursor: 'pointer',
+          border: '1px solid var(--gold)',
+          color: 'var(--gold)', cursor: 'pointer',
           width: '46px', height: '46px', borderRadius: '50%',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
@@ -154,7 +154,7 @@ function TripHome() {
         <div style={{ padding: '88px 24px 36px', position: 'relative', zIndex: 1 }}>
           {landName && (
             <p style={{
-              color: '#c9a84c',
+              color: 'var(--card)',
               fontSize: '0.7rem', fontWeight: '700',
               letterSpacing: '0.2em', textTransform: 'uppercase',
               margin: '0 0 10px', opacity: 0.9,
@@ -165,6 +165,7 @@ function TripHome() {
 
           <h1 style={{
             fontSize: 'clamp(1.9rem, 7.5vw, 2.8rem)',
+            color: '#ede8de',
             fontWeight: '800', margin: '0 0 8px',
             letterSpacing: '-0.5px', lineHeight: 1.1,
             overflowWrap: 'break-word', wordBreak: 'break-word',
@@ -172,7 +173,7 @@ function TripHome() {
             {trip.name}
           </h1>
 
-          <p style={{ color: '#8892a4', margin: '0 0 28px', fontSize: '0.88rem', letterSpacing: '0.02em' }}>
+          <p style={{ color: 'var(--text-sub)', margin: '0 0 28px', fontSize: '0.88rem', letterSpacing: '0.02em' }}>
             {trip.datum}
           </p>
 
@@ -202,7 +203,7 @@ function TripHome() {
         <div onClick={() => navigate(`/trip/${id}/info`)}
           className="karte-hover btn-press fade-in-1"
           style={kachelStyle}>
-          <div style={iconWrapStyle}><Info size={20} color="#c9a84c" /></div>
+          <div style={iconWrapStyle}><Info size={20} color="var(--gold)" /></div>
           <p style={kachelTitelStyle}>{t('navInfo')}</p>
           <p style={kachelSubStyle}>{t('flugHotelLinks')}</p>
         </div>
@@ -211,7 +212,7 @@ function TripHome() {
         <div onClick={() => navigate(`/trip/${id}/orte`)}
           className="karte-hover btn-press fade-in-2"
           style={kachelStyle}>
-          <div style={iconWrapStyle}><MapPin size={20} color="#c9a84c" /></div>
+          <div style={iconWrapStyle}><MapPin size={20} color="var(--gold)" /></div>
           <p style={kachelTitelStyle}>{t('navOrte')}</p>
           <p style={kachelSubStyle}>{t('orteAnzahl')(orteAnzahl)}</p>
         </div>
@@ -220,7 +221,7 @@ function TripHome() {
         <div onClick={() => navigate(`/trip/${id}/personen`)}
           className="karte-hover btn-press fade-in-3"
           style={kachelStyle}>
-          <div style={iconWrapStyle}><Users size={20} color="#c9a84c" /></div>
+          <div style={iconWrapStyle}><Users size={20} color="var(--gold)" /></div>
           <p style={kachelTitelStyle}>{t('navPersonen')}</p>
           <p style={kachelSubStyle}>{t('teilnehmerAnzahl')(teilnehmer.length)}</p>
         </div>
@@ -229,13 +230,13 @@ function TripHome() {
         <div onClick={() => navigate(`/trip/${id}/packliste`)}
           className="karte-hover btn-press fade-in-4"
           style={kachelStyle}>
-          <div style={iconWrapStyle}><CheckSquare size={20} color="#c9a84c" /></div>
+          <div style={iconWrapStyle}><CheckSquare size={20} color="var(--gold)" /></div>
           <p style={kachelTitelStyle}>{t('navPackliste')}</p>
           <p style={kachelSubStyle}>{t('packlisteFortschrittKurz')(packlisteErledigt, packliste.length)}</p>
           {packliste.length > 0 && (
             <div style={{ marginTop: '12px', backgroundColor: '#0d1525', borderRadius: '6px', height: '4px', overflow: 'hidden' }}>
               <div style={{
-                backgroundColor: '#c9a84c', borderRadius: '6px', height: '4px',
+                backgroundColor: 'var(--gold)', borderRadius: '6px', height: '4px',
                 width: `${packlisteProzent}%`, transition: 'width 0.6s ease',
               }} />
             </div>
@@ -246,7 +247,7 @@ function TripHome() {
         <div onClick={() => navigate(`/trip/${id}/kosten`)}
           className="karte-hover btn-press fade-in-5"
           style={kachelStyle}>
-          <div style={iconWrapStyle}><Wallet size={20} color="#c9a84c" /></div>
+          <div style={iconWrapStyle}><Wallet size={20} color="var(--gold)" /></div>
           <p style={kachelTitelStyle}>{t('navKosten')}</p>
           <p style={kachelSubStyle}>{t('kostenAusgegeben')(gesamt.toFixed(0))}</p>
         </div>
@@ -255,7 +256,7 @@ function TripHome() {
         <div onClick={() => navigate(`/trip/${id}/fotos`)}
           className="karte-hover btn-press fade-in-5"
           style={kachelStyle}>
-          <div style={iconWrapStyle}><Camera size={20} color="#c9a84c" /></div>
+          <div style={iconWrapStyle}><Camera size={20} color="var(--gold)" /></div>
           <p style={kachelTitelStyle}>{t('navFotos')}</p>
           <p style={kachelSubStyle}>{t('gemeinsamesAlbum')}</p>
         </div>
@@ -266,7 +267,7 @@ function TripHome() {
 }
 
 const kachelStyle = {
-  backgroundColor: '#111827',
+  backgroundColor: 'var(--card)',
   borderRadius: '22px',
   padding: 'clamp(18px, 4vw, 24px)',
   cursor: 'pointer',
@@ -288,13 +289,13 @@ const iconWrapStyle = {
 const kachelTitelStyle = {
   fontSize: 'clamp(0.9rem, 3.5vw, 1rem)',
   fontWeight: '700', margin: '0 0 4px',
-  color: '#ffffff',
+  color: 'var(--text)',
   overflowWrap: 'break-word', wordBreak: 'break-word',
 }
 
 const kachelSubStyle = {
   fontSize: 'clamp(0.72rem, 3vw, 0.8rem)',
-  color: '#8892a4', margin: 0,
+  color: 'var(--text-sub)', margin: 0,
   overflowWrap: 'break-word', wordBreak: 'break-word',
 }
 

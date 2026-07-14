@@ -152,7 +152,7 @@ export default function SettingsScreen() {
       }}>
         <div style={{
           width: '64px', height: '64px', borderRadius: '20px',
-          background: 'linear-gradient(135deg, #c9a84c, #8a6f2e)',
+          background: 'linear-gradient(135deg, var(--gold), #8a6f2e)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: '1.4rem', fontWeight: '800', color: '#0a0f1e', flexShrink: 0,
         }}>
@@ -162,7 +162,7 @@ export default function SettingsScreen() {
           <h1 style={{ fontSize: '1.4rem', fontWeight: '800', margin: '0 0 2px', letterSpacing: '-0.5px' }}>
             {profile.name || t('keinName')}
           </h1>
-          <p style={{ color: '#8892a4', fontSize: '0.85rem', margin: 0 }}>{user.email}</p>
+          <p style={{ color: 'var(--text-sub)', fontSize: '0.85rem', margin: 0 }}>{user.email}</p>
         </div>
       </div>
 
@@ -173,7 +173,7 @@ export default function SettingsScreen() {
           backgroundColor: nachricht.includes('❌') ? 'rgba(233,69,96,0.1)' : 'rgba(201,168,76,0.1)',
           borderRadius: '14px', padding: '12px 16px',
           border: `1px solid ${nachricht.includes('❌') ? 'rgba(233,69,96,0.2)' : 'rgba(201,168,76,0.2)'}`,
-          color: nachricht.includes('❌') ? '#e94560' : '#c9a84c',
+          color: nachricht.includes('❌') ? '#e94560' : 'var(--gold)',
           fontWeight: '600', fontSize: '0.9rem',
         }}>
           {nachricht}
@@ -186,7 +186,7 @@ export default function SettingsScreen() {
         <div className="fade-in-2" style={karteStyle}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: profilBearbeiten ? '16px' : '0' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={iconWrapperStyle}><User size={16} color="#c9a84c" /></div>
+              <div style={iconWrapperStyle}><User size={16} color="var(--gold)" /></div>
               <h3 style={{ margin: 0, fontWeight: '700', fontSize: '1rem' }}>{t('profilTitel')}</h3>
             </div>
             <button onClick={() => setProfilBearbeiten(!profilBearbeiten)} className="btn-press" style={editButtonStyle}>
@@ -210,23 +210,23 @@ export default function SettingsScreen() {
             <div style={{ marginTop: '16px' }}>
               <div style={infoZeileStyle}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Mail size={14} color="#8892a4" />
-                  <span style={{ color: '#8892a4', fontSize: '0.85rem' }}>{t('email')}</span>
+                  <Mail size={14} color="var(--text-sub)" />
+                  <span style={{ color: 'var(--text-sub)', fontSize: '0.85rem' }}>{t('email')}</span>
                 </div>
                 <span style={{ fontSize: '0.85rem', fontWeight: '500' }}>{user.email}</span>
               </div>
               {profile.name && (
                 <div style={infoZeileStyle}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <User size={14} color="#8892a4" />
-                    <span style={{ color: '#8892a4', fontSize: '0.85rem' }}>{t('name')}</span>
+                    <User size={14} color="var(--text-sub)" />
+                    <span style={{ color: 'var(--text-sub)', fontSize: '0.85rem' }}>{t('name')}</span>
                   </div>
                   <span style={{ fontSize: '0.85rem', fontWeight: '500' }}>{profile.name}</span>
                 </div>
               )}
               {profile.bio && (
-                <div style={{ marginTop: '12px', padding: '12px', backgroundColor: '#1a2235', borderRadius: '12px' }}>
-                  <p style={{ color: '#8892a4', fontSize: '0.75rem', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{t('bioLabel')}</p>
+                <div style={{ marginTop: '12px', padding: '12px', backgroundColor: 'var(--sub)', borderRadius: '12px' }}>
+                  <p style={{ color: 'var(--text-sub)', fontSize: '0.75rem', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{t('bioLabel')}</p>
                   <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: 1.5 }}>{profile.bio}</p>
                 </div>
               )}
@@ -238,11 +238,11 @@ export default function SettingsScreen() {
         <div className="fade-in-2" style={karteStyle}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={iconWrapperStyle}><Lock size={16} color="#c9a84c" /></div>
+              <div style={iconWrapperStyle}><Lock size={16} color="var(--gold)" /></div>
               <div>
                 <h3 style={{ margin: 0, fontWeight: '700', fontSize: '1rem' }}>{t('passwortTitel')}</h3>
                 {!passwortOffen && (
-                  <p style={{ color: '#8892a4', fontSize: '0.8rem', margin: '2px 0 0' }}>{t('direktAendernOderEmail')}</p>
+                  <p style={{ color: 'var(--text-sub)', fontSize: '0.8rem', margin: '2px 0 0' }}>{t('direktAendernOderEmail')}</p>
                 )}
               </div>
             </div>
@@ -264,7 +264,7 @@ export default function SettingsScreen() {
                 <button onClick={passwortAendern} className="btn-press" style={speichernButtonStyle}>{t('speichern')}</button>
                 <button onClick={passwortZuruecksetzen} className="btn-press" style={{
                   ...speichernButtonStyle, backgroundColor: 'transparent',
-                  border: '1px solid rgba(201,168,76,0.3)', color: '#c9a84c',
+                  border: '1px solid rgba(201,168,76,0.3)', color: 'var(--gold)',
                 }}>{t('perEmail')}</button>
               </div>
             </div>
@@ -278,7 +278,7 @@ export default function SettingsScreen() {
           {/* Währung */}
           <div style={{ marginBottom: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-              <div style={iconWrapperStyle}><DollarSign size={16} color="#c9a84c" /></div>
+              <div style={iconWrapperStyle}><DollarSign size={16} color="var(--gold)" /></div>
               <span style={{ fontWeight: '600', fontSize: '0.95rem' }}>{t('waehrungLabel')}</span>
             </div>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -287,8 +287,8 @@ export default function SettingsScreen() {
                   className="btn-press" style={{
                     padding: '0 16px', minHeight: '44px', display: 'flex', alignItems: 'center', borderRadius: '12px', cursor: 'pointer',
                     fontWeight: '600', fontSize: '0.9rem', border: 'none',
-                    backgroundColor: profile.waehrung === w ? '#c9a84c' : '#1a2235',
-                    color: profile.waehrung === w ? '#0a0f1e' : '#8892a4',
+                    backgroundColor: profile.waehrung === w ? 'var(--gold)' : 'var(--sub)',
+                    color: profile.waehrung === w ? '#0a0f1e' : 'var(--text-sub)',
                   }}>
                   {w}
                 </button>
@@ -299,7 +299,7 @@ export default function SettingsScreen() {
           {/* Sprache */}
           <div style={{ marginBottom: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-              <div style={iconWrapperStyle}><Globe size={16} color="#c9a84c" /></div>
+              <div style={iconWrapperStyle}><Globe size={16} color="var(--gold)" /></div>
               <span style={{ fontWeight: '600', fontSize: '0.95rem' }}>{t('spracheLabel')}</span>
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
@@ -308,8 +308,8 @@ export default function SettingsScreen() {
                   className="btn-press" style={{
                     padding: '0 16px', minHeight: '44px', display: 'flex', alignItems: 'center', borderRadius: '12px', cursor: 'pointer',
                     fontWeight: '600', fontSize: '0.9rem', border: 'none',
-                    backgroundColor: profile.sprache === s.code ? '#c9a84c' : '#1a2235',
-                    color: profile.sprache === s.code ? '#0a0f1e' : '#8892a4',
+                    backgroundColor: profile.sprache === s.code ? 'var(--gold)' : 'var(--sub)',
+                    color: profile.sprache === s.code ? '#0a0f1e' : 'var(--text-sub)',
                   }}>
                   {s.label}
                 </button>
@@ -320,7 +320,7 @@ export default function SettingsScreen() {
           {/* Design */}
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-              <div style={iconWrapperStyle}><Palette size={16} color="#c9a84c" /></div>
+              <div style={iconWrapperStyle}><Palette size={16} color="var(--gold)" /></div>
               <span style={{ fontWeight: '600', fontSize: '0.95rem' }}>{t('designLabel')}</span>
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
@@ -329,19 +329,13 @@ export default function SettingsScreen() {
                   className="btn-press" style={{
                     padding: '0 16px', minHeight: '44px', display: 'flex', alignItems: 'center', borderRadius: '12px', cursor: 'pointer',
                     fontWeight: '600', fontSize: '0.9rem', border: 'none',
-                    backgroundColor: profile.design === d.code ? '#c9a84c' : '#1a2235',
-                    color: profile.design === d.code ? '#0a0f1e' : '#8892a4',
-                    opacity: d.code === 'light' ? 0.5 : 1,
+                    backgroundColor: profile.design === d.code ? 'var(--gold)' : 'var(--sub)',
+                    color: profile.design === d.code ? '#0a0f1e' : 'var(--text-sub)',
                   }}>
                   {t(d.labelKey)}
                 </button>
               ))}
             </div>
-            {profile.design === 'light' && (
-              <p style={{ color: '#8892a4', fontSize: '0.8rem', marginTop: '8px' }}>
-                {t('lightModeKommtBald')}
-              </p>
-            )}
           </div>
         </div>
 
@@ -357,10 +351,10 @@ export default function SettingsScreen() {
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={iconWrapperStyle}><Info size={16} color="#c9a84c" /></div>
-              <h3 style={{ margin: 0, fontWeight: '700', fontSize: '1rem', color: '#fff' }}>{t('appInfoTitel')}</h3>
+              <div style={iconWrapperStyle}><Info size={16} color="var(--gold)" /></div>
+              <h3 style={{ margin: 0, fontWeight: '700', fontSize: '1rem', color: 'var(--text)' }}>{t('appInfoTitel')}</h3>
             </div>
-            <ChevronRight size={16} color="#8892a4" style={{
+            <ChevronRight size={16} color="var(--text-sub)" style={{
               transform: appInfoOffen ? 'rotate(90deg)' : 'rotate(0deg)',
               transition: 'transform 0.2s ease',
             }} />
@@ -369,15 +363,15 @@ export default function SettingsScreen() {
           {appInfoOffen && (
             <div style={{ marginTop: '16px' }}>
               <div style={infoZeileStyle}>
-                <span style={{ color: '#8892a4', fontSize: '0.85rem' }}>{t('versionLabel')}</span>
-                <span style={{ fontSize: '0.85rem', fontWeight: '500', color: '#c9a84c' }}>V0.6.1</span>
+                <span style={{ color: 'var(--text-sub)', fontSize: '0.85rem' }}>{t('versionLabel')}</span>
+                <span style={{ fontSize: '0.85rem', fontWeight: '500', color: 'var(--gold)' }}>V0.6.1</span>
               </div>
               <div style={infoZeileStyle}>
-                <span style={{ color: '#8892a4', fontSize: '0.85rem' }}>{t('entwicklerLabel')}</span>
+                <span style={{ color: 'var(--text-sub)', fontSize: '0.85rem' }}>{t('entwicklerLabel')}</span>
                 <span style={{ fontSize: '0.85rem', fontWeight: '500' }}>Georg Kummert</span>
               </div>
               <div style={{ ...infoZeileStyle, borderBottom: 'none' }}>
-                <span style={{ color: '#8892a4', fontSize: '0.85rem' }}>{t('madeWithLabel')}</span>
+                <span style={{ color: 'var(--text-sub)', fontSize: '0.85rem' }}>{t('madeWithLabel')}</span>
                 <span style={{ fontSize: '0.85rem' }}>⚡ React + Supabase</span>
               </div>
             </div>
@@ -387,18 +381,18 @@ export default function SettingsScreen() {
         {/* Ausloggen */}
         <button onClick={ausloggen} className="btn-press fade-in-4" style={{
           width: '100%', padding: '16px', marginBottom: '10px',
-          backgroundColor: '#111827', border: 'none', borderRadius: '16px',
+          backgroundColor: 'var(--card)', border: 'none', borderRadius: '16px',
           cursor: 'pointer', display: 'flex', alignItems: 'center',
           justifyContent: 'space-between',
           boxShadow: '0 2px 12px rgba(0,0,0,0.2)',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{ ...iconWrapperStyle, backgroundColor: 'rgba(136,146,164,0.1)' }}>
-              <LogOut size={16} color="#8892a4" />
+              <LogOut size={16} color="var(--text-sub)" />
             </div>
-            <span style={{ color: '#8892a4', fontWeight: '600', fontSize: '0.95rem' }}>{t('ausloggen')}</span>
+            <span style={{ color: 'var(--text-sub)', fontWeight: '600', fontSize: '0.95rem' }}>{t('ausloggen')}</span>
           </div>
-          <ChevronRight size={16} color="#8892a4" />
+          <ChevronRight size={16} color="var(--text-sub)" />
         </button>
 
         {/* Account löschen */}
@@ -426,15 +420,15 @@ export default function SettingsScreen() {
             zIndex: 1000,
           }}>
             <div className="fade-in" style={{
-              backgroundColor: '#111827', borderRadius: '24px 24px 0 0',
+              backgroundColor: 'var(--card)', borderRadius: '24px 24px 0 0',
               padding: '32px 24px calc(48px + env(safe-area-inset-bottom))',
               width: '100%', maxWidth: '600px', boxSizing: 'border-box',
               maxHeight: '85vh', overflowY: 'auto',
             }}>
-              <div style={{ width: '40px', height: '4px', backgroundColor: '#1a2235', borderRadius: '2px', margin: '0 auto 24px' }} />
+              <div style={{ width: '40px', height: '4px', backgroundColor: 'var(--sub)', borderRadius: '2px', margin: '0 auto 24px' }} />
               <h3 style={{ margin: '0 0 8px', fontWeight: '800', fontSize: '1.3rem' }}>{t('accountLoeschenTitel')}</h3>
-              <p style={{ color: '#8892a4', margin: '0 0 28px', fontSize: '0.95rem', lineHeight: 1.6 }}>
-                {t('accountLoeschenTextVor')} <span style={{ color: '#fff', fontWeight: '600' }}>{t('unwiderruflich')}</span> {t('accountLoeschenTextNach')}
+              <p style={{ color: 'var(--text-sub)', margin: '0 0 28px', fontSize: '0.95rem', lineHeight: 1.6 }}>
+                {t('accountLoeschenTextVor')} <span style={{ color: 'var(--text)', fontWeight: '600' }}>{t('unwiderruflich')}</span> {t('accountLoeschenTextNach')}
               </p>
               <div style={{ display: 'flex', gap: '10px' }}>
                 <button onClick={accountLoeschen} className="btn-press" style={{
@@ -443,7 +437,7 @@ export default function SettingsScreen() {
                   flex: 1, fontWeight: '700', fontSize: '1rem',
                 }}>{t('jaLoeschen')}</button>
                 <button onClick={() => setLoeschenOffen(false)} className="btn-press" style={{
-                  backgroundColor: '#1a2235', color: '#fff', border: 'none',
+                  backgroundColor: 'var(--sub)', color: '#fff', border: 'none',
                   padding: '14px', minHeight: '44px', boxSizing: 'border-box', borderRadius: '14px', cursor: 'pointer', flex: 1, fontWeight: '600',
                 }}>{t('abbrechen')}</button>
               </div>
@@ -456,26 +450,26 @@ export default function SettingsScreen() {
 }
 
 const karteStyle = {
-  backgroundColor: '#111827', borderRadius: '20px',
+  backgroundColor: 'var(--card)', borderRadius: '20px',
   boxShadow: '0 2px 16px rgba(0,0,0,0.25)',
   padding: '20px', marginBottom: '12px',
 }
 
 const inputStyle = {
-  width: '100%', padding: '13px 14px', backgroundColor: '#1a2235',
+  width: '100%', padding: '13px 14px', backgroundColor: 'var(--sub)',
   border: '1.5px solid rgba(255,255,255,0.06)', borderRadius: '12px',
-  color: '#ffffff', fontSize: '1rem', marginBottom: '10px', boxSizing: 'border-box',
+  color: 'var(--text)', fontSize: '1rem', marginBottom: '10px', boxSizing: 'border-box',
 }
 
 const editButtonStyle = {
   backgroundColor: 'rgba(201,168,76,0.1)', border: 'none',
-  color: '#c9a84c', padding: '0 14px', minHeight: '44px', borderRadius: '10px',
+  color: 'var(--gold)', padding: '0 14px', minHeight: '44px', borderRadius: '10px',
   display: 'flex', alignItems: 'center', flexShrink: 0,
   cursor: 'pointer', fontSize: '0.8rem', fontWeight: '700',
 }
 
 const speichernButtonStyle = {
-  backgroundColor: '#c9a84c', color: '#0a0f1e', border: 'none',
+  backgroundColor: 'var(--gold)', color: '#0a0f1e', border: 'none',
   padding: '13px', borderRadius: '12px', cursor: 'pointer',
   flex: 1, fontWeight: '700', fontSize: '1rem',
 }
@@ -488,5 +482,5 @@ const iconWrapperStyle = {
 
 const infoZeileStyle = {
   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-  padding: '10px 0', borderBottom: '1px solid #1a2235',
+  padding: '10px 0', borderBottom: '1px solid var(--sub)',
 }

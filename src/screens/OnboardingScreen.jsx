@@ -88,7 +88,7 @@ export default function OnboardingScreen({ user, onComplete }) {
       <div style={{
         minHeight: '100vh', display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',
-        backgroundColor: '#080d1a',
+        backgroundColor: 'var(--bg)',
         backgroundImage: 'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(201,168,76,0.12) 0%, transparent 70%)',
         padding: 'clamp(20px, 5vw, 40px)', boxSizing: 'border-box',
       }}>
@@ -100,7 +100,7 @@ export default function OnboardingScreen({ user, onComplete }) {
               <div key={n} style={{
                 width: n === schritt ? '24px' : '10px',
                 height: '10px', borderRadius: '5px',
-                backgroundColor: n === schritt ? '#c9a84c'
+                backgroundColor: n === schritt ? 'var(--gold)'
                   : n < schritt ? 'rgba(201,168,76,0.4)' : 'rgba(255,255,255,0.15)',
                 transition: 'all 0.35s cubic-bezier(0.22,1,0.36,1)',
               }} />
@@ -116,13 +116,13 @@ export default function OnboardingScreen({ user, onComplete }) {
                 {/* Kompass-SVG (identisch zum LoginScreen) */}
                 <div className="kompass-onboarding" style={{ display: 'flex', justifyContent: 'center', marginBottom: '32px' }}>
                   <svg viewBox="0 0 60 60" style={{ width: '90px', height: '90px' }}>
-                    <circle cx="30" cy="30" r="27" fill="none" stroke="#c9a84c" strokeWidth="4"/>
-                    <circle cx="30" cy="30" r="18" fill="none" stroke="#c9a84c" strokeWidth="0.8" opacity="0.3"/>
-                    <polygon className="nadel-on" points="30,5 34,30 30,26 26,30" fill="#c9a84c"/>
+                    <circle cx="30" cy="30" r="27" fill="none" stroke="var(--gold)" strokeWidth="4"/>
+                    <circle cx="30" cy="30" r="18" fill="none" stroke="var(--gold)" strokeWidth="0.8" opacity="0.3"/>
+                    <polygon className="nadel-on" points="30,5 34,30 30,26 26,30" fill="var(--gold)"/>
                     <polygon points="30,55 34,30 30,34 26,30" fill="#ffffff" opacity="0.15"/>
-                    <circle cx="30" cy="30" r="4" fill="#c9a84c"/>
-                    <circle cx="30" cy="30" r="2" fill="#080d1a"/>
-                    <circle cx="30" cy="5" r="2" fill="#c9a84c"/>
+                    <circle cx="30" cy="30" r="4" fill="var(--gold)"/>
+                    <circle cx="30" cy="30" r="2" fill="var(--bg)"/>
+                    <circle cx="30" cy="5" r="2" fill="var(--gold)"/>
                   </svg>
                 </div>
 
@@ -133,7 +133,7 @@ export default function OnboardingScreen({ user, onComplete }) {
                   {t('onboardingWillkommen')(userName || '...')}
                 </h1>
                 <p style={{
-                  color: '#8892a4', fontSize: '0.95rem', lineHeight: 1.6,
+                  color: 'var(--text-sub)', fontSize: '0.95rem', lineHeight: 1.6,
                   margin: '0 0 40px',
                 }}>
                   {t('onboardingWillkommenSubtitel')}
@@ -149,7 +149,7 @@ export default function OnboardingScreen({ user, onComplete }) {
               <div>
                 {/* Icon */}
                 <div style={ikonKreisStyle}>
-                  <Globe size={28} color="#c9a84c" />
+                  <Globe size={28} color="var(--gold)" />
                 </div>
                 <h2 style={schrittTitelStyle}>{t('onboardingSpracheTitel')}</h2>
 
@@ -167,7 +167,7 @@ export default function OnboardingScreen({ user, onComplete }) {
                         className="btn-press"
                         style={{
                           flex: 1, padding: '20px 12px', borderRadius: '18px',
-                          backgroundColor: aktiv ? 'rgba(201,168,76,0.1)' : '#111827',
+                          backgroundColor: aktiv ? 'rgba(201,168,76,0.1)' : 'var(--card)',
                           border: aktiv ? '2px solid rgba(201,168,76,0.6)' : '2px solid rgba(255,255,255,0.06)',
                           cursor: 'pointer', textAlign: 'center',
                           boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
@@ -177,7 +177,7 @@ export default function OnboardingScreen({ user, onComplete }) {
                       >
                         <div style={{
                           fontSize: '1.1rem', fontWeight: '800',
-                          color: aktiv ? '#c9a84c' : '#8892a4',
+                          color: aktiv ? 'var(--gold)' : 'var(--text-sub)',
                           marginBottom: '6px',
                           backgroundColor: aktiv ? 'rgba(201,168,76,0.15)' : 'rgba(255,255,255,0.07)',
                           borderRadius: '8px', padding: '4px 10px',
@@ -185,7 +185,7 @@ export default function OnboardingScreen({ user, onComplete }) {
                         }}>
                           {badge}
                         </div>
-                        <p style={{ margin: 0, color: aktiv ? '#fff' : '#8892a4', fontWeight: aktiv ? '700' : '400', fontSize: '0.92rem' }}>
+                        <p style={{ margin: 0, color: aktiv ? '#fff' : 'var(--text-sub)', fontWeight: aktiv ? '700' : '400', fontSize: '0.92rem' }}>
                           {label}
                         </p>
                       </button>
@@ -204,7 +204,7 @@ export default function OnboardingScreen({ user, onComplete }) {
               <div>
                 {/* Icon */}
                 <div style={ikonKreisStyle}>
-                  <DollarSign size={28} color="#c9a84c" />
+                  <DollarSign size={28} color="var(--gold)" />
                 </div>
                 <h2 style={schrittTitelStyle}>{t('onboardingWaehrungTitel')}</h2>
 
@@ -219,7 +219,7 @@ export default function OnboardingScreen({ user, onComplete }) {
                         className="btn-press"
                         style={{
                           padding: '14px 6px', borderRadius: '14px',
-                          backgroundColor: aktiv ? 'rgba(201,168,76,0.12)' : '#111827',
+                          backgroundColor: aktiv ? 'rgba(201,168,76,0.12)' : 'var(--card)',
                           border: aktiv ? '2px solid rgba(201,168,76,0.55)' : '2px solid rgba(255,255,255,0.06)',
                           cursor: 'pointer', textAlign: 'center',
                           boxShadow: '0 4px 16px rgba(0,0,0,0.25)',
@@ -230,12 +230,12 @@ export default function OnboardingScreen({ user, onComplete }) {
                         <div style={{
                           fontSize: symbol.length > 1 ? '0.85rem' : '1.2rem',
                           fontWeight: '800',
-                          color: aktiv ? '#c9a84c' : '#fff',
+                          color: aktiv ? 'var(--gold)' : '#fff',
                           marginBottom: '4px',
                         }}>
                           {symbol}
                         </div>
-                        <div style={{ fontSize: '0.6rem', color: aktiv ? '#c9a84c' : '#8892a4', fontWeight: '500' }}>
+                        <div style={{ fontSize: '0.6rem', color: aktiv ? 'var(--gold)' : 'var(--text-sub)', fontWeight: '500' }}>
                           {waehrungsName}
                         </div>
                       </button>
@@ -276,7 +276,7 @@ export default function OnboardingScreen({ user, onComplete }) {
                 }}>
                   {t('onboardingFertigTitel')}
                 </h1>
-                <p style={{ color: '#8892a4', fontSize: '0.95rem', lineHeight: 1.6, margin: '0 0 40px' }}>
+                <p style={{ color: 'var(--text-sub)', fontSize: '0.95rem', lineHeight: 1.6, margin: '0 0 40px' }}>
                   {t('onboardingFertigSubtitel')}
                 </p>
 
@@ -302,7 +302,7 @@ export default function OnboardingScreen({ user, onComplete }) {
 
 const goldButtonStyle = {
   width: '100%', padding: '16px', borderRadius: '16px',
-  backgroundColor: '#c9a84c', color: '#080d1a',
+  backgroundColor: 'var(--gold)', color: 'var(--bg)',
   border: 'none', fontSize: '1rem', fontWeight: '700',
   cursor: 'pointer', letterSpacing: '0.02em',
   boxShadow: '0 6px 24px rgba(201,168,76,0.38)',

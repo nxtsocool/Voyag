@@ -196,7 +196,7 @@ function TripInfo() {
         <div className="fade-in-1" style={sectionStyle}>
           <div style={sectionHeaderStyle}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={sectionIconStyle}><Plane size={16} color="#c9a84c" /></div>
+              <div style={sectionIconStyle}><Plane size={16} color="var(--gold)" /></div>
               <h3 style={sectionTitelStyle}>{t('fluegeTitel')}</h3>
             </div>
             <button onClick={() => setFlugFormularOffen(!flugFormularOffen)} className="btn-press" style={addButtonStyle}>
@@ -260,18 +260,18 @@ function TripInfo() {
                     {/* Ticket Header */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                       <div>
-                        <p style={{ color: '#8892a4', fontSize: '0.7rem', fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 4px' }}>
+                        <p style={{ color: 'var(--text-sub)', fontSize: '0.7rem', fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 4px' }}>
                           {flug.titel}
                         </p>
                         {flug.flugnummer && (
-                          <p style={{ color: '#c9a84c', fontSize: '0.85rem', fontWeight: '700', margin: 0, letterSpacing: '0.05em' }}>
+                          <p style={{ color: 'var(--gold)', fontSize: '0.85rem', fontWeight: '700', margin: 0, letterSpacing: '0.05em' }}>
                             {flug.flugnummer}
                           </p>
                         )}
                       </div>
                       <div style={{ display: 'flex', gap: '6px' }}>
                         <button onClick={() => setBearbeiteFlug(flug)} className="btn-press" style={ikonButtonStyle}>
-                          <SquarePen size={13} color="#c9a84c" />
+                          <SquarePen size={13} color="var(--gold)" />
                         </button>
                         <button onClick={() => flugLoeschen(flug.id)} className="btn-press" style={ikonButtonStyleRot}>
                           <Trash2 size={13} color="#e94560" />
@@ -284,10 +284,10 @@ function TripInfo() {
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         {/* Abflug */}
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <p style={{ fontSize: 'clamp(1.5rem, 6vw, 2rem)', fontWeight: '800', margin: '0 0 2px', color: '#fff', lineHeight: 1 }}>
+                          <p style={{ fontSize: 'clamp(1.5rem, 6vw, 2rem)', fontWeight: '800', margin: '0 0 2px', color: 'var(--text)', lineHeight: 1 }}>
                             {parseFlugInfo(flug.abflug).zeit}
                           </p>
-                          <p style={{ color: '#8892a4', fontSize: '0.78rem', margin: 0, overflowWrap: 'break-word', wordBreak: 'break-word' }}>
+                          <p style={{ color: 'var(--text-sub)', fontSize: '0.78rem', margin: 0, overflowWrap: 'break-word', wordBreak: 'break-word' }}>
                             {parseFlugInfo(flug.abflug).ort}
                           </p>
                         </div>
@@ -295,16 +295,16 @@ function TripInfo() {
                         {/* Trennlinie mit Plane Icon */}
                         <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0, padding: '0 4px' }}>
                           <div style={{ width: '28px', borderTop: '1.5px dashed rgba(201,168,76,0.35)' }} />
-                          <Plane size={15} color="#c9a84c" style={{ margin: '0 4px', flexShrink: 0 }} />
+                          <Plane size={15} color="var(--gold)" style={{ margin: '0 4px', flexShrink: 0 }} />
                           <div style={{ width: '28px', borderTop: '1.5px dashed rgba(201,168,76,0.35)' }} />
                         </div>
 
                         {/* Ankunft */}
                         <div style={{ flex: 1, minWidth: 0, textAlign: 'right' }}>
-                          <p style={{ fontSize: 'clamp(1.5rem, 6vw, 2rem)', fontWeight: '800', margin: '0 0 2px', color: '#fff', lineHeight: 1 }}>
+                          <p style={{ fontSize: 'clamp(1.5rem, 6vw, 2rem)', fontWeight: '800', margin: '0 0 2px', color: 'var(--text)', lineHeight: 1 }}>
                             {parseFlugInfo(flug.ankunft).zeit}
                           </p>
-                          <p style={{ color: '#8892a4', fontSize: '0.78rem', margin: 0, overflowWrap: 'break-word', wordBreak: 'break-word' }}>
+                          <p style={{ color: 'var(--text-sub)', fontSize: '0.78rem', margin: 0, overflowWrap: 'break-word', wordBreak: 'break-word' }}>
                             {parseFlugInfo(flug.ankunft).ort}
                           </p>
                         </div>
@@ -321,7 +321,7 @@ function TripInfo() {
         <div className="fade-in-2" style={sectionStyle}>
           <div style={sectionHeaderStyle}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={sectionIconStyle}><Hotel size={16} color="#c9a84c" /></div>
+              <div style={sectionIconStyle}><Hotel size={16} color="var(--gold)" /></div>
               <h3 style={sectionTitelStyle}>{t('unterkuenfteTitel')}</h3>
             </div>
             <button onClick={() => setUnterkunftFormularOffen(!unterkunftFormularOffen)} className="btn-press" style={addButtonStyle}>
@@ -389,18 +389,18 @@ function TripInfo() {
                   <div className="karte-hover" style={unterkunftCardStyle}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
                       <div style={{ minWidth: 0, flex: 1 }}>
-                        <p style={{ fontWeight: '700', margin: '0 0 2px', color: '#c9a84c', overflowWrap: 'break-word', wordBreak: 'break-word' }}>
+                        <p style={{ fontWeight: '700', margin: '0 0 2px', color: 'var(--gold)', overflowWrap: 'break-word', wordBreak: 'break-word' }}>
                           {unterkunft.titel}
                         </p>
                         {unterkunft.name && (
-                          <p style={{ color: '#fff', fontSize: '0.9rem', margin: 0, fontWeight: '500', overflowWrap: 'break-word', wordBreak: 'break-word' }}>
+                          <p style={{ color: 'var(--text)', fontSize: '0.9rem', margin: 0, fontWeight: '500', overflowWrap: 'break-word', wordBreak: 'break-word' }}>
                             {unterkunft.name}
                           </p>
                         )}
                       </div>
                       <div style={{ display: 'flex', gap: '6px', flexShrink: 0, marginLeft: '8px' }}>
                         <button onClick={() => setBearbeiteUnterkunft(unterkunft)} className="btn-press" style={ikonButtonStyle}>
-                          <SquarePen size={13} color="#c9a84c" />
+                          <SquarePen size={13} color="var(--gold)" />
                         </button>
                         <button onClick={() => unterkunftLoeschen(unterkunft.id)} className="btn-press" style={ikonButtonStyleRot}>
                           <Trash2 size={13} color="#e94560" />
@@ -413,20 +413,20 @@ function TripInfo() {
                       <div style={{ display: 'flex', gap: '12px', marginBottom: unterkunft.adresse ? '12px' : '0' }}>
                         {unterkunft.checkin && (
                           <div style={{ flex: 1, backgroundColor: 'rgba(8,13,26,0.6)', borderRadius: '10px', padding: '10px 12px' }}>
-                            <p style={{ color: '#8892a4', fontSize: '0.65rem', fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 4px' }}>{t('checkinKurzPlatzhalter')}</p>
-                            <p style={{ color: '#fff', fontWeight: '700', margin: 0, fontSize: '0.95rem' }}>{unterkunft.checkin}</p>
+                            <p style={{ color: 'var(--text-sub)', fontSize: '0.65rem', fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 4px' }}>{t('checkinKurzPlatzhalter')}</p>
+                            <p style={{ color: 'var(--text)', fontWeight: '700', margin: 0, fontSize: '0.95rem' }}>{unterkunft.checkin}</p>
                           </div>
                         )}
                         {unterkunft.checkout && (
                           <div style={{ flex: 1, backgroundColor: 'rgba(8,13,26,0.6)', borderRadius: '10px', padding: '10px 12px' }}>
-                            <p style={{ color: '#8892a4', fontSize: '0.65rem', fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 4px' }}>{t('checkoutKurzPlatzhalter')}</p>
-                            <p style={{ color: '#fff', fontWeight: '700', margin: 0, fontSize: '0.95rem' }}>{unterkunft.checkout}</p>
+                            <p style={{ color: 'var(--text-sub)', fontSize: '0.65rem', fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 4px' }}>{t('checkoutKurzPlatzhalter')}</p>
+                            <p style={{ color: 'var(--text)', fontWeight: '700', margin: 0, fontSize: '0.95rem' }}>{unterkunft.checkout}</p>
                           </div>
                         )}
                       </div>
                     )}
                     {unterkunft.adresse && (
-                      <p style={{ color: '#8892a4', fontSize: '0.82rem', margin: 0, overflowWrap: 'break-word', wordBreak: 'break-word' }}>
+                      <p style={{ color: 'var(--text-sub)', fontSize: '0.82rem', margin: 0, overflowWrap: 'break-word', wordBreak: 'break-word' }}>
                         {unterkunft.adresse}
                       </p>
                     )}
@@ -441,7 +441,7 @@ function TripInfo() {
         <div className="fade-in-3" style={sectionStyle}>
           <div style={sectionHeaderStyle}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={sectionIconStyle}><Link size={16} color="#c9a84c" /></div>
+              <div style={sectionIconStyle}><Link size={16} color="var(--gold)" /></div>
               <h3 style={sectionTitelStyle}>{t('linksTitel')}</h3>
             </div>
             <button onClick={() => setLinkFormularOffen(!linkFormularOffen)} className="btn-press" style={addButtonStyle}>
@@ -469,13 +469,13 @@ function TripInfo() {
               {links.map(link => (
                 <div key={link.id} style={{
                   display: 'flex', alignItems: 'center', gap: '6px',
-                  backgroundColor: '#1a2235',
-                  border: '1px solid rgba(201,168,76,0.15)',
+                  backgroundColor: 'var(--sub)',
+                  border: '1px solid var(--border)',
                   borderRadius: '50px',
                   padding: '8px 14px',
                 }}>
                   <a href={link.url} target="_blank" rel="noreferrer" style={{
-                    color: '#c9a84c', textDecoration: 'none',
+                    color: 'var(--gold)', textDecoration: 'none',
                     fontSize: '0.85rem', fontWeight: '600',
                     display: 'flex', alignItems: 'center', gap: '5px',
                   }}>
@@ -483,7 +483,7 @@ function TripInfo() {
                     {link.titel}
                   </a>
                   <button onClick={() => linkLoeschen(link.id)} className="btn-press" style={{
-                    background: 'none', border: 'none', color: '#8892a4',
+                    background: 'none', border: 'none', color: 'var(--text-sub)',
                     cursor: 'pointer', lineHeight: 1, margin: '-9px -6px -9px 0',
                     width: '34px', height: '34px',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px',
@@ -500,7 +500,7 @@ function TripInfo() {
         <div className="fade-in-4" style={sectionStyle}>
           <div style={sectionHeaderStyle}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={sectionIconStyle}><NotebookPen size={16} color="#c9a84c" /></div>
+              <div style={sectionIconStyle}><NotebookPen size={16} color="var(--gold)" /></div>
               <h3 style={sectionTitelStyle}>{t('notizenTitel')}</h3>
             </div>
             <button onClick={() => setNotizenBearbeiten(!notizenBearbeiten)} className="btn-press" style={addButtonStyle}>
@@ -520,7 +520,7 @@ function TripInfo() {
             </div>
           ) : (
             <p style={{
-              color: notizen ? '#ffffff' : '#8892a4',
+              color: notizen ? '#ffffff' : 'var(--text-sub)',
               fontSize: '0.9rem', margin: 0,
               whiteSpace: 'pre-wrap', lineHeight: '1.7',
             }}>
@@ -537,7 +537,7 @@ function TripInfo() {
 // ── Style Objekte ──
 
 const sectionStyle = {
-  backgroundColor: '#111827',
+  backgroundColor: 'var(--card)',
   borderRadius: '22px',
   padding: 'clamp(18px, 4vw, 24px)',
   marginBottom: '16px',
@@ -567,14 +567,14 @@ const sectionTitelStyle = {
 }
 
 const ticketCardStyle = {
-  backgroundColor: '#1a2235',
+  backgroundColor: 'var(--sub)',
   borderRadius: '16px',
   padding: '16px',
   boxSizing: 'border-box',
 }
 
 const unterkunftCardStyle = {
-  backgroundColor: '#1a2235',
+  backgroundColor: 'var(--sub)',
   borderRadius: '16px',
   padding: '16px',
   boxSizing: 'border-box',
@@ -590,18 +590,18 @@ const formularStyle = {
 
 const inputStyle = {
   width: '100%', padding: '13px 14px',
-  backgroundColor: '#1a2235',
+  backgroundColor: 'var(--sub)',
   border: '1px solid rgba(255,255,255,0.08)',
   borderRadius: '12px',
   // min. 16px verhindert Auto-Zoom bei Fokus auf iOS Safari
-  color: '#ffffff', fontSize: '16px',
+  color: 'var(--text)', fontSize: '16px',
   marginBottom: '10px', boxSizing: 'border-box',
 }
 
 const addButtonStyle = {
   backgroundColor: 'transparent',
   border: '1px solid rgba(201,168,76,0.3)',
-  color: '#c9a84c', padding: '8px 14px',
+  color: 'var(--gold)', padding: '8px 14px',
   minHeight: '44px', borderRadius: '50px', boxSizing: 'border-box',
   cursor: 'pointer', fontSize: '0.8rem', fontWeight: '600',
   display: 'flex', alignItems: 'center',
@@ -609,7 +609,7 @@ const addButtonStyle = {
 }
 
 const speichernButtonStyle = {
-  backgroundColor: '#c9a84c', color: '#0a0f1e', border: 'none',
+  backgroundColor: 'var(--gold)', color: '#0a0f1e', border: 'none',
   padding: '14px', minHeight: '48px', borderRadius: '14px',
   cursor: 'pointer', width: '100%', fontWeight: '700',
   fontSize: '0.95rem', boxSizing: 'border-box',
@@ -617,7 +617,7 @@ const speichernButtonStyle = {
 }
 
 const abbrechenButtonStyle = {
-  backgroundColor: 'transparent', color: '#fff',
+  backgroundColor: 'transparent', color: 'var(--text)',
   border: '1px solid rgba(255,255,255,0.15)',
   padding: '14px', minHeight: '48px', borderRadius: '14px',
   cursor: 'pointer', boxSizing: 'border-box', fontWeight: '500',
@@ -640,7 +640,7 @@ const ikonButtonStyleRot = {
 }
 
 const leerTextStyle = {
-  color: '#8892a4', fontSize: '0.88rem', margin: 0,
+  color: 'var(--text-sub)', fontSize: '0.88rem', margin: 0,
   fontStyle: 'italic',
 }
 

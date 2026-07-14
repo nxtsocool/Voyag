@@ -91,7 +91,7 @@ export default function TripPackliste() {
         {/* Großer Fortschrittsblock oben */}
         {gesamt > 0 && (
           <div className="fade-in" style={{
-            backgroundColor: '#111827',
+            backgroundColor: 'var(--card)',
             borderRadius: '22px',
             padding: 'clamp(20px, 5vw, 28px)',
             marginBottom: '16px',
@@ -101,11 +101,11 @@ export default function TripPackliste() {
             {/* Prozent + Label */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '16px' }}>
               <div>
-                <p style={{ color: '#8892a4', fontSize: '0.7rem', fontWeight: '600', letterSpacing: '0.15em', textTransform: 'uppercase', margin: '0 0 4px' }}>
+                <p style={{ color: 'var(--text-sub)', fontSize: '0.7rem', fontWeight: '600', letterSpacing: '0.15em', textTransform: 'uppercase', margin: '0 0 4px' }}>
                   {t('fortschritt')}
                 </p>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-                  <span style={{ fontSize: 'clamp(2.2rem, 9vw, 3rem)', fontWeight: '800', color: '#c9a84c', lineHeight: 1 }}>
+                  <span style={{ fontSize: 'clamp(2.2rem, 9vw, 3rem)', fontWeight: '800', color: 'var(--gold)', lineHeight: 1 }}>
                     {prozent}%
                   </span>
                   {prozent === 100 && (
@@ -113,7 +113,7 @@ export default function TripPackliste() {
                   )}
                 </div>
               </div>
-              <p style={{ color: '#8892a4', fontSize: '0.88rem', margin: 0, fontWeight: '500' }}>
+              <p style={{ color: 'var(--text-sub)', fontSize: '0.88rem', margin: 0, fontWeight: '500' }}>
                 {t('erledigtVonGesamt')(erledigt, gesamt)}
               </p>
             </div>
@@ -129,7 +129,7 @@ export default function TripPackliste() {
                 width: `${prozent}%`,
                 background: prozent === 100
                   ? 'linear-gradient(90deg, #4caf50, #66bb6a)'
-                  : 'linear-gradient(90deg, #c9a84c, #e8c97a)',
+                  : 'linear-gradient(90deg, var(--gold), #e8c97a)',
                 transition: 'width 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
                 boxShadow: prozent === 100
                   ? '0 0 12px rgba(76,175,80,0.5)'
@@ -141,7 +141,7 @@ export default function TripPackliste() {
 
         {/* Packliste Items */}
         <div className="fade-in" style={{
-          backgroundColor: '#111827',
+          backgroundColor: 'var(--card)',
           borderRadius: '22px',
           padding: 'clamp(18px, 4vw, 24px)',
           boxSizing: 'border-box',
@@ -149,7 +149,7 @@ export default function TripPackliste() {
         }}>
 
           {packliste.length === 0 ? (
-            <p style={{ color: '#8892a4', fontSize: '0.9rem', margin: '0 0 20px', textAlign: 'center', padding: '20px 0', fontStyle: 'italic' }}>
+            <p style={{ color: 'var(--text-sub)', fontSize: '0.9rem', margin: '0 0 20px', textAlign: 'center', padding: '20px 0', fontStyle: 'italic' }}>
               {t('nochNichtsAufListe')}
             </p>
           ) : (
@@ -170,13 +170,13 @@ export default function TripPackliste() {
                     />
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <button onClick={itemSpeichern} className="btn-press" style={{
-                        backgroundColor: '#c9a84c', color: '#0a0f1e', border: 'none',
+                        backgroundColor: 'var(--gold)', color: '#0a0f1e', border: 'none',
                         padding: '12px', minHeight: '44px', borderRadius: '12px',
                         cursor: 'pointer', flex: 1, fontWeight: '700', boxSizing: 'border-box',
                         boxShadow: '0 4px 12px rgba(201,168,76,0.3)',
                       }}>{t('speichern')}</button>
                       <button onClick={() => setBearbeiteItem(null)} className="btn-press" style={{
-                        backgroundColor: 'transparent', color: '#8892a4',
+                        backgroundColor: 'transparent', color: 'var(--text-sub)',
                         border: '1px solid rgba(255,255,255,0.12)',
                         padding: '12px', minHeight: '44px', borderRadius: '12px',
                         cursor: 'pointer', flex: 1, boxSizing: 'border-box',
@@ -199,9 +199,9 @@ export default function TripPackliste() {
                     >
                       <div style={{
                         width: '26px', height: '26px', borderRadius: '50%',
-                        backgroundColor: item.erledigt ? '#c9a84c' : 'transparent',
+                        backgroundColor: item.erledigt ? 'var(--gold)' : 'transparent',
                         border: item.erledigt
-                          ? '2px solid #c9a84c'
+                          ? '2px solid var(--gold)'
                           : '2px solid rgba(255,255,255,0.2)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         transition: 'all 0.25s ease',
@@ -219,7 +219,7 @@ export default function TripPackliste() {
                       cursor: 'pointer',
                       overflowWrap: 'break-word', wordBreak: 'break-word',
                       textDecoration: item.erledigt ? 'line-through' : 'none',
-                      color: item.erledigt ? '#4d5a6e' : '#ffffff',
+                      color: item.erledigt ? 'var(--text-sub)' : 'var(--text)',
                       fontSize: '0.95rem',
                       transition: 'color 0.25s ease',
                     }}>
@@ -229,7 +229,7 @@ export default function TripPackliste() {
                     {/* Action Buttons */}
                     <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
                       <button onClick={() => setBearbeiteItem(item)} className="btn-press" style={ikonButtonStyle}>
-                        <SquarePen size={13} color="#c9a84c" />
+                        <SquarePen size={13} color="var(--gold)" />
                       </button>
                       <button onClick={() => itemLoeschen(item.id)} className="btn-press" style={ikonButtonStyleRot}>
                         <Trash2 size={13} color="#e94560" />
@@ -251,7 +251,7 @@ export default function TripPackliste() {
               style={{ ...inputStyle, flex: 1, minWidth: 0, marginBottom: 0 }}
             />
             <button onClick={itemHinzufuegen} className="btn-press" style={{
-              backgroundColor: '#c9a84c', color: '#0a0f1e', border: 'none',
+              backgroundColor: 'var(--gold)', color: '#0a0f1e', border: 'none',
               padding: '0 20px', minHeight: '48px', borderRadius: '14px',
               cursor: 'pointer', fontSize: '1.3rem', fontWeight: '600',
               flexShrink: 0, boxSizing: 'border-box',
@@ -267,11 +267,11 @@ export default function TripPackliste() {
 
 const inputStyle = {
   width: '100%', padding: '13px 14px',
-  backgroundColor: '#1a2235',
+  backgroundColor: 'var(--sub)',
   border: '1px solid rgba(255,255,255,0.08)',
   borderRadius: '12px',
   // min. 16px verhindert Auto-Zoom bei Fokus auf iOS Safari
-  color: '#ffffff', fontSize: '16px',
+  color: 'var(--text)', fontSize: '16px',
   marginBottom: '10px', boxSizing: 'border-box',
 }
 

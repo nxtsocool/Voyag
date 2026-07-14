@@ -283,21 +283,21 @@ function TripsOverview() {
   <div style={{
     minHeight: '100vh', display: 'flex',
     flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-    backgroundColor: '#080d1a',
+    backgroundColor: 'var(--bg)',
     backgroundImage: 'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(201,168,76,0.1) 0%, transparent 70%)',
   }}>
     {/* Logo Animation */}
     <div style={{ display: 'flex', alignItems: 'center', marginBottom: '40px' }}>
-      <span className="logo-slide" style={{ fontSize: '2.8rem', fontWeight: '800', color: '#ffffff', letterSpacing: '-2px', lineHeight: 1 }}>V</span>
+      <span className="logo-slide" style={{ fontSize: '2.8rem', fontWeight: '800', color: 'var(--text)', letterSpacing: '-2px', lineHeight: 1 }}>V</span>
       <svg className="kompass-spin" width="32" height="32" viewBox="-1 0 60 60" style={{ marginTop: '8px' }}>
-        <circle cx="30" cy="30" r="27" fill="none" stroke="#c9a84c" strokeWidth="4"/>
-        <polygon points="30,5 34,30 30,26 26,30" fill="#c9a84c"/>
+        <circle cx="30" cy="30" r="27" fill="none" stroke="var(--gold)" strokeWidth="4"/>
+        <polygon points="30,5 34,30 30,26 26,30" fill="var(--gold)"/>
         <polygon points="30,55 34,30 30,34 26,30" fill="#ffffff" opacity="0.15"/>
-        <circle cx="30" cy="30" r="4" fill="#c9a84c"/>
-        <circle cx="30" cy="30" r="2" fill="#080d1a"/>
+        <circle cx="30" cy="30" r="4" fill="var(--gold)"/>
+        <circle cx="30" cy="30" r="2" fill="var(--bg)"/>
       </svg>
-      <span className="logo-slide" style={{ fontSize: '2.8rem', fontWeight: '800', color: '#ffffff', letterSpacing: '-2px', lineHeight: 1 }}>y</span>
-      <span className="logo-gold" style={{ fontSize: '2.8rem', fontWeight: '800', color: '#c9a84c', letterSpacing: '-2px', lineHeight: 1 }}>ag</span>
+      <span className="logo-slide" style={{ fontSize: '2.8rem', fontWeight: '800', color: 'var(--text)', letterSpacing: '-2px', lineHeight: 1 }}>y</span>
+      <span className="logo-gold" style={{ fontSize: '2.8rem', fontWeight: '800', color: 'var(--gold)', letterSpacing: '-2px', lineHeight: 1 }}>ag</span>
     </div>
 
     {/* Pulsierender Punkt */}
@@ -305,7 +305,7 @@ function TripsOverview() {
       {[0, 1, 2].map(i => (
         <div key={i} style={{
           width: '6px', height: '6px', borderRadius: '50%',
-          backgroundColor: '#c9a84c',
+          backgroundColor: 'var(--gold)',
           animation: `nadelPuls 1.2s ease-in-out ${i * 0.2}s infinite`,
         }} />
       ))}
@@ -324,31 +324,31 @@ function TripsOverview() {
         <div style={{ minWidth: 0 }}>
           {/* Logo mit Kompass als O */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0px',  }}>
-            <span className="logo-slide" style={{ fontSize: '2.2rem', fontWeight: '800', color: '#ffffff', letterSpacing: '-2px', lineHeight: 1 }}>V</span>
+            <span className="logo-slide" style={{ fontSize: '2.2rem', fontWeight: '800', color: 'var(--text)', letterSpacing: '-2px', lineHeight: 1 }}>V</span>
             <svg className="kompass-spin" width="26" height="26" viewBox="0 0 60 60" style={{ marginTop: '8px' }}>
-              <circle cx="30" cy="30" r="27" fill="none" stroke="#c9a84c" strokeWidth="4"/>
-              <polygon points="30,5 34,30 30,26 26,30" fill="#c9a84c"/>
+              <circle cx="30" cy="30" r="27" fill="none" stroke="var(--gold)" strokeWidth="4"/>
+              <polygon points="30,5 34,30 30,26 26,30" fill="var(--gold)"/>
               <polygon points="30,55 34,30 30,34 26,30" fill="#ffffff" opacity="0.15"/>
-              <circle cx="30" cy="30" r="4" fill="#c9a84c"/>
-              <circle cx="30" cy="30" r="2" fill="#080d1a"/>
+              <circle cx="30" cy="30" r="4" fill="var(--gold)"/>
+              <circle cx="30" cy="30" r="2" fill="var(--bg)"/>
             </svg>
-            <span className="logo-slide" style={{ fontSize: '2.2rem', fontWeight: '800', color: '#ffffff', letterSpacing: '-2px', lineHeight: 1 }}>y</span>
-            <span className="logo-gold" style={{ fontSize: '2.2rem', fontWeight: '800', color: '#c9a84c', letterSpacing: '-2px', lineHeight: 1 }}>ag</span>
+            <span className="logo-slide" style={{ fontSize: '2.2rem', fontWeight: '800', color: 'var(--text)', letterSpacing: '-2px', lineHeight: 1 }}>y</span>
+            <span className="logo-gold" style={{ fontSize: '2.2rem', fontWeight: '800', color: 'var(--gold)', letterSpacing: '-2px', lineHeight: 1 }}>ag</span>
           </div>
-          <p style={{ color: '#8892a4', fontSize: '0.8rem', marginTop: '4px' }}>
+          <p style={{ color: 'var(--text-sub)', fontSize: '0.8rem', marginTop: '4px' }}>
             {t('tripsAnzahlText')(trips.length)}
           </p>
         </div>
          {/* Buttons – waren weg! */}
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           <button onClick={() => setBeitretenOffen(!beitretenOffen)} className="btn-press" style={{
-            backgroundColor: 'transparent', color: '#c9a84c',
+            backgroundColor: 'transparent', color: 'var(--gold)',
             border: '1.5px solid rgba(201,168,76,0.4)', padding: '10px 16px',
             minHeight: '44px', boxSizing: 'border-box',
             borderRadius: '14px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600',
           }}>{t('beitreten')}</button>
           <button onClick={() => setFormularOffen(!formularOffen)} className="btn-press" style={{
-            backgroundColor: '#c9a84c', color: '#0a0f1e', border: 'none',
+            backgroundColor: 'var(--gold)', color: '#0a0f1e', border: 'none',
             padding: '10px 16px', minHeight: '44px', boxSizing: 'border-box',
             borderRadius: '14px', cursor: 'pointer',
             fontSize: '0.85rem', fontWeight: '700',
@@ -411,7 +411,7 @@ function TripsOverview() {
               <option value="">{t('landAuswaehlen')}</option>
               {laender.map(land => <option key={land.code} value={land.code}>{land.name}</option>)}
             </select>
-            <p style={{ color: '#8892a4', fontSize: '0.82rem', marginBottom: '10px' }}>
+            <p style={{ color: 'var(--text-sub)', fontSize: '0.82rem', marginBottom: '10px' }}>
               {t('datumLeerLassen')}
             </p>
             <DatePicker selected={bearbeiteDaten.startDatum}
@@ -444,7 +444,7 @@ function TripsOverview() {
                 className="karte-hover"
                 style={{
                   borderRadius: '20px',
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+                  boxShadow: 'var(--shadow)',
                   cursor: 'pointer',
                 }}
               >
@@ -476,7 +476,7 @@ function TripsOverview() {
                     <h2 style={{
                       margin: '0 0 3px', fontSize: 'clamp(0.95rem, 4.5vw, 1.15rem)',
                       fontWeight: '800', letterSpacing: '-0.5px',
-                      color: '#ffffff',
+                      color: '#ede8de',
                       overflowWrap: 'break-word', wordBreak: 'break-word',
                     }}>
                       {trip.name}
@@ -529,14 +529,14 @@ function TripsOverview() {
 
                 {/* Footer unten */}
                 <div onClick={() => navigate(`/trip/${trip.id}`)} style={{
-                  backgroundColor: '#111827', padding: '12px 20px',
+                  backgroundColor: 'var(--card)', padding: '12px 20px',
                   borderRadius: '0 0 20px 20px',
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                 }}>
                   {/* Einladungscode oder Badge */}
                   {eigenTrip && trip.invite_code ? (
                     <span style={{
-                      backgroundColor: 'rgba(201,168,76,0.1)', color: '#c9a84c',
+                      backgroundColor: 'rgba(201,168,76,0.1)', color: 'var(--gold)',
                       padding: '4px 10px', borderRadius: '8px',
                       fontSize: '0.75rem', fontWeight: '700', letterSpacing: '0.08em',
                     }}>
@@ -544,7 +544,7 @@ function TripsOverview() {
                     </span>
                   ) : (
                     <span style={{
-                      backgroundColor: 'rgba(136,146,164,0.1)', color: '#8892a4',
+                      backgroundColor: 'rgba(136,146,164,0.1)', color: 'var(--text-sub)',
                       padding: '4px 10px', borderRadius: '8px',
                       fontSize: '0.75rem', fontWeight: '600',
                     }}>
@@ -555,8 +555,8 @@ function TripsOverview() {
                   {/* Countdown */}
                   {countdown && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <div style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: '#c9a84c' }} />
-                      <span style={{ color: '#8892a4', fontSize: '0.78rem' }}>{countdown}</span>
+                      <div style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: 'var(--gold)' }} />
+                      <span style={{ color: 'var(--text-sub)', fontSize: '0.78rem' }}>{countdown}</span>
                     </div>
                   )}
                 </div>
@@ -570,17 +570,17 @@ function TripsOverview() {
           <div className="fade-in" style={{ textAlign: 'center', padding: '80px 20px' }}>
             <div style={{
               width: '72px', height: '72px', borderRadius: '20px',
-              backgroundColor: '#111827', display: 'flex',
+              backgroundColor: 'var(--card)', display: 'flex',
               alignItems: 'center', justifyContent: 'center',
               margin: '0 auto 20px',
-              boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+              boxShadow: 'var(--shadow)',
             }}>
-              <Globe size={32} color="#c9a84c" />
+              <Globe size={32} color="var(--gold)" />
             </div>
-            <p style={{ fontWeight: '700', color: '#fff', marginBottom: '8px', fontSize: '1.1rem' }}>
+            <p style={{ fontWeight: '700', color: 'var(--text)', marginBottom: '8px', fontSize: '1.1rem' }}>
               {t('nochKeineReisen')}
             </p>
-            <p style={{ fontSize: '0.9rem', color: '#8892a4', lineHeight: 1.5 }}>
+            <p style={{ fontSize: '0.9rem', color: 'var(--text-sub)', lineHeight: 1.5 }}>
               {t('tippeNeuReiseZeile1')}<br />{t('tippeNeuReiseZeile2')}
             </p>
           </div>
@@ -596,20 +596,20 @@ function TripsOverview() {
           zIndex: 1000,
         }}>
           <div className="fade-in" style={{
-            backgroundColor: '#111827', borderRadius: '24px 24px 0 0',
+            backgroundColor: 'var(--card)', borderRadius: '24px 24px 0 0',
             padding: '32px 24px calc(48px + env(safe-area-inset-bottom))',
             width: '100%', maxWidth: '600px', boxSizing: 'border-box',
             maxHeight: '85vh', overflowY: 'auto',
           }}>
             <div style={{
-              width: '40px', height: '4px', backgroundColor: '#1a2235',
+              width: '40px', height: '4px', backgroundColor: 'var(--sub)',
               borderRadius: '2px', margin: '0 auto 24px',
             }} />
             <h3 style={{ margin: '0 0 8px', fontWeight: '700', fontSize: '1.2rem' }}>
               {t('reiseLoeschenTitel')}
             </h3>
-            <p style={{ color: '#8892a4', margin: '0 0 28px', fontSize: '0.95rem', lineHeight: 1.5 }}>
-              <span style={{ color: '#fff', fontWeight: '600' }}>{loescheTrip.name}</span> {t('wirdUnwiderruflichGeloescht')}
+            <p style={{ color: 'var(--text-sub)', margin: '0 0 28px', fontSize: '0.95rem', lineHeight: 1.5 }}>
+              <span style={{ color: 'var(--text)', fontWeight: '600' }}>{loescheTrip.name}</span> {t('wirdUnwiderruflichGeloescht')}
             </p>
             <div style={{ display: 'flex', gap: '10px' }}>
               <button onClick={() => reiseEntfernen(loescheTrip.id)} className="btn-press" style={{
@@ -635,14 +635,14 @@ function TripsOverview() {
           zIndex: 1000,
         }}>
           <div className="fade-in" style={{
-            backgroundColor: '#111827', borderRadius: '24px 24px 0 0',
+            backgroundColor: 'var(--card)', borderRadius: '24px 24px 0 0',
             padding: '32px 24px calc(48px + env(safe-area-inset-bottom))',
             width: '100%', maxWidth: '600px', boxSizing: 'border-box',
             maxHeight: '85vh', overflowY: 'auto',
           }}>
             {/* Drag Handle */}
             <div style={{
-              width: '40px', height: '4px', backgroundColor: '#1a2235',
+              width: '40px', height: '4px', backgroundColor: 'var(--sub)',
               borderRadius: '2px', margin: '0 auto 24px',
             }} />
 
@@ -650,7 +650,7 @@ function TripsOverview() {
             <h3 style={{ margin: '0 0 6px', fontWeight: '700', fontSize: '1.2rem' }}>
               {t('bistDuDabeiTitel')}
             </h3>
-            <p style={{ color: '#8892a4', margin: '0 0 24px', fontSize: '0.88rem', lineHeight: 1.5 }}>
+            <p style={{ color: 'var(--text-sub)', margin: '0 0 24px', fontSize: '0.88rem', lineHeight: 1.5 }}>
               {t('namenAuswaehlenUntertitel')}
             </p>
 
@@ -666,7 +666,7 @@ function TripsOverview() {
                     className="btn-press"
                     style={{
                       display: 'flex', alignItems: 'center', gap: '14px',
-                      backgroundColor: ausgewaehlt ? 'rgba(201,168,76,0.08)' : '#1a2235',
+                      backgroundColor: ausgewaehlt ? 'rgba(201,168,76,0.08)' : 'var(--sub)',
                       border: ausgewaehlt
                         ? '1.5px solid rgba(201,168,76,0.5)'
                         : '1.5px solid rgba(255,255,255,0.06)',
@@ -678,18 +678,18 @@ function TripsOverview() {
                     {/* Avatar mit Initiale */}
                     <div style={{
                       width: '42px', height: '42px', borderRadius: '50%',
-                      backgroundColor: '#c9a84c', flexShrink: 0,
+                      backgroundColor: 'var(--gold)', flexShrink: 0,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontSize: '1.1rem', fontWeight: '700', color: '#0a0f1e',
                     }}>
                       {initiale}
                     </div>
-                    <span style={{ color: '#fff', fontWeight: '600', fontSize: '0.95rem', flex: 1 }}>
+                    <span style={{ color: 'var(--text)', fontWeight: '600', fontSize: '0.95rem', flex: 1 }}>
                       {person.name}
                     </span>
                     {/* Häkchen wenn ausgewählt */}
                     {ausgewaehlt && (
-                      <span style={{ color: '#c9a84c', fontSize: '1.1rem', fontWeight: '700', flexShrink: 0 }}>✓</span>
+                      <span style={{ color: 'var(--gold)', fontSize: '1.1rem', fontWeight: '700', flexShrink: 0 }}>✓</span>
                     )}
                   </button>
                 )
@@ -713,7 +713,7 @@ function TripsOverview() {
               className="btn-press"
               style={{
                 ...abbrechenButtonStyle, flex: 'none', width: '100%', padding: '14px',
-                color: '#8892a4', boxSizing: 'border-box',
+                color: 'var(--text-sub)', boxSizing: 'border-box',
               }}
             >
               {t('ichBinKeinervonDenen')}
@@ -728,25 +728,25 @@ function TripsOverview() {
 }
 
 const karteStyle = {
-  backgroundColor: '#111827', borderRadius: '20px',
+  backgroundColor: 'var(--card)', borderRadius: '20px',
   boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
   padding: '20px', marginBottom: '12px',
 }
 
 const inputStyle = {
-  width: '100%', padding: '13px 14px', backgroundColor: '#1a2235',
+  width: '100%', padding: '13px 14px', backgroundColor: 'var(--sub)',
   border: '1.5px solid rgba(255,255,255,0.06)', borderRadius: '12px',
-  color: '#ffffff', fontSize: '1rem', marginBottom: '10px', boxSizing: 'border-box',
+  color: 'var(--text)', fontSize: '1rem', marginBottom: '10px', boxSizing: 'border-box',
 }
 
 const speichernButtonStyle = {
-  backgroundColor: '#c9a84c', color: '#0a0f1e', border: 'none',
+  backgroundColor: 'var(--gold)', color: '#0a0f1e', border: 'none',
   padding: '13px', borderRadius: '14px', cursor: 'pointer',
   flex: 1, fontWeight: '700', fontSize: '1rem',
 }
 
 const abbrechenButtonStyle = {
-  backgroundColor: '#1a2235', color: '#fff', border: 'none',
+  backgroundColor: 'var(--sub)', color: 'var(--text)', border: 'none',
   padding: '13px', borderRadius: '14px', cursor: 'pointer', flex: 1, fontWeight: '600',
 }
 

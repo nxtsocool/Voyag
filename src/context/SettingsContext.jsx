@@ -26,6 +26,11 @@ export function SettingsProvider({ children }) {
     }
   }
 
+  // Theme sofort auf das <html>-Element anwenden – kein Seiten-Reload nötig
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', design)
+  }, [design])
+
   useEffect(() => {
     const init = async () => {
       const { data: { user } } = await supabase.auth.getUser()

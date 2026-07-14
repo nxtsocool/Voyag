@@ -148,7 +148,7 @@ export default function TripPersonen() {
         {/* Teilnehmer Liste */}
         {teilnehmer.length === 0 ? (
           <div className="fade-in" style={{ ...karteStyle, textAlign: 'center', padding: '32px' }}>
-            <p style={{ color: '#8892a4', margin: 0 }}>{t('keineTeilnehmer')}</p>
+            <p style={{ color: 'var(--text-sub)', margin: 0 }}>{t('keineTeilnehmer')}</p>
           </div>
         ) : (
           teilnehmer.map((person, index) => {
@@ -167,7 +167,7 @@ export default function TripPersonen() {
                         width: '56px', height: '56px', borderRadius: '50%',
                         backgroundColor: avatarFarbe,
                         border: verknuepftProfil
-                          ? '2px solid #c9a84c'
+                          ? '2px solid var(--gold)'
                           : '2px solid rgba(255,255,255,0.1)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         boxShadow: verknuepftProfil ? '0 0 16px rgba(201,168,76,0.25)' : 'none',
@@ -175,7 +175,7 @@ export default function TripPersonen() {
                       }}>
                         <span style={{
                           fontSize: initials.length > 1 ? '1.2rem' : '1.4rem',
-                          fontWeight: '800', color: '#ffffff',
+                          fontWeight: '800', color: 'var(--text)',
                           letterSpacing: initials.length > 1 ? '-1px' : '0',
                         }}>
                           {initials}
@@ -186,9 +186,9 @@ export default function TripPersonen() {
                         <div style={{
                           position: 'absolute', bottom: '-2px', right: '-2px',
                           width: '20px', height: '20px', borderRadius: '50%',
-                          backgroundColor: '#c9a84c',
+                          backgroundColor: 'var(--gold)',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          border: '2px solid #111827',
+                          border: '2px solid var(--card)',
                         }}>
                           <CheckCircle size={12} color="#080d1a" />
                         </div>
@@ -201,11 +201,11 @@ export default function TripPersonen() {
                         {person.name}
                       </p>
                       {verknuepftProfil ? (
-                        <p style={{ color: '#c9a84c', fontSize: '0.78rem', margin: 0, fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <p style={{ color: 'var(--gold)', fontSize: '0.78rem', margin: 0, fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}>
                           @{verknuepftProfil.name || t('voyagNutzerFallback')} · {t('verknuepftSuffix')}
                         </p>
                       ) : (
-                        <p style={{ color: '#8892a4', fontSize: '0.78rem', margin: 0 }}>
+                        <p style={{ color: 'var(--text-sub)', fontSize: '0.78rem', margin: 0 }}>
                           {t('keinVoyagKonto')}
                         </p>
                       )}
@@ -226,7 +226,7 @@ export default function TripPersonen() {
                         style={{
                           backgroundColor: 'rgba(201,168,76,0.1)',
                           border: '1px solid rgba(201,168,76,0.25)',
-                          color: '#c9a84c', cursor: 'pointer',
+                          color: 'var(--gold)', cursor: 'pointer',
                           padding: '0 14px', minHeight: '44px', boxSizing: 'border-box',
                           borderRadius: '50px', display: 'flex', alignItems: 'center',
                           fontSize: '0.75rem', fontWeight: '600',
@@ -253,7 +253,7 @@ export default function TripPersonen() {
                     marginTop: '14px', paddingTop: '14px',
                     borderTop: '1px solid rgba(255,255,255,0.06)',
                   }}>
-                    <p style={{ color: '#8892a4', fontSize: '0.82rem', marginBottom: '10px' }}>
+                    <p style={{ color: 'var(--text-sub)', fontSize: '0.82rem', marginBottom: '10px' }}>
                       {t('voyagKontoVerknuepfenText')}
                     </p>
                     <input
@@ -271,13 +271,13 @@ export default function TripPersonen() {
                     )}
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <button onClick={() => userVerknuepfen(person.id)} className="btn-press" style={{
-                        backgroundColor: '#c9a84c', color: '#0a0f1e', border: 'none',
+                        backgroundColor: 'var(--gold)', color: '#0a0f1e', border: 'none',
                         padding: '10px 16px', minHeight: '44px', boxSizing: 'border-box', borderRadius: '12px', cursor: 'pointer',
                         fontWeight: '700', fontSize: '0.88rem', flex: 1,
                         boxShadow: '0 4px 12px rgba(201,168,76,0.3)',
                       }}>{t('verknuepfen')}</button>
                       <button onClick={() => setVerknuepfenId(null)} className="btn-press" style={{
-                        backgroundColor: 'transparent', color: '#8892a4',
+                        backgroundColor: 'transparent', color: 'var(--text-sub)',
                         border: '1px solid rgba(255,255,255,0.12)',
                         padding: '10px 16px', minHeight: '44px', boxSizing: 'border-box', borderRadius: '12px', cursor: 'pointer',
                         fontSize: '0.88rem', flex: 1,
@@ -299,7 +299,7 @@ export default function TripPersonen() {
               border: '1px solid rgba(201,168,76,0.18)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
-              <UserPlus size={16} color="#c9a84c" />
+              <UserPlus size={16} color="var(--gold)" />
             </div>
             <h3 style={{ margin: 0, fontWeight: '700', fontSize: '1rem' }}>{t('teilnehmerHinzufuegenTitel')}</h3>
           </div>
@@ -312,7 +312,7 @@ export default function TripPersonen() {
               style={{ ...inputStyle, flex: 1, marginBottom: 0 }}
             />
             <button onClick={teilnehmerHinzufuegen} className="btn-press" style={{
-              backgroundColor: '#c9a84c', color: '#0a0f1e', border: 'none',
+              backgroundColor: 'var(--gold)', color: '#0a0f1e', border: 'none',
               padding: '0 20px', minHeight: '48px', borderRadius: '14px',
               cursor: 'pointer', fontSize: '1.3rem', fontWeight: '600', flexShrink: 0,
               boxShadow: '0 4px 14px rgba(201,168,76,0.3)',
@@ -324,7 +324,7 @@ export default function TripPersonen() {
         {trip.invite_code && (
           <div className="fade-in" style={karteStyle}>
             <h3 style={{ margin: '0 0 6px', fontWeight: '700' }}>{t('einladungscodeTitel')}</h3>
-            <p style={{ color: '#8892a4', fontSize: '0.82rem', marginBottom: '14px' }}>
+            <p style={{ color: 'var(--text-sub)', fontSize: '0.82rem', marginBottom: '14px' }}>
               {t('einladungscodeText')}
             </p>
             <div style={{
@@ -336,7 +336,7 @@ export default function TripPersonen() {
             }}>
               <p style={{
                 fontSize: 'clamp(1.8rem, 8vw, 2.4rem)', fontWeight: '800',
-                letterSpacing: '0.35em', color: '#c9a84c', margin: 0,
+                letterSpacing: '0.35em', color: 'var(--gold)', margin: 0,
               }}>
                 {trip.invite_code}
               </p>
@@ -350,7 +350,7 @@ export default function TripPersonen() {
 }
 
 const karteStyle = {
-  backgroundColor: '#111827',
+  backgroundColor: 'var(--card)',
   borderRadius: '22px',
   padding: 'clamp(16px, 4vw, 22px)',
   marginBottom: '12px',
@@ -360,10 +360,10 @@ const karteStyle = {
 
 const inputStyle = {
   width: '100%', padding: '13px 14px',
-  backgroundColor: '#1a2235',
+  backgroundColor: 'var(--sub)',
   border: '1px solid rgba(255,255,255,0.08)',
   borderRadius: '12px',
   // min. 16px verhindert Auto-Zoom bei Fokus auf iOS Safari
-  color: '#ffffff', fontSize: '16px',
+  color: 'var(--text)', fontSize: '16px',
   boxSizing: 'border-box', marginBottom: '10px',
 }

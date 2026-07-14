@@ -108,7 +108,7 @@ export default function TripFotos() {
             <h2 style={{ margin: 0, fontWeight: '800', fontSize: '1.3rem', letterSpacing: '-0.5px' }}>
               {t('navFotos')}
             </h2>
-            <p style={{ color: '#8892a4', fontSize: '0.82rem', margin: '2px 0 0' }}>
+            <p style={{ color: 'var(--text-sub)', fontSize: '0.82rem', margin: '2px 0 0' }}>
               {t('fotosAnzahlAlbum')(fotos.length)}
             </p>
           </div>
@@ -123,8 +123,8 @@ export default function TripFotos() {
               disabled={hochladen}
               className="btn-press"
               style={{
-                backgroundColor: hochladen ? '#1a2235' : '#c9a84c',
-                color: hochladen ? '#8892a4' : '#0a0f1e',
+                backgroundColor: hochladen ? 'var(--sub)' : 'var(--gold)',
+                color: hochladen ? 'var(--text-sub)' : '#0a0f1e',
                 border: 'none', padding: '0 16px', minHeight: '44px', boxSizing: 'border-box',
                 borderRadius: '14px', cursor: 'pointer',
                 fontWeight: '700', fontSize: '0.85rem',
@@ -144,8 +144,8 @@ export default function TripFotos() {
         {/* Leerer Zustand */}
         {fotos.length === 0 ? (
           <div className="fade-in-2" style={{
-            backgroundColor: '#111827', borderRadius: '24px',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+            backgroundColor: 'var(--card)', borderRadius: '24px',
+            boxShadow: 'var(--shadow)',
             padding: '60px 20px', textAlign: 'center',
           }}>
             <div style={{
@@ -154,19 +154,19 @@ export default function TripFotos() {
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               margin: '0 auto 20px',
             }}>
-              <Camera size={32} color="#c9a84c" />
+              <Camera size={32} color="var(--gold)" />
             </div>
             <h3 style={{ margin: '0 0 8px', fontWeight: '700', fontSize: '1.1rem' }}>
               {t('keineFotos')}
             </h3>
-            <p style={{ color: '#8892a4', margin: '0 0 24px', fontSize: '0.9rem' }}>
+            <p style={{ color: 'var(--text-sub)', margin: '0 0 24px', fontSize: '0.9rem' }}>
               {t('haltetMomenteFest')}
             </p>
             <button
               onClick={() => fileInputRef.current.click()}
               className="btn-press"
               style={{
-                backgroundColor: '#c9a84c', color: '#0a0f1e', border: 'none',
+                backgroundColor: 'var(--gold)', color: '#0a0f1e', border: 'none',
                 padding: '0 24px', minHeight: '44px', boxSizing: 'border-box', borderRadius: '14px', cursor: 'pointer',
                 fontWeight: '700', fontSize: '0.95rem',
                 display: 'inline-flex', alignItems: 'center', gap: '8px',
@@ -244,7 +244,7 @@ export default function TripFotos() {
 
             {/* Zähler */}
             <span style={{
-              color: '#8892a4', fontSize: '0.85rem', fontWeight: '600',
+              color: 'var(--text-sub)', fontSize: '0.85rem', fontWeight: '600',
               backgroundColor: 'rgba(255,255,255,0.05)',
               padding: '6px 14px', borderRadius: '20px',
             }}>
@@ -254,7 +254,7 @@ export default function TripFotos() {
             {/* Schließen */}
             <button onClick={() => setLightboxIndex(null)} style={{
               backgroundColor: 'rgba(255,255,255,0.08)', border: 'none',
-              color: '#fff', borderRadius: '12px', width: '44px', height: '44px',
+              color: 'var(--text)', borderRadius: '12px', width: '44px', height: '44px',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               cursor: 'pointer', flexShrink: 0,
             }}>
@@ -267,7 +267,7 @@ export default function TripFotos() {
             <button onClick={vorherigesFoto} style={{
               position: 'absolute', left: '16px',
               backgroundColor: 'rgba(255,255,255,0.08)', border: 'none',
-              color: '#fff', borderRadius: '50%', width: '48px', height: '48px',
+              color: 'var(--text)', borderRadius: '50%', width: '48px', height: '48px',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               cursor: 'pointer', zIndex: 1001,
             }}>
@@ -290,7 +290,7 @@ export default function TripFotos() {
             <button onClick={naechstesFoto} style={{
               position: 'absolute', right: '16px',
               backgroundColor: 'rgba(255,255,255,0.08)', border: 'none',
-              color: '#fff', borderRadius: '50%', width: '48px', height: '48px',
+              color: 'var(--text)', borderRadius: '50%', width: '48px', height: '48px',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               cursor: 'pointer', zIndex: 1001,
             }}>

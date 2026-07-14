@@ -227,9 +227,9 @@ function MapScreen() {
           margin: '0 0 4px',
           lineHeight: 1.1,
         }}>
-          {t('meinePrefix')} <span style={{ color: '#c9a84c' }}>{t('karte')}</span>
+          {t('meinePrefix')} <span style={{ color: 'var(--gold)' }}>{t('karte')}</span>
         </h1>
-        <p style={{ color: '#8892a4', fontSize: '0.85rem', margin: 0 }}>
+        <p style={{ color: 'var(--text-sub)', fontSize: '0.85rem', margin: 0 }}>
           {t('deinePersoenlicheReisegeschichte')}
         </p>
       </div>
@@ -238,21 +238,21 @@ function MapScreen() {
       <div className="fade-in" style={karteStyle}>
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: '16px' }}>
           <div>
-            <p style={{ color: '#8892a4', fontSize: '0.7rem', fontWeight: '600', letterSpacing: '0.15em', textTransform: 'uppercase', margin: '0 0 4px' }}>
+            <p style={{ color: 'var(--text-sub)', fontSize: '0.7rem', fontWeight: '600', letterSpacing: '0.15em', textTransform: 'uppercase', margin: '0 0 4px' }}>
               {t('bereisteLaender')}
             </p>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-              <span style={{ fontSize: 'clamp(2.4rem, 10vw, 3.2rem)', fontWeight: '800', color: '#c9a84c', lineHeight: 1 }}>
+              <span style={{ fontSize: 'clamp(2.4rem, 10vw, 3.2rem)', fontWeight: '800', color: 'var(--gold)', lineHeight: 1 }}>
                 {besucht.length}
               </span>
-              <span style={{ color: '#8892a4', fontSize: '0.9rem' }}>/ {laender.length}</span>
+              <span style={{ color: 'var(--text-sub)', fontSize: '0.9rem' }}>/ {laender.length}</span>
             </div>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <p style={{ color: '#8892a4', fontSize: '0.7rem', fontWeight: '600', letterSpacing: '0.15em', textTransform: 'uppercase', margin: '0 0 4px' }}>
+            <p style={{ color: 'var(--text-sub)', fontSize: '0.7rem', fontWeight: '600', letterSpacing: '0.15em', textTransform: 'uppercase', margin: '0 0 4px' }}>
               {t('derWelt')}
             </p>
-            <span style={{ fontSize: 'clamp(1.8rem, 8vw, 2.6rem)', fontWeight: '800', color: '#ffffff', lineHeight: 1 }}>
+            <span style={{ fontSize: 'clamp(1.8rem, 8vw, 2.6rem)', fontWeight: '800', color: 'var(--text)', lineHeight: 1 }}>
               {prozent}%
             </span>
           </div>
@@ -263,7 +263,7 @@ function MapScreen() {
             height: '8px',
             borderRadius: '100px',
             width: `${balkenBreite}%`,
-            background: 'linear-gradient(90deg, #c9a84c, #e8c97a)',
+            background: 'linear-gradient(90deg, var(--gold), #e8c97a)',
             transition: 'width 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
             boxShadow: '0 0 12px rgba(201,168,76,0.4)',
           }} />
@@ -274,10 +274,10 @@ function MapScreen() {
       <div ref={mapContainerRef} className="fade-in" style={{ position: 'relative', marginBottom: '14px' }}>
         {/* Innere Karte mit overflow:hidden für abgerundete Ecken */}
         <div style={{
-          backgroundColor: '#111827',
+          backgroundColor: 'var(--card)',
           borderRadius: '20px',
           overflow: 'hidden',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+          boxShadow: 'var(--shadow)',
         }}>
           <svg ref={svgRef} style={{ width: '100%', display: 'block' }} />
         </div>
@@ -302,7 +302,7 @@ function MapScreen() {
             position: 'absolute',
             left: `${popup.x}px`,
             top: `${popup.y}px`,
-            backgroundColor: '#111827',
+            backgroundColor: 'var(--card)',
             borderRadius: '16px',
             padding: '12px 14px',
             boxShadow: '0 8px 32px rgba(0,0,0,0.7), 0 0 0 1px rgba(201,168,76,0.2)',
@@ -321,7 +321,7 @@ function MapScreen() {
                 {popup.name}
               </span>
               <button onClick={() => setPopup(null)} style={{
-                background: 'none', border: 'none', color: '#8892a4',
+                background: 'none', border: 'none', color: 'var(--text-sub)',
                 cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 flexShrink: 0, width: '28px', height: '28px', margin: '-7px',
               }}>
@@ -354,8 +354,8 @@ function MapScreen() {
             ) : (
               <button onClick={() => landHinzufuegen(popup.code)} className="btn-press" style={{
                 width: '100%', padding: '8px 10px', minHeight: '44px', boxSizing: 'border-box', borderRadius: '10px',
-                border: 'none', backgroundColor: 'rgba(201,168,76,0.15)',
-                color: '#c9a84c', cursor: 'pointer',
+                border: 'none', backgroundColor: 'var(--border)',
+                color: 'var(--gold)', cursor: 'pointer',
                 fontSize: '0.82rem', fontWeight: '600',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px',
               }}>
@@ -375,14 +375,14 @@ function MapScreen() {
             border: '1px solid rgba(201,168,76,0.18)',
             display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
           }}>
-            <Search size={16} color="#c9a84c" />
+            <Search size={16} color="var(--gold)" />
           </div>
           <h3 style={{ margin: 0, fontWeight: '700', fontSize: '1rem' }}>{t('landHinzufuegenTitel')}</h3>
         </div>
 
         {/* Suchfeld */}
         <div style={{ position: 'relative' }}>
-          <Search size={15} color="#8892a4" style={{
+          <Search size={15} color="var(--text-sub)" style={{
             position: 'absolute', left: '14px', top: '50%',
             transform: 'translateY(-50%)', pointerEvents: 'none',
           }} />
@@ -407,7 +407,7 @@ function MapScreen() {
                   border: '1px solid rgba(201,168,76,0.2)',
                   borderRadius: '50px',
                   padding: '7px 12px 7px 8px',
-                  color: '#c9a84c',
+                  color: 'var(--gold)',
                   fontSize: '0.82rem',
                   fontWeight: '600',
                   cursor: 'pointer',
@@ -428,7 +428,7 @@ function MapScreen() {
         )}
 
         {suche.trim().length > 0 && gefilterteLaender.length === 0 && (
-          <p style={{ color: '#8892a4', fontSize: '0.85rem', margin: '10px 0 0', textAlign: 'center' }}>
+          <p style={{ color: 'var(--text-sub)', fontSize: '0.85rem', margin: '10px 0 0', textAlign: 'center' }}>
             {t('keinLandGefunden')}
           </p>
         )}
@@ -440,8 +440,8 @@ function MapScreen() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
             <h3 style={{ margin: 0, fontWeight: '700', fontSize: '1rem' }}>{t('besuchteLaender')}</h3>
             <span style={{
-              backgroundColor: 'rgba(201,168,76,0.15)',
-              color: '#c9a84c',
+              backgroundColor: 'var(--border)',
+              color: 'var(--gold)',
               fontSize: '0.75rem',
               fontWeight: '700',
               padding: '3px 9px',
@@ -455,7 +455,7 @@ function MapScreen() {
               const land = laender.find(l => l.code === eintrag.country_code)
               return (
                 <div key={eintrag.country_code} className={`fade-in-${Math.min(index + 1, 5)}`} style={{
-                  backgroundColor: '#1a2235',
+                  backgroundColor: 'var(--sub)',
                   borderRadius: '50px',
                   padding: '7px 10px 7px 8px',
                   display: 'flex',
@@ -497,22 +497,22 @@ function MapScreen() {
 }
 
 const karteStyle = {
-  backgroundColor: '#111827',
+  backgroundColor: 'var(--card)',
   borderRadius: '20px',
   padding: 'clamp(18px, 4vw, 24px)',
   marginBottom: '14px',
   boxSizing: 'border-box',
-  boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+  boxShadow: 'var(--shadow)',
 }
 
 const inputStyle = {
   width: '100%',
   padding: '13px 14px',
-  backgroundColor: '#1a2235',
+  backgroundColor: 'var(--sub)',
   border: '1px solid rgba(255,255,255,0.08)',
   borderRadius: '12px',
   // min. 16px verhindert Auto-Zoom bei Fokus auf iOS Safari
-  color: '#ffffff',
+  color: 'var(--text)',
   fontSize: '16px',
   minHeight: '44px',
   boxSizing: 'border-box',

@@ -159,13 +159,13 @@ export default function TripOrte() {
             backgroundColor: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.18)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            <MapPin size={18} color="#c9a84c" />
+            <MapPin size={18} color="var(--gold)" />
           </div>
           <h2 style={{ margin: 0, fontWeight: '800', fontSize: '1.15rem', flex: 1, letterSpacing: '-0.3px' }}>
             {t('orteUndAktivitaetenTitel')}
           </h2>
           {orte.length > 0 && (
-            <span style={{ color: '#8892a4', fontSize: '0.88rem', fontWeight: '600', flexShrink: 0 }}>
+            <span style={{ color: 'var(--text-sub)', fontSize: '0.88rem', fontWeight: '600', flexShrink: 0 }}>
               ({besuchteAnzahl}/{orte.length})
             </span>
           )}
@@ -175,8 +175,8 @@ export default function TripOrte() {
         {orte.length === 0 ? (
           <div className="fade-in-2" style={{
             textAlign: 'center', padding: '60px 20px',
-            backgroundColor: '#111827', borderRadius: '24px',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+            backgroundColor: 'var(--card)', borderRadius: '24px',
+            boxShadow: 'var(--shadow)',
           }}>
             <div style={{
               width: '80px', height: '80px', borderRadius: '50%',
@@ -185,16 +185,16 @@ export default function TripOrte() {
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               margin: '0 auto 20px',
             }}>
-              <MapPin size={36} color="#c9a84c" />
+              <MapPin size={36} color="var(--gold)" />
             </div>
             <h3 style={{ margin: '0 0 8px', fontWeight: '700', fontSize: '1.15rem' }}>
               {t('keineOrte')}
             </h3>
-            <p style={{ color: '#8892a4', margin: '0 0 28px', fontSize: '0.9rem', lineHeight: 1.5 }}>
+            <p style={{ color: 'var(--text-sub)', margin: '0 0 28px', fontSize: '0.9rem', lineHeight: 1.5 }}>
               {t('keineOrteSubtitel')}
             </p>
             <button onClick={() => modalOeffnen()} className="btn-press" style={{
-              backgroundColor: '#c9a84c', color: '#0a0f1e', border: 'none',
+              backgroundColor: 'var(--gold)', color: '#0a0f1e', border: 'none',
               padding: '0 28px', minHeight: '48px', borderRadius: '14px',
               cursor: 'pointer', fontWeight: '700', fontSize: '0.95rem',
               display: 'inline-flex', alignItems: 'center', gap: '8px',
@@ -216,7 +216,7 @@ export default function TripOrte() {
                     backgroundColor: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.18)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                   }}>
-                    <GruppeIcon size={15} color="#c9a84c" />
+                    <GruppeIcon size={15} color="var(--gold)" />
                   </div>
                   <p style={{ fontWeight: '700', color: '#fff', margin: 0, fontSize: '0.92rem' }}>
                     {t(gruppe.labelKey)}
@@ -236,9 +236,9 @@ export default function TripOrte() {
 
                   return (
                     <div key={ort.id} className="karte-hover" style={{
-                      backgroundColor: ort.besucht ? 'rgba(76,175,80,0.04)' : '#111827',
+                      backgroundColor: ort.besucht ? 'rgba(76,175,80,0.04)' : 'var(--card)',
                       borderRadius: '20px',
-                      boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+                      boxShadow: 'var(--shadow)',
                       borderLeft: ort.besucht ? '3px solid #4caf50' : '3px solid transparent',
                       padding: 'clamp(16px, 4vw, 20px)',
                       marginBottom: '10px', boxSizing: 'border-box',
@@ -251,23 +251,23 @@ export default function TripOrte() {
                           border: ort.besucht ? '2px solid rgba(76,175,80,0.35)' : '2px solid rgba(201,168,76,0.28)',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                         }}>
-                          <KatIcon size={22} color={ort.besucht ? '#4caf50' : '#c9a84c'} />
+                          <KatIcon size={22} color={ort.besucht ? '#4caf50' : 'var(--gold)'} />
                         </div>
 
                         {/* Textinhalt */}
                         <div style={{ flex: 1, minWidth: 0 }}>
                           {/* Name + Buttons */}
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
-                            <p style={{ fontWeight: '800', fontSize: '1.05rem', margin: '0 0 3px', color: ort.besucht ? '#8892a4' : '#fff', overflowWrap: 'break-word', wordBreak: 'break-word', lineHeight: 1.2, textDecoration: ort.besucht ? 'line-through' : 'none', textDecorationColor: '#4d5a6e' }}>
+                            <p style={{ fontWeight: '800', fontSize: '1.05rem', margin: '0 0 3px', color: ort.besucht ? 'var(--text-sub)' : '#fff', overflowWrap: 'break-word', wordBreak: 'break-word', lineHeight: 1.2, textDecoration: ort.besucht ? 'line-through' : 'none', textDecorationColor: '#4d5a6e' }}>
                               {ort.name}
                             </p>
                             <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
                               {/* Besucht-Toggle */}
                               <button onClick={() => besuchToggle(ort)} className="btn-press" style={ort.besucht ? ikonButtonStyleGruen : ikonButtonStyleTransparent}>
-                                <Check size={13} color={ort.besucht ? '#fff' : '#8892a4'} />
+                                <Check size={13} color={ort.besucht ? '#fff' : 'var(--text-sub)'} />
                               </button>
                               <button onClick={() => modalOeffnen(ort)} className="btn-press" style={ikonButtonStyle}>
-                                <SquarePen size={13} color="#c9a84c" />
+                                <SquarePen size={13} color="var(--gold)" />
                               </button>
                               <button onClick={() => ortLoeschen(ort.id)} className="btn-press" style={ikonButtonStyleRot}>
                                 <Trash2 size={13} color="#e94560" />
@@ -277,7 +277,7 @@ export default function TripOrte() {
 
                           {/* Notiz */}
                           {ort.notiz ? (
-                            <p style={{ color: '#8892a4', fontSize: '0.85rem', margin: '6px 0 0', lineHeight: 1.55, overflowWrap: 'break-word', wordBreak: 'break-word' }}>
+                            <p style={{ color: 'var(--text-sub)', fontSize: '0.85rem', margin: '6px 0 0', lineHeight: 1.55, overflowWrap: 'break-word', wordBreak: 'break-word' }}>
                               {ort.notiz}
                             </p>
                           ) : null}
@@ -293,7 +293,7 @@ export default function TripOrte() {
                                 backgroundColor: 'rgba(201,168,76,0.1)',
                                 border: '1px solid rgba(201,168,76,0.25)',
                                 borderRadius: '10px', padding: '7px 13px',
-                                color: '#c9a84c', textDecoration: 'none',
+                                color: 'var(--gold)', textDecoration: 'none',
                                 fontSize: '0.8rem', fontWeight: '700',
                               }}
                             >
@@ -319,7 +319,7 @@ export default function TripOrte() {
         style={{
           position: 'fixed', bottom: 'calc(92px + env(safe-area-inset-bottom))', right: '20px',
           width: '58px', height: '58px', borderRadius: '50%',
-          backgroundColor: '#c9a84c', border: 'none', cursor: 'pointer',
+          backgroundColor: 'var(--gold)', border: 'none', cursor: 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           boxShadow: '0 8px 24px rgba(201,168,76,0.5)',
           zIndex: 90,
@@ -337,13 +337,13 @@ export default function TripOrte() {
           zIndex: 1000,
         }}>
           <div className="fade-in" style={{
-            backgroundColor: '#111827', borderRadius: '24px 24px 0 0',
+            backgroundColor: 'var(--card)', borderRadius: '24px 24px 0 0',
             padding: '24px 20px', paddingBottom: 'calc(32px + env(safe-area-inset-bottom))',
             width: '100%', maxWidth: '600px',
             maxHeight: '90vh', overflowY: 'auto', boxSizing: 'border-box',
           }}>
             {/* Griff */}
-            <div style={{ width: '40px', height: '4px', backgroundColor: '#1a2235', borderRadius: '2px', margin: '0 auto 20px' }} />
+            <div style={{ width: '40px', height: '4px', backgroundColor: 'var(--sub)', borderRadius: '2px', margin: '0 auto 20px' }} />
 
             {/* Titel + Schließen */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -353,7 +353,7 @@ export default function TripOrte() {
               <button onClick={modalSchliessen} style={{
                 background: 'rgba(255,255,255,0.08)', border: 'none', borderRadius: '50%',
                 width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer', color: '#8892a4', flexShrink: 0,
+                cursor: 'pointer', color: 'var(--text-sub)', flexShrink: 0,
               }}>
                 <X size={16} />
               </button>
@@ -380,16 +380,16 @@ export default function TripOrte() {
                     style={{
                       display: 'flex', flexDirection: 'column', alignItems: 'center',
                       justifyContent: 'center', gap: '6px',
-                      backgroundColor: aktiv ? 'rgba(201,168,76,0.15)' : '#1a2235',
+                      backgroundColor: aktiv ? 'rgba(201,168,76,0.15)' : 'var(--sub)',
                       border: aktiv ? '1.5px solid rgba(201,168,76,0.55)' : '1.5px solid rgba(255,255,255,0.06)',
                       borderRadius: '14px', padding: '10px 4px', minHeight: '70px',
                       cursor: 'pointer', transition: 'all 0.15s ease', boxSizing: 'border-box',
                     }}
                   >
-                    <kat.Icon size={20} color={aktiv ? '#c9a84c' : '#8892a4'} />
+                    <kat.Icon size={20} color={aktiv ? 'var(--gold)' : 'var(--text-sub)'} />
                     <span style={{
                       fontSize: '0.65rem', fontWeight: aktiv ? '700' : '500',
-                      color: aktiv ? '#c9a84c' : '#8892a4',
+                      color: aktiv ? 'var(--gold)' : 'var(--text-sub)',
                       textAlign: 'center', lineHeight: 1.2,
                     }}>
                       {t(kat.labelKey)}
@@ -434,22 +434,22 @@ export default function TripOrte() {
 // ── Style Objekte ──
 
 const inputStyle = {
-  width: '100%', padding: '13px 14px', backgroundColor: '#1a2235',
+  width: '100%', padding: '13px 14px', backgroundColor: 'var(--sub)',
   border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px',
   // min. 16px verhindert Auto-Zoom bei Fokus auf iOS Safari
-  color: '#ffffff', fontSize: '16px', minHeight: '44px',
+  color: 'var(--text)', fontSize: '16px', minHeight: '44px',
   marginBottom: '10px', boxSizing: 'border-box',
 }
 
 const speichernButtonStyle = {
-  backgroundColor: '#c9a84c', color: '#0a0f1e', border: 'none',
+  backgroundColor: 'var(--gold)', color: '#0a0f1e', border: 'none',
   padding: '14px', minHeight: '48px', borderRadius: '14px',
   cursor: 'pointer', fontWeight: '700', fontSize: '0.95rem',
   boxSizing: 'border-box', boxShadow: '0 4px 16px rgba(201,168,76,0.3)',
 }
 
 const abbrechenButtonStyle = {
-  backgroundColor: 'transparent', color: '#8892a4',
+  backgroundColor: 'transparent', color: 'var(--text-sub)',
   border: '1px solid rgba(255,255,255,0.12)',
   padding: '14px', minHeight: '48px', borderRadius: '14px',
   cursor: 'pointer', boxSizing: 'border-box', fontWeight: '500',
