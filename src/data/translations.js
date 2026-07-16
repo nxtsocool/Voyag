@@ -180,6 +180,9 @@ export const translations = {
     fotosLoeschenText: (n) => `${n} ${n === 1 ? 'Foto wird' : 'Fotos werden'} unwiderruflich gelöscht.`,
     fotosHochladenFortschritt: (aktuell, gesamt) => `${aktuell} von ${gesamt} Fotos hochgeladen...`,
     fotosHochgeladenErfolg: (n) => `${n} ${n === 1 ? 'Foto' : 'Fotos'} hochgeladen! ✅`,
+    fotoGespeichertErfolg: 'Foto gespeichert! ✅',
+    downloadFehlgeschlagen: 'Download fehlgeschlagen',
+    fotosGeloeschtErfolg: (n) => `${n} ${n === 1 ? 'Foto' : 'Fotos'} gelöscht`,
 
     // MapScreen
     meinePrefix: 'Meine',
@@ -454,6 +457,9 @@ export const translations = {
     fotosLoeschenText: (n) => `${n} ${n === 1 ? 'photo' : 'photos'} will be permanently deleted.`,
     fotosHochladenFortschritt: (aktuell, gesamt) => `${aktuell} of ${gesamt} photos uploaded...`,
     fotosHochgeladenErfolg: (n) => `${n} ${n === 1 ? 'photo' : 'photos'} uploaded! ✅`,
+    fotoGespeichertErfolg: 'Photo saved! ✅',
+    downloadFehlgeschlagen: 'Download failed',
+    fotosGeloeschtErfolg: (n) => `${n} ${n === 1 ? 'photo' : 'photos'} deleted`,
 
     // MapScreen
     meinePrefix: 'My',

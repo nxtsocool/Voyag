@@ -63,20 +63,26 @@ export default function TripFotos() {
 
   const { ziehen, fortschritt, schwellenwert } = usePullToRefresh(fotosLaden)
 
-  // Body-Scroll sperren solange die Lightbox offen ist – verhindert iOS Safari Scroll-Bugs
+  // Body-Scroll sperren solange die Lightbox offen ist – verhindert iOS Safari Scroll-Bugs.
+  // Scroll-Position wird gemerkt (via body.top) und beim Schließen exakt wiederhergestellt.
   useEffect(() => {
     if (lightboxIndex !== null) {
       document.body.style.overflow = 'hidden'
       document.body.style.position = 'fixed'
+      document.body.style.top = `-${window.scrollY}px`
       document.body.style.width = '100%'
     } else {
+      const scrollY = document.body.style.top
       document.body.style.overflow = ''
       document.body.style.position = ''
+      document.body.style.top = ''
       document.body.style.width = ''
+      window.scrollTo(0, parseInt(scrollY || '0') * -1)
     }
     return () => {
       document.body.style.overflow = ''
       document.body.style.position = ''
+      document.body.style.top = ''
       document.body.style.width = ''
     }
   }, [lightboxIndex])
@@ -128,19 +134,33 @@ export default function TripFotos() {
     setLightboxIndex(null)
   }
 
-  // Ein einzelnes Foto herunterladen
+  // Ein einzelnes Foto herunterladen – als Blob laden, da iOS Safari das
+  // download-Attribut bei Cross-Origin-URLs (Supabase Storage) ignoriert und
+  // die URL sonst einfach in einem neuen Tab öffnet statt sie zu speichern.
   const bildHerunterladen = async (foto) => {
-    const { data } = await supabase.storage
-      .from('trip-photos')
-      .createSignedUrl(foto.storage_path, 60)
-    if (!data?.signedUrl) return
+    try {
+      const { data: urlData } = await supabase.storage
+        .from('trip-photos')
+        .createSignedUrl(foto.storage_path, 60)
+      if (!urlData?.signedUrl) throw new Error('Keine Signed URL erhalten')
 
-    const link = document.createElement('a')
-    link.href = data.signedUrl
-    link.download = `voyag_${foto.id}.jpg`
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+      const response = await fetch(urlData.signedUrl)
+      const blob = await response.blob()
+      const blobUrl = URL.createObjectURL(blob)
+
+      const link = document.createElement('a')
+      link.href = blobUrl
+      link.download = `voyag_foto_${foto.id}.jpg`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 1000)
+      toast(t('fotoGespeichertErfolg'), 'success')
+    } catch (err) {
+      console.error('Download Fehler:', err)
+      toast(t('downloadFehlgeschlagen'), 'error')
+    }
   }
 
   // Alle ausgewählten Fotos nacheinander herunterladen
@@ -150,7 +170,7 @@ export default function TripFotos() {
     setHerunterladenLaeuft(true)
     for (const foto of ziel) {
       await bildHerunterladen(foto)
-      await new Promise(r => setTimeout(r, 500)) // kurze Pause zwischen Downloads
+      await new Promise(r => setTimeout(r, 800)) // kurze Pause zwischen Downloads
     }
     setHerunterladenLaeuft(false)
   }
@@ -188,6 +208,7 @@ export default function TripFotos() {
     setFotos(prev => prev.filter(f => !zuLoeschen.some(z => z.id === f.id)))
     setLoescheBestaetigung(false)
     auswahlModusVerlassen()
+    toast(t('fotosGeloeschtErfolg')(zuLoeschen.length), 'success')
   }
 
   const naechstesFoto = () => setLightboxIndex((lightboxIndex + 1) % fotos.length)
@@ -412,11 +433,12 @@ export default function TripFotos() {
         )}
       </div>
 
-      {/* Action-Bar im Auswahl-Modus – fixed über der BottomNav */}
+      {/* Action-Bar im Auswahl-Modus – fixed am unteren Rand, hoher z-index damit sie
+          nicht von anderen fixed-positionierten Elementen verdeckt wird */}
       {auswahlModus && (
         <div className="fade-in" style={{
           position: 'fixed',
-          bottom: 'calc(80px + env(safe-area-inset-bottom))',
+          bottom: 'calc(90px + env(safe-area-inset-bottom))',
           left: '50%',
           transform: 'translateX(-50%)',
           width: 'calc(100% - 32px)',
@@ -426,8 +448,9 @@ export default function TripFotos() {
           padding: '12px 16px',
           display: 'flex',
           gap: '8px',
+          alignItems: 'center',
           boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-          zIndex: 90,
+          zIndex: 200,
           boxSizing: 'border-box',
         }}>
           <button onClick={alleAuswaehlenToggle} className="btn-press" style={{
@@ -509,21 +532,21 @@ export default function TripFotos() {
         </div>
       )}
 
-      {/* Lightbox – iOS-sicher: fixed mit expliziten Kanten, 100dvh statt 100vh */}
+      {/* Lightbox – iOS-sicher: fixed mit expliziten Kanten + -webkit-fill-available,
+          damit sie auf iOS Safari wirklich den kompletten Screen füllt (100vh reicht
+          wegen der ein-/ausblendenden Adressleiste nicht zuverlässig aus) */}
       {lightboxIndex !== null && (
         <div
           onTouchStart={handleLightboxTouchStart}
           onTouchEnd={handleLightboxTouchEnd}
           style={{
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            height: '100dvh',
+            width: '100%', height: '100%', minHeight: '-webkit-fill-available',
             backgroundColor: 'rgba(0,0,0,0.97)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
             overflow: 'hidden',
-            paddingTop: 'env(safe-area-inset-top)',
-            paddingBottom: 'env(safe-area-inset-bottom)',
             boxSizing: 'border-box',
-            zIndex: 1000,
+            zIndex: 9999,
           }}
         >
           {/* Top Bar – mit Safe-Area-Abstand für die Notch */}
@@ -593,8 +616,8 @@ export default function TripFotos() {
             src={fotos[lightboxIndex]?.url}
             alt="Reisefoto"
             style={{
-              maxWidth: '92vw', maxHeight: 'calc(100dvh - 120px)',
-              objectFit: 'contain', borderRadius: '12px',
+              maxWidth: '100vw', maxHeight: 'calc(100vh - 120px)',
+              objectFit: 'contain', borderRadius: '12px', display: 'block',
             }}
           />
 
