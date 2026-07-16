@@ -8,6 +8,8 @@ import 'react-datepicker/dist/react-datepicker.css'
 import { de } from 'date-fns/locale'
 import Toast from '../components/Toast'
 import useToast from '../hooks/useToast.jsx'
+import usePullToRefresh from '../hooks/usePullToRefresh'
+import PullToRefreshIndicator from '../components/PullToRefreshIndicator'
 import { useSettings } from '../context/SettingsContext'
 
 
@@ -81,6 +83,8 @@ function TripsOverview() {
   const [ausgewaehlteTeilnehmer, setAusgewaehlteTeilnehmer] = useState(null)
 
   useEffect(() => { tripsLaden() }, [])
+
+  const { ziehen, fortschritt, schwellenwert } = usePullToRefresh(tripsLaden)
 
   async function tripsLaden() {
     const { data: authData } = await supabase.auth.getUser()
@@ -315,6 +319,8 @@ function TripsOverview() {
 
   return (
     <div style={{ padding: '24px 20px', maxWidth: '600px', margin: '0 auto', minHeight: '100vh' }}>
+
+      <PullToRefreshIndicator ziehen={ziehen} fortschritt={fortschritt} schwellenwert={schwellenwert} />
 
       {/* Header */}
       <div className="fly-down" style={{

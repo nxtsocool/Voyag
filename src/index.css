@@ -50,6 +50,31 @@ html, body {
   width: 100%;
   background-color: var(--bg);
   color: var(--text);
+  /* Verhindert das "Gummiband"-Überziehen beim Scrollen an den Rändern (Pull-to-Refresh der App vorbehalten) */
+  /*overscroll-behavior: none; */
+  -webkit-overflow-scrolling: touch;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Tap-Highlight und iOS Callout-Menü auf allen Elementen entfernen */
+* {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+/* Verhindert Layout-Probleme wenn die Tastatur auf iOS aufgeht */
+@supports (-webkit-touch-callout: none) {
+  .keyboard-aware {
+    padding-bottom: env(keyboard-inset-height, 0px);
+  }
+}
+
+/* Scrollbar in horizontalen Scroll-Containern (z.B. TripNav Tabs) ausblenden */
+.trip-nav-scroll::-webkit-scrollbar {
+  display: none;
 }
 
 #root {
@@ -110,6 +135,12 @@ button, a, input, select, textarea {
 .fade-in-3 { animation: fadeInUp 0.3s ease 0.15s both; }
 .fade-in-4 { animation: fadeInUp 0.3s ease 0.2s both; }
 .fade-in-5 { animation: fadeInUp 0.3s ease 0.25s both; }
+
+/* Bessere Performance für Animationen – Browser bereitet die Compositing-Layer vorab vor */
+.fade-in, .fade-in-1, .fade-in-2, .fade-in-3, .fade-in-4, .fade-in-5,
+.fly-in-1, .fly-in-2, .fly-in-3, .fly-in-4, .fly-in-5 {
+  will-change: transform, opacity;
+}
 
 /* Skeleton Loading */
 @keyframes shimmer {
@@ -215,6 +246,12 @@ input:focus, select:focus, textarea:focus {
 .kompass-spin {
   animation: kompassSpin 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
   display: inline-block;
+}
+
+/* Dauerhafte Rotation für den Pull-to-Refresh Indikator */
+@keyframes pullSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
 }
 
 .logo-slide {

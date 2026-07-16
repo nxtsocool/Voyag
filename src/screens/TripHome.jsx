@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
 import laender from '../data/laender'
 import { ChevronLeft, Info, Users, CheckSquare, Wallet, Camera, MapPin, Rocket, PartyPopper } from 'lucide-react'
+import usePullToRefresh from '../hooks/usePullToRefresh'
+import PullToRefreshIndicator from '../components/PullToRefreshIndicator'
 import { useSettings } from '../context/SettingsContext'
 
 function TripHome() {
@@ -17,34 +19,35 @@ function TripHome() {
   const [orteAnzahl, setOrteAnzahl] = useState(0)
   const [laden, setLaden] = useState(true)
 
-  useEffect(() => {
-    const datenLaden = async () => {
-      const { data: tripData } = await supabase
-        .from('trips').select('*').eq('id', id).single()
-      setTrip(tripData)
+  useEffect(() => { datenLaden() }, [id])
 
-      const { data: teilnehmerData } = await supabase
-        .from('teilnehmer').select('*').eq('trip_id', id)
-      setTeilnehmer(teilnehmerData || [])
+  const { ziehen, fortschritt, schwellenwert } = usePullToRefresh(datenLaden)
 
-      const { data: ausgabenData } = await supabase
-        .from('ausgaben').select('*').eq('trip_id', id)
-      setAusgaben(ausgabenData || [])
+  async function datenLaden() {
+    const { data: tripData } = await supabase
+      .from('trips').select('*').eq('id', id).single()
+    setTrip(tripData)
 
-      // Packliste aus Supabase laden
-      const { data: packlisteData } = await supabase
-        .from('packliste').select('*').eq('trip_id', id)
-      setPackliste(packlisteData || [])
+    const { data: teilnehmerData } = await supabase
+      .from('teilnehmer').select('*').eq('trip_id', id)
+    setTeilnehmer(teilnehmerData || [])
 
-      // Anzahl gespeicherter Orte laden
-      const { data: orteData } = await supabase
-        .from('trip_orte').select('id').eq('trip_id', id)
-      setOrteAnzahl((orteData || []).length)
+    const { data: ausgabenData } = await supabase
+      .from('ausgaben').select('*').eq('trip_id', id)
+    setAusgaben(ausgabenData || [])
 
-      setLaden(false)
-    }
-    datenLaden()
-  }, [id])
+    // Packliste aus Supabase laden
+    const { data: packlisteData } = await supabase
+      .from('packliste').select('*').eq('trip_id', id)
+    setPackliste(packlisteData || [])
+
+    // Anzahl gespeicherter Orte laden
+    const { data: orteData } = await supabase
+      .from('trip_orte').select('id').eq('trip_id', id)
+    setOrteAnzahl((orteData || []).length)
+
+    setLaden(false)
+  }
 
   // Countdown in Tagen berechnen
   const getCountdownTage = () => {
@@ -117,6 +120,8 @@ function TripHome() {
 
   return (
     <div style={{ maxWidth: '600px', margin: '0 auto', paddingBottom: '100px', boxSizing: 'border-box' }}>
+
+      <PullToRefreshIndicator ziehen={ziehen} fortschritt={fortschritt} schwellenwert={schwellenwert} />
 
       {/* Hero Banner mit Länderflagge als Hintergrund */}
       <div className="fade-in" style={{

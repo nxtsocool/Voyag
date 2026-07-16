@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { Info, Users, CheckSquare, Wallet, ChevronLeft, Camera, MapPin } from 'lucide-react'
 import { useSettings } from '../context/SettingsContext'
@@ -7,6 +8,7 @@ function TripNav({ tripName }) {
   const { id } = useParams()
   const location = useLocation()
   const { t } = useSettings()
+  const aktivTabRef = useRef(null)
 
   const tabs = [
     { path: `/trip/${id}/info`, label: t('navInfo'), icon: Info },
@@ -16,6 +18,11 @@ function TripNav({ tripName }) {
     { path: `/trip/${id}/kosten`, label: t('navKosten'), icon: Wallet },
     { path: `/trip/${id}/fotos`, label: t('navFotos'), icon: Camera },
   ]
+
+  // Aktiven Tab automatisch in die Mitte scrollen
+  useEffect(() => {
+    aktivTabRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+  }, [location.pathname])
 
   return (
     <div style={{ maxWidth: '600px', margin: '0 auto', padding: '0 clamp(14px, 4vw, 20px)' }}>
@@ -40,12 +47,13 @@ function TripNav({ tripName }) {
       </div>
 
       {/* Pill-Style Tab Navigation */}
-      <div style={{
+      <div className="trip-nav-scroll" style={{
         display: 'flex', gap: '6px',
         marginBottom: '20px',
         overflowX: 'auto', paddingBottom: '2px',
         WebkitOverflowScrolling: 'touch',
-        scrollbarWidth: 'none',
+        scrollbarWidth: 'none', // Firefox
+        msOverflowStyle: 'none', // IE
       }}>
         {tabs.map(tab => {
           const aktiv = location.pathname === tab.path
@@ -53,6 +61,7 @@ function TripNav({ tripName }) {
           return (
             <button
               key={tab.path}
+              ref={aktiv ? aktivTabRef : null}
               onClick={() => navigate(tab.path)}
               className="btn-press"
               style={{

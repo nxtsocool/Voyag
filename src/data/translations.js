@@ -166,6 +166,8 @@ export const translations = {
     // TripFotos
     fotosAnzahlAlbum: (n) => `${n} ${n === 1 ? 'Foto' : 'Fotos'} im Album`,
     hochladen: 'Hochladen',
+    fotoAufnehmen: 'Aufnehmen',
+    ausGalerie: 'Galerie',
     keineFotos: 'Noch keine Fotos',
     haltetMomenteFest: 'Haltet eure Reisemomente fest!',
     erstesFotoHochladen: 'Erstes Foto hochladen',
@@ -429,6 +431,8 @@ export const translations = {
     // TripFotos
     fotosAnzahlAlbum: (n) => `${n} ${n === 1 ? 'photo' : 'photos'} in album`,
     hochladen: 'Upload',
+    fotoAufnehmen: 'Camera',
+    ausGalerie: 'Gallery',
     keineFotos: 'No photos yet',
     haltetMomenteFest: 'Capture your travel memories!',
     erstesFotoHochladen: 'Upload first photo',

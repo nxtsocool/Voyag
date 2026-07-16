@@ -5,6 +5,8 @@ import TripNav from '../components/TripNav'
 import { Wallet, Trash2, SquarePen, Plus, Check, Calendar, X } from 'lucide-react'
 import Toast from '../components/Toast'
 import useToast from '../hooks/useToast.jsx'
+import usePullToRefresh from '../hooks/usePullToRefresh'
+import PullToRefreshIndicator from '../components/PullToRefreshIndicator'
 import { useSettings } from '../context/SettingsContext'
 
 function TripKosten() {
@@ -25,29 +27,30 @@ function TripKosten() {
     datum: new Date().toISOString().split('T')[0],
   })
 
-  useEffect(() => {
-    const datenLaden = async () => {
-      const { data: tripData } = await supabase
-        .from('trips').select('*').eq('id', id).single()
-      setTrip(tripData)
+  useEffect(() => { datenLaden() }, [id])
 
-      const { data: ausgabenData } = await supabase
-        .from('ausgaben').select('*').eq('trip_id', id)
-        .order('datum', { ascending: false })
-      setAusgaben(ausgabenData || [])
+  const { ziehen, fortschritt, schwellenwert } = usePullToRefresh(datenLaden)
 
-      const { data: teilnehmerData } = await supabase
-        .from('teilnehmer').select('*').eq('trip_id', id)
-      setTeilnehmer(teilnehmerData || [])
+  async function datenLaden() {
+    const { data: tripData } = await supabase
+      .from('trips').select('*').eq('id', id).single()
+    setTrip(tripData)
 
-      const { data: abrechnungenData } = await supabase
-        .from('abrechnungen').select('*').eq('trip_id', id)
-      setAbrechnungen(abrechnungenData || [])
+    const { data: ausgabenData } = await supabase
+      .from('ausgaben').select('*').eq('trip_id', id)
+      .order('datum', { ascending: false })
+    setAusgaben(ausgabenData || [])
 
-      setLaden(false)
-    }
-    datenLaden()
-  }, [id])
+    const { data: teilnehmerData } = await supabase
+      .from('teilnehmer').select('*').eq('trip_id', id)
+    setTeilnehmer(teilnehmerData || [])
+
+    const { data: abrechnungenData } = await supabase
+      .from('abrechnungen').select('*').eq('trip_id', id)
+    setAbrechnungen(abrechnungenData || [])
+
+    setLaden(false)
+  }
 
   const gesamt = ausgaben.reduce((sum, a) => sum + a.betrag, 0)
 
@@ -227,6 +230,7 @@ function TripKosten() {
 
   return (
     <div style={{ paddingBottom: 'calc(170px + env(safe-area-inset-bottom))' }}>
+      <PullToRefreshIndicator ziehen={ziehen} fortschritt={fortschritt} schwellenwert={schwellenwert} />
       <TripNav tripName={trip.name} />
 
       <div style={{ padding: '0 clamp(14px, 4vw, 20px)', maxWidth: '600px', margin: '0 auto', boxSizing: 'border-box' }}>

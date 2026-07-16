@@ -3,6 +3,8 @@ import { useParams } from 'react-router-dom'
 import { supabase } from '../supabase'
 import TripNav from '../components/TripNav'
 import { Upload, Trash2, Image, ChevronLeft, ChevronRight, X, Camera } from 'lucide-react'
+import usePullToRefresh from '../hooks/usePullToRefresh'
+import PullToRefreshIndicator from '../components/PullToRefreshIndicator'
 import { useSettings } from '../context/SettingsContext'
 
 export default function TripFotos() {
@@ -12,9 +14,12 @@ export default function TripFotos() {
   const [fotos, setFotos] = useState([])
   const [laden, setLaden] = useState(true)
   const [hochladen, setHochladen] = useState(false)
+  // Fotos die gerade hochgeladen werden – mit lokaler Vorschau für den Fortschrittsindikator
+  const [hochladendeFotos, setHochladendeFotos] = useState([])
   const [currentUser, setCurrentUser] = useState(null)
   const [lightboxIndex, setLightboxIndex] = useState(null)
-  const fileInputRef = useRef(null)
+  const kameraInputRef = useRef(null)
+  const galerieInputRef = useRef(null)
 
   useEffect(() => {
     const datenLaden = async () => {
@@ -44,19 +49,33 @@ export default function TripFotos() {
     setFotos(fotosWithUrls)
   }
 
+  const { ziehen, fortschritt, schwellenwert } = usePullToRefresh(fotosLaden)
+
   const fotoHochladen = async (e) => {
     const files = Array.from(e.target.files)
     if (!files.length) return
+    e.target.value = '' // gleiche Datei erneut auswählbar machen
+
     setHochladen(true)
-    for (const file of files) {
+    const neueVorschauen = files.map(file => ({ tempId: `${Date.now()}_${file.name}`, previewUrl: URL.createObjectURL(file) }))
+    setHochladendeFotos(prev => [...prev, ...neueVorschauen])
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i]
+      const vorschau = neueVorschauen[i]
       const dateiname = `${id}/${Date.now()}_${file.name}`
       const { error: uploadError } = await supabase.storage
         .from('trip-photos').upload(dateiname, file)
-      if (uploadError) { console.error('Upload Fehler:', uploadError); continue }
-      await supabase.from('trip_photos').insert([{
-        trip_id: id, user_id: currentUser.id,
-        storage_path: dateiname, caption: '',
-      }])
+      if (!uploadError) {
+        await supabase.from('trip_photos').insert([{
+          trip_id: id, user_id: currentUser.id,
+          storage_path: dateiname, caption: '',
+        }])
+      } else {
+        console.error('Upload Fehler:', uploadError)
+      }
+      URL.revokeObjectURL(vorschau.previewUrl)
+      setHochladendeFotos(prev => prev.filter(v => v.tempId !== vorschau.tempId))
     }
     await fotosLaden()
     setHochladen(false)
@@ -95,6 +114,7 @@ export default function TripFotos() {
 
   return (
     <div style={{ paddingBottom: 'calc(110px + env(safe-area-inset-bottom))' }}>
+      <PullToRefreshIndicator ziehen={ziehen} fortschritt={fortschritt} schwellenwert={schwellenwert} />
       <TripNav tripName={trip.name} />
 
       <div style={{ padding: '0 clamp(14px, 4vw, 20px)', maxWidth: '600px', margin: '0 auto', boxSizing: 'border-box' }}>
@@ -112,14 +132,39 @@ export default function TripFotos() {
               {t('fotosAnzahlAlbum')(fotos.length)}
             </p>
           </div>
-          <div>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {/* Direkte Kamera-Aufnahme */}
             <input
-              type="file" accept="image/*" multiple
-              ref={fileInputRef} onChange={fotoHochladen}
+              type="file" accept="image/*" capture="environment"
+              ref={kameraInputRef} onChange={fotoHochladen}
               style={{ display: 'none' }}
             />
             <button
-              onClick={() => fileInputRef.current.click()}
+              onClick={() => kameraInputRef.current.click()}
+              disabled={hochladen}
+              className="btn-press"
+              style={{
+                backgroundColor: hochladen ? 'var(--sub)' : 'rgba(201,168,76,0.1)',
+                color: hochladen ? 'var(--text-sub)' : 'var(--gold)',
+                border: '1px solid rgba(201,168,76,0.3)',
+                padding: '0 14px', minHeight: '44px', boxSizing: 'border-box',
+                borderRadius: '14px', cursor: 'pointer',
+                fontWeight: '700', fontSize: '0.85rem',
+                display: 'flex', alignItems: 'center', gap: '6px',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              <Camera size={16} /> {t('fotoAufnehmen')}
+            </button>
+
+            {/* Auswahl aus der Galerie */}
+            <input
+              type="file" accept="image/*" multiple
+              ref={galerieInputRef} onChange={fotoHochladen}
+              style={{ display: 'none' }}
+            />
+            <button
+              onClick={() => galerieInputRef.current.click()}
               disabled={hochladen}
               className="btn-press"
               style={{
@@ -135,14 +180,14 @@ export default function TripFotos() {
               {hochladen ? (
                 <>⏳ {t('laedt')}</>
               ) : (
-                <><Upload size={16} /> {t('hochladen')}</>
+                <><Upload size={16} /> {t('ausGalerie')}</>
               )}
             </button>
           </div>
         </div>
 
         {/* Leerer Zustand */}
-        {fotos.length === 0 ? (
+        {fotos.length === 0 && hochladendeFotos.length === 0 ? (
           <div className="fade-in-2" style={{
             backgroundColor: 'var(--card)', borderRadius: '24px',
             boxShadow: 'var(--shadow)',
@@ -163,7 +208,7 @@ export default function TripFotos() {
               {t('haltetMomenteFest')}
             </p>
             <button
-              onClick={() => fileInputRef.current.click()}
+              onClick={() => galerieInputRef.current.click()}
               className="btn-press"
               style={{
                 backgroundColor: 'var(--gold)', color: '#0a0f1e', border: 'none',
@@ -182,6 +227,33 @@ export default function TripFotos() {
             gridTemplateColumns: 'repeat(3, 1fr)',
             gap: '6px',
           }}>
+            {/* Fotos die gerade hochgeladen werden – mit Fortschrittsindikator */}
+            {hochladendeFotos.map(vorschau => (
+              <div key={vorschau.tempId} style={{
+                position: 'relative', borderRadius: '12px',
+                overflow: 'hidden', aspectRatio: '1',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+              }}>
+                <img
+                  src={vorschau.previewUrl}
+                  alt=""
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', opacity: 0.5 }}
+                />
+                <div style={{
+                  position: 'absolute', inset: 0,
+                  backgroundColor: 'rgba(0,0,0,0.35)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <div style={{
+                    width: '28px', height: '28px', borderRadius: '50%',
+                    border: '2.5px solid rgba(201,168,76,0.3)',
+                    borderTopColor: 'var(--gold)',
+                    animation: 'pullSpin 0.7s linear infinite',
+                  }} />
+                </div>
+              </div>
+            ))}
+
             {fotos.map((foto, index) => (
               <div
                 key={foto.id}

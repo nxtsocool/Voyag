@@ -4,6 +4,8 @@ import laender from '../data/laender'
 import * as d3 from 'd3'
 import * as topojson from 'topojson-client'
 import { Search, X, Plus } from 'lucide-react'
+import usePullToRefresh from '../hooks/usePullToRefresh'
+import PullToRefreshIndicator from '../components/PullToRefreshIndicator'
 import { useSettings } from '../context/SettingsContext'
 
 const countryIds = {
@@ -58,18 +60,19 @@ function MapScreen() {
   // Zoom-Zustand zwischen Neu-Zeichnungen erhalten
   const zoomTransformRef = useRef(d3.zoomIdentity)
 
-  useEffect(() => {
-    const laden = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      setUserId(user.id)
-      const { data } = await supabase
-        .from('visited_countries')
-        .select('country_code, trip_id')
-        .eq('user_id', user.id)
-      setBesucht(data || [])
-    }
-    laden()
-  }, [])
+  useEffect(() => { laden() }, [])
+
+  const { ziehen, fortschritt, schwellenwert } = usePullToRefresh(laden)
+
+  async function laden() {
+    const { data: { user } } = await supabase.auth.getUser()
+    setUserId(user.id)
+    const { data } = await supabase
+      .from('visited_countries')
+      .select('country_code, trip_id')
+      .eq('user_id', user.id)
+    setBesucht(data || [])
+  }
 
   // Fortschrittsbalken animiert einblenden
   useEffect(() => {
@@ -217,6 +220,8 @@ function MapScreen() {
       paddingBottom: 'calc(90px + env(safe-area-inset-bottom))',
       boxSizing: 'border-box',
     }}>
+
+      <PullToRefreshIndicator ziehen={ziehen} fortschritt={fortschritt} schwellenwert={schwellenwert} />
 
       {/* Header */}
       <div className="fade-in" style={{ marginBottom: '20px' }}>
