@@ -412,14 +412,14 @@ function TripInfo() {
                     {(unterkunft.checkin || unterkunft.checkout) && (
                       <div style={{ display: 'flex', gap: '12px', marginBottom: unterkunft.adresse ? '12px' : '0' }}>
                         {unterkunft.checkin && (
-                          <div style={{ flex: 1, backgroundColor: 'rgba(8,13,26,0.6)', borderRadius: '10px', padding: '10px 12px' }}>
-                            <p style={{ color: 'var(--text-sub)', fontSize: '0.65rem', fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 4px' }}>{t('checkinKurzPlatzhalter')}</p>
+                          <div style={{ flex: 1, backgroundColor: 'var(--card)', borderRadius: '10px', padding: '10px 12px' }}>
+                            <p style={{ color: 'var(--gold)', fontSize: '0.65rem', fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 4px' }}>{t('checkinKurzPlatzhalter')}</p>
                             <p style={{ color: 'var(--text)', fontWeight: '700', margin: 0, fontSize: '0.95rem' }}>{unterkunft.checkin}</p>
                           </div>
                         )}
                         {unterkunft.checkout && (
-                          <div style={{ flex: 1, backgroundColor: 'rgba(8,13,26,0.6)', borderRadius: '10px', padding: '10px 12px' }}>
-                            <p style={{ color: 'var(--text-sub)', fontSize: '0.65rem', fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 4px' }}>{t('checkoutKurzPlatzhalter')}</p>
+                          <div style={{ flex: 1, backgroundColor: 'var(--card)', borderRadius: '10px', padding: '10px 12px' }}>
+                            <p style={{ color: 'var(--gold)', fontSize: '0.65rem', fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 4px' }}>{t('checkoutKurzPlatzhalter')}</p>
                             <p style={{ color: 'var(--text)', fontWeight: '700', margin: 0, fontSize: '0.95rem' }}>{unterkunft.checkout}</p>
                           </div>
                         )}
