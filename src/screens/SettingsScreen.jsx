@@ -364,7 +364,7 @@ export default function SettingsScreen() {
             <div style={{ marginTop: '16px' }}>
               <div style={infoZeileStyle}>
                 <span style={{ color: 'var(--text-sub)', fontSize: '0.85rem' }}>{t('versionLabel')}</span>
-                <span style={{ fontSize: '0.85rem', fontWeight: '500', color: 'var(--gold)' }}>V0.7.0</span>
+                <span style={{ fontSize: '0.85rem', fontWeight: '500', color: 'var(--gold)' }}>V0.7.1</span>
               </div>
               <div style={infoZeileStyle}>
                 <span style={{ color: 'var(--text-sub)', fontSize: '0.85rem' }}>{t('entwicklerLabel')}</span>
@@ -372,7 +372,7 @@ export default function SettingsScreen() {
               </div>
               <div style={{ ...infoZeileStyle, borderBottom: 'none' }}>
                 <span style={{ color: 'var(--text-sub)', fontSize: '0.85rem' }}>{t('madeWithLabel')}</span>
-                <span style={{ fontSize: '0.85rem' }}>⚡ React + Supabase</span>
+                <span style={{ fontSize: '0.85rem' }}> React + Supabase</span>
               </div>
             </div>
           )}
