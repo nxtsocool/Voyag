@@ -183,6 +183,10 @@ export const translations = {
     fotoGespeichertErfolg: 'Foto gespeichert! ✅',
     downloadFehlgeschlagen: 'Download fehlgeschlagen',
     fotosGeloeschtErfolg: (n) => `${n} ${n === 1 ? 'Foto' : 'Fotos'} gelöscht`,
+    wirdVorbereitet: 'Wird vorbereitet...',
+    fotoHeruntergeladenErfolg: 'Foto heruntergeladen! ✅',
+    fotosGespeichertErfolg: (n) => `${n} ${n === 1 ? 'Foto' : 'Fotos'} gespeichert! ✅`,
+    fotosHeruntergeladenErfolg: 'Fotos heruntergeladen! ✅',
 
     // MapScreen
     meinePrefix: 'Meine',
@@ -460,6 +464,10 @@ export const translations = {
     fotoGespeichertErfolg: 'Photo saved! ✅',
     downloadFehlgeschlagen: 'Download failed',
     fotosGeloeschtErfolg: (n) => `${n} ${n === 1 ? 'photo' : 'photos'} deleted`,
+    wirdVorbereitet: 'Preparing...',
+    fotoHeruntergeladenErfolg: 'Photo downloaded! ✅',
+    fotosGespeichertErfolg: (n) => `${n} ${n === 1 ? 'photo' : 'photos'} saved! ✅`,
+    fotosHeruntergeladenErfolg: 'Photos downloaded! ✅',
 
     // MapScreen
     meinePrefix: 'My',

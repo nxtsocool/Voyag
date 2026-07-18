@@ -274,10 +274,12 @@ export default function TripPackliste() {
                       >
                         <div style={{
                           width: '26px', height: '26px', borderRadius: '50%',
-                          backgroundColor: item.erledigt ? 'var(--gold)' : 'transparent',
+                          // war 'transparent'/rgba(255,255,255,0.2) → im Light Mode auf hellem
+                          // Kartenhintergrund unsichtbar. var(--sub)/var(--border) funktionieren in beiden Modi.
+                          backgroundColor: item.erledigt ? 'var(--gold)' : 'var(--sub)',
                           border: item.erledigt
                             ? '2px solid var(--gold)'
-                            : '2px solid rgba(255,255,255,0.2)',
+                            : '2px solid var(--border)',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           transition: 'all 0.25s ease',
                           boxShadow: item.erledigt ? '0 0 10px rgba(201,168,76,0.35)' : 'none',

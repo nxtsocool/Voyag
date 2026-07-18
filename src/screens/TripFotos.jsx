@@ -134,11 +134,14 @@ export default function TripFotos() {
     setLightboxIndex(null)
   }
 
-  // Ein einzelnes Foto herunterladen – als Blob laden, da iOS Safari das
-  // download-Attribut bei Cross-Origin-URLs (Supabase Storage) ignoriert und
-  // die URL sonst einfach in einem neuen Tab öffnet statt sie zu speichern.
+  // Ein einzelnes Foto herunterladen – bevorzugt über die Web Share API, da iOS
+  // damit direkt in die Fotos-App speichern kann (statt in die Dateien-App).
+  // Fallback für Browser ohne Share-Unterstützung: Blob-Download (das normale
+  // download-Attribut wird von iOS Safari bei Cross-Origin-URLs ignoriert).
   const bildHerunterladen = async (foto) => {
     try {
+      toast(t('wirdVorbereitet'), 'info')
+
       const { data: urlData } = await supabase.storage
         .from('trip-photos')
         .createSignedUrl(foto.storage_path, 60)
@@ -146,31 +149,74 @@ export default function TripFotos() {
 
       const response = await fetch(urlData.signedUrl)
       const blob = await response.blob()
-      const blobUrl = URL.createObjectURL(blob)
+      const dateiname = `voyag_foto_${foto.id}.jpg`
+      const file = new File([blob], dateiname, { type: blob.type || 'image/jpeg' })
 
-      const link = document.createElement('a')
-      link.href = blobUrl
-      link.download = `voyag_foto_${foto.id}.jpg`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 1000)
-      toast(t('fotoGespeichertErfolg'), 'success')
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: 'Voyag Foto' })
+        toast(t('fotoGespeichertErfolg'), 'success')
+      } else {
+        const blobUrl = URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = blobUrl
+        link.download = dateiname
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 1000)
+        toast(t('fotoHeruntergeladenErfolg'), 'success')
+      }
     } catch (err) {
-      console.error('Download Fehler:', err)
-      toast(t('downloadFehlgeschlagen'), 'error')
+      // Abbruch durch den Nutzer im Share-Dialog ist kein Fehler
+      if (err.name !== 'AbortError') {
+        console.error('Download Fehler:', err)
+        toast(t('downloadFehlgeschlagen'), 'error')
+      }
     }
   }
 
-  // Alle ausgewählten Fotos nacheinander herunterladen
+  // Alle ausgewählten Fotos herunterladen – als eine gemeinsame Share-Anfrage
+  // (öffnet einmal den Teilen-Dialog mit allen Fotos statt N einzelner Downloads)
   const alleHerunterladen = async () => {
     const ziel = fotos.filter(f => ausgewaehlteFotos.includes(f.id))
     if (ziel.length === 0) return
+
     setHerunterladenLaeuft(true)
-    for (const foto of ziel) {
-      await bildHerunterladen(foto)
-      await new Promise(r => setTimeout(r, 800)) // kurze Pause zwischen Downloads
+    try {
+      toast(t('wirdVorbereitet'), 'info')
+
+      const files = []
+      for (const foto of ziel) {
+        const { data: urlData } = await supabase.storage
+          .from('trip-photos').createSignedUrl(foto.storage_path, 60)
+        if (!urlData?.signedUrl) continue
+        const response = await fetch(urlData.signedUrl)
+        const blob = await response.blob()
+        files.push(new File([blob], `voyag_foto_${foto.id}.jpg`, { type: blob.type || 'image/jpeg' }))
+      }
+
+      if (navigator.canShare && navigator.canShare({ files })) {
+        await navigator.share({ files, title: 'Voyag Fotos' })
+        toast(t('fotosGespeichertErfolg')(files.length), 'success')
+      } else {
+        for (const file of files) {
+          const blobUrl = URL.createObjectURL(file)
+          const link = document.createElement('a')
+          link.href = blobUrl
+          link.download = file.name
+          document.body.appendChild(link)
+          link.click()
+          document.body.removeChild(link)
+          await new Promise(r => setTimeout(r, 500)) // kurze Pause zwischen Downloads
+          URL.revokeObjectURL(blobUrl)
+        }
+        toast(t('fotosHeruntergeladenErfolg'), 'success')
+      }
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        console.error('Download Fehler:', err)
+        toast(t('downloadFehlgeschlagen'), 'error')
+      }
     }
     setHerunterladenLaeuft(false)
   }
@@ -246,7 +292,7 @@ export default function TripFotos() {
   )
 
   return (
-    <div style={{ paddingBottom: 'calc(110px + env(safe-area-inset-bottom))' }}>
+    <div style={{ paddingBottom: 'calc(180px + env(safe-area-inset-bottom))' }}>
       <PullToRefreshIndicator ziehen={ziehen} fortschritt={fortschritt} schwellenwert={schwellenwert} />
       <TripNav tripName={trip.name} />
 
@@ -433,8 +479,8 @@ export default function TripFotos() {
         )}
       </div>
 
-      {/* Action-Bar im Auswahl-Modus – fixed am unteren Rand, hoher z-index damit sie
-          nicht von anderen fixed-positionierten Elementen verdeckt wird */}
+      {/* Action-Bar im Auswahl-Modus – fixed am unteren Rand, sehr hoher z-index damit sie
+          garantiert über allem liegt (auch im Light Mode sichtbar dank var(--card)) */}
       {auswahlModus && (
         <div className="fade-in" style={{
           position: 'fixed',
@@ -449,8 +495,8 @@ export default function TripFotos() {
           display: 'flex',
           gap: '8px',
           alignItems: 'center',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-          zIndex: 200,
+          boxShadow: '0 -4px 32px rgba(0,0,0,0.15)',
+          zIndex: 500,
           boxSizing: 'border-box',
         }}>
           <button onClick={alleAuswaehlenToggle} className="btn-press" style={{
@@ -466,7 +512,7 @@ export default function TripFotos() {
             disabled={ausgewaehlteFotos.length === 0 || herunterladenLaeuft}
             className="btn-press"
             style={{
-              flex: 1, backgroundColor: 'var(--gold)', color: '#0a0f1e', border: 'none',
+              flex: 1, backgroundColor: 'var(--gold)', color: '#ffffff', border: 'none',
               borderRadius: '12px', minHeight: '44px', boxSizing: 'border-box',
               cursor: 'pointer', fontSize: '0.8rem', fontWeight: '700',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
@@ -532,17 +578,17 @@ export default function TripFotos() {
         </div>
       )}
 
-      {/* Lightbox – iOS-sicher: fixed mit expliziten Kanten + -webkit-fill-available,
-          damit sie auf iOS Safari wirklich den kompletten Screen füllt (100vh reicht
-          wegen der ein-/ausblendenden Adressleiste nicht zuverlässig aus) */}
+      {/* Lightbox – iOS-sicher: fixed mit expliziten Kanten, 100vw/100vh + -webkit-fill-available,
+          damit sie auf iOS Safari wirklich den kompletten Screen füllt (auch im Light Mode).
+          Hintergrund explizit schwarz (kein var()), da die Lightbox immer dunkel bleibt. */}
       {lightboxIndex !== null && (
         <div
           onTouchStart={handleLightboxTouchStart}
           onTouchEnd={handleLightboxTouchEnd}
           style={{
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            width: '100%', height: '100%', minHeight: '-webkit-fill-available',
-            backgroundColor: 'rgba(0,0,0,0.97)',
+            width: '100vw', height: '100vh', minHeight: '-webkit-fill-available',
+            backgroundColor: '#000000',
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
             overflow: 'hidden',
             boxSizing: 'border-box',
@@ -556,11 +602,12 @@ export default function TripFotos() {
             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
             zIndex: 1001, boxSizing: 'border-box',
           }}>
-            {/* Herunterladen + Löschen (nur eigene Fotos) */}
+            {/* Herunterladen + Löschen (nur eigene Fotos) – Farben immer fix (weiß/rot),
+                da die Lightbox unabhängig vom Light/Dark Mode immer schwarz ist */}
             <div style={{ display: 'flex', gap: '8px' }}>
               <button onClick={() => bildHerunterladen(fotos[lightboxIndex])} style={{
-                backgroundColor: 'rgba(255,255,255,0.08)', border: 'none',
-                color: 'var(--text)', borderRadius: '12px', width: '44px', height: '44px',
+                backgroundColor: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)',
+                color: '#ffffff', borderRadius: '50%', width: '44px', height: '44px',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 cursor: 'pointer', flexShrink: 0,
               }}>
@@ -568,8 +615,8 @@ export default function TripFotos() {
               </button>
               {fotos[lightboxIndex]?.user_id === currentUser?.id && (
                 <button onClick={() => fotoLoeschen(fotos[lightboxIndex])} style={{
-                  backgroundColor: 'rgba(233,69,96,0.15)', border: '1px solid rgba(233,69,96,0.3)',
-                  color: '#e94560', borderRadius: '12px', width: '44px', height: '44px',
+                  backgroundColor: 'rgba(233,69,96,0.3)', border: '1px solid rgba(233,69,96,0.5)',
+                  color: '#ffffff', borderRadius: '50%', width: '44px', height: '44px',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   cursor: 'pointer', flexShrink: 0,
                 }}>
@@ -580,8 +627,8 @@ export default function TripFotos() {
 
             {/* Zähler */}
             <span style={{
-              color: 'var(--text-sub)', fontSize: '0.85rem', fontWeight: '600',
-              backgroundColor: 'rgba(255,255,255,0.05)',
+              color: '#ffffff', fontSize: '0.85rem', fontWeight: '600',
+              backgroundColor: 'rgba(0,0,0,0.5)',
               padding: '6px 14px', borderRadius: '20px',
             }}>
               {lightboxIndex + 1} / {fotos.length}
@@ -589,8 +636,8 @@ export default function TripFotos() {
 
             {/* Schließen */}
             <button onClick={() => setLightboxIndex(null)} style={{
-              backgroundColor: 'rgba(255,255,255,0.08)', border: 'none',
-              color: 'var(--text)', borderRadius: '12px', width: '44px', height: '44px',
+              backgroundColor: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)',
+              color: '#ffffff', borderRadius: '50%', width: '44px', height: '44px',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               cursor: 'pointer', flexShrink: 0,
             }}>
@@ -602,8 +649,8 @@ export default function TripFotos() {
           {fotos.length > 1 && (
             <button onClick={vorherigesFoto} style={{
               position: 'absolute', left: '16px',
-              backgroundColor: 'rgba(255,255,255,0.08)', border: 'none',
-              color: 'var(--text)', borderRadius: '50%', width: '48px', height: '48px',
+              backgroundColor: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)',
+              color: '#ffffff', borderRadius: '50%', width: '48px', height: '48px',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               cursor: 'pointer', zIndex: 1001,
             }}>
@@ -625,8 +672,8 @@ export default function TripFotos() {
           {fotos.length > 1 && (
             <button onClick={naechstesFoto} style={{
               position: 'absolute', right: '16px',
-              backgroundColor: 'rgba(255,255,255,0.08)', border: 'none',
-              color: 'var(--text)', borderRadius: '50%', width: '48px', height: '48px',
+              backgroundColor: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)',
+              color: '#ffffff', borderRadius: '50%', width: '48px', height: '48px',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               cursor: 'pointer', zIndex: 1001,
             }}>

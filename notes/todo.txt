@@ -1,17 +1,22 @@
 BUGFIX
-
-- Acc Löschen geht nicht
-
-
+- Fotoscreen Light mode Bugfix
+- Bilder download fix
+- Packliste Checkbox Lightmode
+- Kostenscreen verbuggt
 
 
 
 IDEEN
-
+- Orte Kategorien einklappen
+- Einladungslink
+- Navigation umdesignen beim Trip
+- Währungen umrechnen
+- TripHome Design/Anordnung ändern
 - Andere Konten anzeigen mit Reisen Karte usw
-- Endabrechnung
 - Karten für einzelne Teilnehmer mit Notizfenster
 - Reisekalender
+- umgestaltung "Einstellungen" zu "Profil"
+- Farbdesing für Darkmode ändern
 
 
 
