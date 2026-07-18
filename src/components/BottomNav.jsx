@@ -46,7 +46,7 @@ function BottomNav() {
               flexDirection: 'column',
               alignItems: 'center',
               gap: '4px',
-              padding: '10px 4px',
+              padding: 'calc(6px + env(safe-area-inset-bottom)) 8px 6px',
               minHeight: '56px',
               borderRadius: '20px',
               transition: 'background-color 0.2s ease',

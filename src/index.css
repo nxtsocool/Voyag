@@ -77,6 +77,17 @@ html {
   display: none;
 }
 
+/* PWA Vollbild Fix für iOS */
+html, body {
+  height: 100%;
+  height: -webkit-fill-available;
+}
+
+#root {
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+}
+
 #root {
   overflow-x: hidden;
   width: 100%;

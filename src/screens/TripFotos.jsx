@@ -484,7 +484,7 @@ export default function TripFotos() {
       {auswahlModus && (
         <div className="fade-in" style={{
           position: 'fixed',
-          bottom: 'calc(90px + env(safe-area-inset-bottom))',
+          bottom: 'calc(85px + env(safe-area-inset-bottom))',
           left: '50%',
           transform: 'translateX(-50%)',
           width: 'calc(100% - 32px)',
