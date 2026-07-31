@@ -162,6 +162,7 @@ export const translations = {
     neueAusgabeTitel: 'Neue Ausgabe',
     betragInWaehrungPlatzhalter: 'Betrag in €',
     fuerWenLeerAlle: 'Für wen? – leer lassen = für alle',
+    wechselkurseNichtAktuell: 'Wechselkurse nicht aktuell – Näherungswerte werden verwendet',
 
     // TripFotos
     fotosAnzahlAlbum: (n) => `${n} ${n === 1 ? 'Foto' : 'Fotos'} im Album`,
@@ -443,6 +444,7 @@ export const translations = {
     neueAusgabeTitel: 'New expense',
     betragInWaehrungPlatzhalter: 'Amount in €',
     fuerWenLeerAlle: 'For whom? – leave empty for everyone',
+    wechselkurseNichtAktuell: 'Exchange rates not current – using approximate values',
 
     // TripFotos
     fotosAnzahlAlbum: (n) => `${n} ${n === 1 ? 'photo' : 'photos'} in album`,

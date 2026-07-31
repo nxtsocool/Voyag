@@ -8,11 +8,16 @@ import useToast from '../hooks/useToast.jsx'
 import usePullToRefresh from '../hooks/usePullToRefresh'
 import PullToRefreshIndicator from '../components/PullToRefreshIndicator'
 import { useSettings } from '../context/SettingsContext'
+import useWechselkurse from '../hooks/useWechselkurse'
+import { WAEHRUNGEN } from '../data/waehrungen'
 
 function TripKosten() {
   const { id } = useParams()
   const { toasts, setToasts, toast } = useToast()
   const { waehrung, t, design } = useSettings()
+  const { umrechnen, veraltet } = useWechselkurse()
+  // ISO-Code der Heimwährung – Fallback auf EUR falls die Heimwährung nicht umgerechnet werden kann
+  const heimISO = WAEHRUNGEN.find(w => w.symbol === waehrung)?.iso || 'EUR'
   const [trip, setTrip] = useState(null)
   const [ausgaben, setAusgaben] = useState([])
   const [teilnehmer, setTeilnehmer] = useState([])
@@ -25,9 +30,15 @@ function TripKosten() {
   const [neueAusgabe, setNeueAusgabe] = useState({
     beschreibung: '', betrag: '', bezahlt_von: '', fuer: [],
     datum: new Date().toISOString().split('T')[0],
+    waehrung: { symbol: '€', iso: 'EUR' },
   })
 
   useEffect(() => { datenLaden() }, [id])
+
+  // Warnung anzeigen, falls die API nicht erreichbar war und Näherungswerte verwendet werden
+  useEffect(() => {
+    if (veraltet) toast(t('wechselkurseNichtAktuell'), 'error')
+  }, [veraltet])
 
   const { ziehen, fortschritt, schwellenwert } = usePullToRefresh(datenLaden)
 
@@ -61,11 +72,20 @@ function TripKosten() {
       return
     }
 
+    // Original-Betrag immer in die Heimwährung umrechnen – Saldo/Schulden basieren nur auf betrag
+    const betragInHeim = umrechnen(
+      parseFloat(neueAusgabe.betrag),
+      neueAusgabe.waehrung.iso,
+      heimISO
+    )
+
     const { data, error } = await supabase
       .from('ausgaben')
       .insert([{
         beschreibung: neueAusgabe.beschreibung,
-        betrag: parseFloat(neueAusgabe.betrag),
+        betrag: parseFloat(betragInHeim.toFixed(2)),
+        betrag_original: parseFloat(neueAusgabe.betrag),
+        waehrung_original: neueAusgabe.waehrung.symbol,
         bezahlt_von: neueAusgabe.bezahlt_von,
         trip_id: id,
         datum: neueAusgabe.datum,
@@ -81,6 +101,7 @@ function TripKosten() {
       setNeueAusgabe({
         beschreibung: '', betrag: '', bezahlt_von: '', fuer: [],
         datum: new Date().toISOString().split('T')[0],
+        waehrung: { symbol: '€', iso: 'EUR' },
       })
       setFormularOffen(false)
       toast(t('ausgabeHinzugefuegt'), 'success')
@@ -332,6 +353,40 @@ function TripKosten() {
                         <input type="number" value={bearbeiteAusgabe.betrag}
                           onChange={(e) => setBearbeiteAusgabe({ ...bearbeiteAusgabe, betrag: e.target.value })}
                           style={inputStyle} placeholder={t('betragPlatzhalter')} />
+
+                        {/* Währungs-Auswahl – gleicher Style wie beim Hinzufügen */}
+                        <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
+                          {WAEHRUNGEN.map(w => (
+                            <button
+                              key={w.iso}
+                              onClick={() => setBearbeiteAusgabe({ ...bearbeiteAusgabe, waehrung: w })}
+                              className="btn-press"
+                              style={{
+                                flex: 1,
+                                padding: '10px 8px',
+                                borderRadius: '12px',
+                                border: 'none',
+                                cursor: 'pointer',
+                                fontWeight: '700',
+                                fontSize: '0.9rem',
+                                backgroundColor: bearbeiteAusgabe.waehrung.iso === w.iso ? 'var(--gold)' : 'var(--sub)',
+                                color: bearbeiteAusgabe.waehrung.iso === w.iso ? '#0a0f1e' : 'var(--text-sub)',
+                              }}
+                            >
+                              {w.symbol}
+                            </button>
+                          ))}
+                        </div>
+
+                        {bearbeiteAusgabe.betrag && bearbeiteAusgabe.waehrung.iso !== heimISO && (
+                          <p style={{
+                            color: 'var(--text-sub)', fontSize: '0.82rem',
+                            marginBottom: '10px', textAlign: 'right',
+                          }}>
+                            ≈ {umrechnen(parseFloat(bearbeiteAusgabe.betrag), bearbeiteAusgabe.waehrung.iso, heimISO).toFixed(2)}{waehrung}
+                          </p>
+                        )}
+
                         <input type="date" value={bearbeiteAusgabe.datum}
                           onChange={(e) => setBearbeiteAusgabe({ ...bearbeiteAusgabe, datum: e.target.value })}
                           style={inputStyle} />
@@ -342,9 +397,16 @@ function TripKosten() {
                         </select>
                         <div style={{ display: 'flex', gap: '8px' }}>
                           <button onClick={async () => {
+                            const betragInHeim = umrechnen(
+                              parseFloat(bearbeiteAusgabe.betrag),
+                              bearbeiteAusgabe.waehrung.iso,
+                              heimISO
+                            )
                             await ausgabeBearbeiten(ausgabe.id, {
                               beschreibung: bearbeiteAusgabe.beschreibung,
-                              betrag: parseFloat(bearbeiteAusgabe.betrag),
+                              betrag: parseFloat(betragInHeim.toFixed(2)),
+                              betrag_original: parseFloat(bearbeiteAusgabe.betrag),
+                              waehrung_original: bearbeiteAusgabe.waehrung.symbol,
                               bezahlt_von: bearbeiteAusgabe.bezahlt_von,
                               datum: bearbeiteAusgabe.datum,
                             })
@@ -368,7 +430,10 @@ function TripKosten() {
                               {ausgabe.beschreibung}
                             </p>
                             <span style={{ fontSize: '1.1rem', color: 'var(--gold)', fontWeight: '700', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                              {Number(ausgabe.betrag).toFixed(2)}{waehrung}
+                              {/* Bei Fremdwährung Original + umgerechneten Betrag anzeigen */}
+                              {ausgabe.waehrung_original && ausgabe.waehrung_original !== waehrung
+                                ? `${Number(ausgabe.betrag_original).toFixed(2)}${ausgabe.waehrung_original} (${Number(ausgabe.betrag).toFixed(2)}${waehrung})`
+                                : `${Number(ausgabe.betrag).toFixed(2)}${waehrung}`}
                             </span>
                           </div>
                           <p style={{ color: 'var(--text-sub)', fontSize: '0.78rem', margin: 0, overflowWrap: 'break-word', wordBreak: 'break-word' }}>
@@ -380,7 +445,12 @@ function TripKosten() {
                         </div>
 
                         <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
-                          <button onClick={() => setBearbeiteAusgabe({ ...ausgabe, datum: ausgabe.datum || new Date().toISOString().split('T')[0] })} className="btn-press" style={ikonButtonStyle}>
+                          <button onClick={() => setBearbeiteAusgabe({
+                            ...ausgabe,
+                            datum: ausgabe.datum || new Date().toISOString().split('T')[0],
+                            betrag: ausgabe.betrag_original != null ? ausgabe.betrag_original : ausgabe.betrag,
+                            waehrung: WAEHRUNGEN.find(w => w.symbol === ausgabe.waehrung_original) || WAEHRUNGEN.find(w => w.iso === heimISO) || WAEHRUNGEN[0],
+                          })} className="btn-press" style={ikonButtonStyle}>
                             <SquarePen size={13} color="var(--gold)" />
                           </button>
                           <button onClick={() => ausgabeLoeschen(ausgabe.id)} className="btn-press" style={ikonButtonStyleRot}>
@@ -538,6 +608,40 @@ function TripKosten() {
             <input placeholder={t('betragInWaehrungPlatzhalter')} type="number" value={neueAusgabe.betrag}
               onChange={(e) => setNeueAusgabe({ ...neueAusgabe, betrag: e.target.value })}
               style={inputStyle} />
+
+            {/* Währungs-Auswahl für den eingegebenen Betrag */}
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
+              {WAEHRUNGEN.map(w => (
+                <button
+                  key={w.iso}
+                  onClick={() => setNeueAusgabe({ ...neueAusgabe, waehrung: w })}
+                  className="btn-press"
+                  style={{
+                    flex: 1,
+                    padding: '10px 8px',
+                    borderRadius: '12px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontWeight: '700',
+                    fontSize: '0.9rem',
+                    backgroundColor: neueAusgabe.waehrung.iso === w.iso ? 'var(--gold)' : 'var(--sub)',
+                    color: neueAusgabe.waehrung.iso === w.iso ? '#0a0f1e' : 'var(--text-sub)',
+                  }}
+                >
+                  {w.symbol}
+                </button>
+              ))}
+            </div>
+
+            {/* Live-Umrechnung anzeigen, wenn eine Fremdwährung gewählt wurde */}
+            {neueAusgabe.betrag && neueAusgabe.waehrung.iso !== heimISO && (
+              <p style={{
+                color: 'var(--text-sub)', fontSize: '0.82rem',
+                marginBottom: '10px', textAlign: 'right',
+              }}>
+                ≈ {umrechnen(parseFloat(neueAusgabe.betrag), neueAusgabe.waehrung.iso, heimISO).toFixed(2)}{waehrung}
+              </p>
+            )}
 
             <input type="date" value={neueAusgabe.datum}
               onChange={(e) => setNeueAusgabe({ ...neueAusgabe, datum: e.target.value })}

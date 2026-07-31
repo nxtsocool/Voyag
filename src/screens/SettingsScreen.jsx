@@ -282,7 +282,7 @@ export default function SettingsScreen() {
               <span style={{ fontWeight: '600', fontSize: '0.95rem' }}>{t('waehrungLabel')}</span>
             </div>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              {['€', '$', '£', '¥', '₺', 'CHF'].map(w => (
+              {['€', '$', '£', '¥', '₺', 'CHF', 'Ft'].map(w => (
                 <button key={w} onClick={() => einstellungSpeichern('waehrung', w)}
                   className="btn-press" style={{
                     padding: '0 16px', minHeight: '44px', display: 'flex', alignItems: 'center', borderRadius: '12px', cursor: 'pointer',
