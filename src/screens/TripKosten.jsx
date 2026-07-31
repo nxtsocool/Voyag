@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { supabase } from '../supabase'
 import TripNav from '../components/TripNav'
-import { Wallet, Trash2, SquarePen, Plus, Check, Calendar, X } from 'lucide-react'
+import { Wallet, Trash2, SquarePen, Plus, Check, Calendar, X, ChevronDown } from 'lucide-react'
 import Toast from '../components/Toast'
 import useToast from '../hooks/useToast.jsx'
 import usePullToRefresh from '../hooks/usePullToRefresh'
@@ -26,6 +26,8 @@ function TripKosten() {
   const [formularOffen, setFormularOffen] = useState(false) // Bottom Sheet für neue Ausgabe
   const [bearbeiteAusgabe, setBearbeiteAusgabe] = useState(null)
   const [abrechnenOffen, setAbrechnenOffen] = useState(false)
+  // Ob die gesamte Ausgaben-Liste aufgeklappt ist – standardmäßig aufgeklappt
+  const [ausgabenOffen, setAusgabenOffen] = useState(true)
 
   const [neueAusgabe, setNeueAusgabe] = useState({
     beschreibung: '', betrag: '', bezahlt_von: '', fuer: [],
@@ -329,140 +331,158 @@ function TripKosten() {
           )}
         </div>
 
-        {/* Timeline der Ausgaben – nach Datum gruppiert */}
+        {/* Timeline der Ausgaben – nach Datum gruppiert, gesamte Liste als Block auf-/zuklappbar */}
         {ausgaben.length > 0 && (
           <div className="fade-in-2" style={karteStyle}>
-            <h3 style={{ margin: '0 0 20px', fontWeight: '700', fontSize: '1rem' }}>{t('ausgabenLabel')}</h3>
+            <div
+              onClick={() => setAusgabenOffen(!ausgabenOffen)}
+              style={{
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                cursor: 'pointer', marginBottom: ausgabenOffen ? '20px' : '0',
+              }}
+            >
+              <h3 style={{ margin: 0, fontWeight: '700', fontSize: '1rem' }}>
+                {t('ausgabenLabel')} ({ausgaben.length})
+              </h3>
+              <ChevronDown
+                size={18} color="var(--text-sub)"
+                style={{ transform: ausgabenOffen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}
+              />
+            </div>
 
-            {ausgabenNachDatum().map(([datum, ausgabenDesTages], gruppenIndex) => (
-              <div key={datum} style={{ marginBottom: gruppenIndex < ausgabenNachDatum().length - 1 ? '24px' : '0' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
-                  <Calendar size={12} color="var(--text-sub)" />
-                  <p style={{ color: 'var(--text-sub)', fontSize: '0.72rem', fontWeight: '700', margin: 0, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                    {datumFormatieren(datum)}
-                  </p>
-                </div>
+            {ausgabenOffen && (
+              <div className="fade-in">
+                {ausgabenNachDatum().map(([datum, ausgabenDesTages], gruppenIndex) => (
+                  <div key={datum} style={{ marginBottom: gruppenIndex < ausgabenNachDatum().length - 1 ? '24px' : '0' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
+                      <Calendar size={12} color="var(--text-sub)" />
+                      <p style={{ color: 'var(--text-sub)', fontSize: '0.72rem', fontWeight: '700', margin: 0, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                        {datumFormatieren(datum)}
+                      </p>
+                    </div>
 
-                {ausgabenDesTages.map((ausgabe, index) => (
-                  <div key={ausgabe.id}>
-                    {bearbeiteAusgabe?.id === ausgabe.id ? (
-                      <div className="fade-in" style={{ marginBottom: '16px' }}>
-                        <input value={bearbeiteAusgabe.beschreibung}
-                          onChange={(e) => setBearbeiteAusgabe({ ...bearbeiteAusgabe, beschreibung: e.target.value })}
-                          style={inputStyle} placeholder={t('beschreibungPlatzhalter')} />
-                        <input type="number" value={bearbeiteAusgabe.betrag}
-                          onChange={(e) => setBearbeiteAusgabe({ ...bearbeiteAusgabe, betrag: e.target.value })}
-                          style={inputStyle} placeholder={t('betragPlatzhalter')} />
+                    {ausgabenDesTages.map((ausgabe, index) => (
+                      <div key={ausgabe.id}>
+                        {bearbeiteAusgabe?.id === ausgabe.id ? (
+                          <div className="fade-in" style={{ marginBottom: '16px' }}>
+                            <input value={bearbeiteAusgabe.beschreibung}
+                              onChange={(e) => setBearbeiteAusgabe({ ...bearbeiteAusgabe, beschreibung: e.target.value })}
+                              style={inputStyle} placeholder={t('beschreibungPlatzhalter')} />
+                            <input type="number" value={bearbeiteAusgabe.betrag}
+                              onChange={(e) => setBearbeiteAusgabe({ ...bearbeiteAusgabe, betrag: e.target.value })}
+                              style={inputStyle} placeholder={t('betragPlatzhalter')} />
 
-                        {/* Währungs-Auswahl – gleicher Style wie beim Hinzufügen */}
-                        <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
-                          {WAEHRUNGEN.map(w => (
-                            <button
-                              key={w.iso}
-                              onClick={() => setBearbeiteAusgabe({ ...bearbeiteAusgabe, waehrung: w })}
-                              className="btn-press"
-                              style={{
-                                flex: 1,
-                                padding: '10px 8px',
-                                borderRadius: '12px',
-                                border: 'none',
-                                cursor: 'pointer',
-                                fontWeight: '700',
-                                fontSize: '0.9rem',
-                                backgroundColor: bearbeiteAusgabe.waehrung.iso === w.iso ? 'var(--gold)' : 'var(--sub)',
-                                color: bearbeiteAusgabe.waehrung.iso === w.iso ? '#0a0f1e' : 'var(--text-sub)',
-                              }}
-                            >
-                              {w.symbol}
-                            </button>
-                          ))}
-                        </div>
+                            {/* Währungs-Auswahl – gleicher Style wie beim Hinzufügen */}
+                            <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
+                              {WAEHRUNGEN.map(w => (
+                                <button
+                                  key={w.iso}
+                                  onClick={() => setBearbeiteAusgabe({ ...bearbeiteAusgabe, waehrung: w })}
+                                  className="btn-press"
+                                  style={{
+                                    flex: 1,
+                                    padding: '10px 8px',
+                                    borderRadius: '12px',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    fontWeight: '700',
+                                    fontSize: '0.9rem',
+                                    backgroundColor: bearbeiteAusgabe.waehrung.iso === w.iso ? 'var(--gold)' : 'var(--sub)',
+                                    color: bearbeiteAusgabe.waehrung.iso === w.iso ? '#0a0f1e' : 'var(--text-sub)',
+                                  }}
+                                >
+                                  {w.symbol}
+                                </button>
+                              ))}
+                            </div>
 
-                        {bearbeiteAusgabe.betrag && bearbeiteAusgabe.waehrung.iso !== heimISO && (
-                          <p style={{
-                            color: 'var(--text-sub)', fontSize: '0.82rem',
-                            marginBottom: '10px', textAlign: 'right',
-                          }}>
-                            ≈ {umrechnen(parseFloat(bearbeiteAusgabe.betrag), bearbeiteAusgabe.waehrung.iso, heimISO).toFixed(2)}{waehrung}
-                          </p>
-                        )}
-
-                        <input type="date" value={bearbeiteAusgabe.datum}
-                          onChange={(e) => setBearbeiteAusgabe({ ...bearbeiteAusgabe, datum: e.target.value })}
-                          style={inputStyle} />
-                        <select value={bearbeiteAusgabe.bezahlt_von}
-                          onChange={(e) => setBearbeiteAusgabe({ ...bearbeiteAusgabe, bezahlt_von: e.target.value })}
-                          style={{ ...inputStyle, appearance: 'none' }}>
-                          {teilnehmer.map(person => <option key={person.id} value={person.name}>{person.name}</option>)}
-                        </select>
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                          <button onClick={async () => {
-                            const betragInHeim = umrechnen(
-                              parseFloat(bearbeiteAusgabe.betrag),
-                              bearbeiteAusgabe.waehrung.iso,
-                              heimISO
-                            )
-                            await ausgabeBearbeiten(ausgabe.id, {
-                              beschreibung: bearbeiteAusgabe.beschreibung,
-                              betrag: parseFloat(betragInHeim.toFixed(2)),
-                              betrag_original: parseFloat(bearbeiteAusgabe.betrag),
-                              waehrung_original: bearbeiteAusgabe.waehrung.symbol,
-                              bezahlt_von: bearbeiteAusgabe.bezahlt_von,
-                              datum: bearbeiteAusgabe.datum,
-                            })
-                            setBearbeiteAusgabe(null)
-                          }} className="btn-press" style={{ ...speichernButtonStyle, flex: 1 }}>{t('speichern')}</button>
-                          <button onClick={() => setBearbeiteAusgabe(null)} className="btn-press" style={{ ...abbrechenButtonStyle, flex: 1 }}>{t('abbrechen')}</button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className={`fade-in-${Math.min(index + 1, 5)}`} style={{
-                        display: 'flex', alignItems: 'flex-start', gap: '12px',
-                        paddingBottom: index < ausgabenDesTages.length - 1 ? '16px' : '0',
-                        marginBottom: index < ausgabenDesTages.length - 1 ? '16px' : '0',
-                        borderBottom: index < ausgabenDesTages.length - 1 ? '1px solid var(--border)' : 'none',
-                      }}>
-                        <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: 'var(--gold)', marginTop: '6px', flexShrink: 0, boxShadow: '0 0 8px rgba(201,168,76,0.4)' }} />
-
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
-                            <p style={{ fontWeight: '600', margin: '0 0 4px', overflowWrap: 'break-word', wordBreak: 'break-word', minWidth: 0, fontSize: '0.95rem' }}>
-                              {ausgabe.beschreibung}
-                            </p>
-                            <span style={{ fontSize: '1.1rem', color: 'var(--gold)', fontWeight: '700', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                              {/* Bei Fremdwährung Original + umgerechneten Betrag anzeigen */}
-                              {ausgabe.waehrung_original && ausgabe.waehrung_original !== waehrung
-                                ? `${Number(ausgabe.betrag_original).toFixed(2)}${ausgabe.waehrung_original} (${Number(ausgabe.betrag).toFixed(2)}${waehrung})`
-                                : `${Number(ausgabe.betrag).toFixed(2)}${waehrung}`}
-                            </span>
-                          </div>
-                          <p style={{ color: 'var(--text-sub)', fontSize: '0.78rem', margin: 0, overflowWrap: 'break-word', wordBreak: 'break-word' }}>
-                            {t('bezahltVonText')(ausgabe.bezahlt_von)}
-                            {ausgabe.fuer && ausgabe.fuer.length > 0 && (
-                              <span> · {t('fuerWenText')(Array.isArray(ausgabe.fuer) ? ausgabe.fuer.join(', ') : ausgabe.fuer)}</span>
+                            {bearbeiteAusgabe.betrag && bearbeiteAusgabe.waehrung.iso !== heimISO && (
+                              <p style={{
+                                color: 'var(--text-sub)', fontSize: '0.82rem',
+                                marginBottom: '10px', textAlign: 'right',
+                              }}>
+                                ≈ {umrechnen(parseFloat(bearbeiteAusgabe.betrag), bearbeiteAusgabe.waehrung.iso, heimISO).toFixed(2)}{waehrung}
+                              </p>
                             )}
-                          </p>
-                        </div>
 
-                        <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
-                          <button onClick={() => setBearbeiteAusgabe({
-                            ...ausgabe,
-                            datum: ausgabe.datum || new Date().toISOString().split('T')[0],
-                            betrag: ausgabe.betrag_original != null ? ausgabe.betrag_original : ausgabe.betrag,
-                            waehrung: WAEHRUNGEN.find(w => w.symbol === ausgabe.waehrung_original) || WAEHRUNGEN.find(w => w.iso === heimISO) || WAEHRUNGEN[0],
-                          })} className="btn-press" style={ikonButtonStyle}>
-                            <SquarePen size={13} color="var(--gold)" />
-                          </button>
-                          <button onClick={() => ausgabeLoeschen(ausgabe.id)} className="btn-press" style={ikonButtonStyleRot}>
-                            <Trash2 size={13} color="#e94560" />
-                          </button>
-                        </div>
+                            <input type="date" value={bearbeiteAusgabe.datum}
+                              onChange={(e) => setBearbeiteAusgabe({ ...bearbeiteAusgabe, datum: e.target.value })}
+                              style={dateInputStyle} />
+                            <select value={bearbeiteAusgabe.bezahlt_von}
+                              onChange={(e) => setBearbeiteAusgabe({ ...bearbeiteAusgabe, bezahlt_von: e.target.value })}
+                              style={{ ...inputStyle, appearance: 'none' }}>
+                              {teilnehmer.map(person => <option key={person.id} value={person.name}>{person.name}</option>)}
+                            </select>
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                              <button onClick={async () => {
+                                const betragInHeim = umrechnen(
+                                  parseFloat(bearbeiteAusgabe.betrag),
+                                  bearbeiteAusgabe.waehrung.iso,
+                                  heimISO
+                                )
+                                await ausgabeBearbeiten(ausgabe.id, {
+                                  beschreibung: bearbeiteAusgabe.beschreibung,
+                                  betrag: parseFloat(betragInHeim.toFixed(2)),
+                                  betrag_original: parseFloat(bearbeiteAusgabe.betrag),
+                                  waehrung_original: bearbeiteAusgabe.waehrung.symbol,
+                                  bezahlt_von: bearbeiteAusgabe.bezahlt_von,
+                                  datum: bearbeiteAusgabe.datum,
+                                })
+                                setBearbeiteAusgabe(null)
+                              }} className="btn-press" style={{ ...speichernButtonStyle, flex: 1 }}>{t('speichern')}</button>
+                              <button onClick={() => setBearbeiteAusgabe(null)} className="btn-press" style={{ ...abbrechenButtonStyle, flex: 1 }}>{t('abbrechen')}</button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className={`fade-in-${Math.min(index + 1, 5)}`} style={{
+                            display: 'flex', alignItems: 'flex-start', gap: '12px',
+                            paddingBottom: index < ausgabenDesTages.length - 1 ? '16px' : '0',
+                            marginBottom: index < ausgabenDesTages.length - 1 ? '16px' : '0',
+                            borderBottom: index < ausgabenDesTages.length - 1 ? '1px solid var(--border)' : 'none',
+                          }}>
+                            <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: 'var(--gold)', marginTop: '6px', flexShrink: 0, boxShadow: '0 0 8px rgba(201,168,76,0.4)' }} />
+
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+                                <p style={{ fontWeight: '600', margin: '0 0 4px', overflowWrap: 'break-word', wordBreak: 'break-word', minWidth: 0, fontSize: '0.95rem' }}>
+                                  {ausgabe.beschreibung}
+                                </p>
+                                <span style={{ fontSize: '1.1rem', color: 'var(--gold)', fontWeight: '700', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                                  {/* Bei Fremdwährung Original + umgerechneten Betrag anzeigen */}
+                                  {ausgabe.waehrung_original && ausgabe.waehrung_original !== waehrung
+                                    ? `${Number(ausgabe.betrag_original).toFixed(2)}${ausgabe.waehrung_original} (${Number(ausgabe.betrag).toFixed(2)}${waehrung})`
+                                    : `${Number(ausgabe.betrag).toFixed(2)}${waehrung}`}
+                                </span>
+                              </div>
+                              <p style={{ color: 'var(--text-sub)', fontSize: '0.78rem', margin: 0, overflowWrap: 'break-word', wordBreak: 'break-word' }}>
+                                {t('bezahltVonText')(ausgabe.bezahlt_von)}
+                                {ausgabe.fuer && ausgabe.fuer.length > 0 && (
+                                  <span> · {t('fuerWenText')(Array.isArray(ausgabe.fuer) ? ausgabe.fuer.join(', ') : ausgabe.fuer)}</span>
+                                )}
+                              </p>
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
+                              <button onClick={() => setBearbeiteAusgabe({
+                                ...ausgabe,
+                                datum: ausgabe.datum || new Date().toISOString().split('T')[0],
+                                betrag: ausgabe.betrag_original != null ? ausgabe.betrag_original : ausgabe.betrag,
+                                waehrung: WAEHRUNGEN.find(w => w.symbol === ausgabe.waehrung_original) || WAEHRUNGEN.find(w => w.iso === heimISO) || WAEHRUNGEN[0],
+                              })} className="btn-press" style={ikonButtonStyle}>
+                                <SquarePen size={13} color="var(--gold)" />
+                              </button>
+                              <button onClick={() => ausgabeLoeschen(ausgabe.id)} className="btn-press" style={ikonButtonStyleRot}>
+                                <Trash2 size={13} color="#e94560" />
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    )}
+                    ))}
                   </div>
                 ))}
               </div>
-            ))}
+            )}
           </div>
         )}
 
@@ -584,7 +604,7 @@ function TripKosten() {
           <div className="fade-in" style={{
             backgroundColor: 'var(--card)', borderRadius: '24px 24px 0 0',
             padding: '24px 20px 32px', width: '100%', maxWidth: '600px',
-            maxHeight: '85vh', overflowY: 'auto', boxSizing: 'border-box',
+            maxHeight: '85vh', overflowY: 'auto', overflowX: 'hidden', boxSizing: 'border-box',
             position: 'relative', zIndex: 9999,
           }}>
             {/* Griff oben */}
@@ -645,7 +665,7 @@ function TripKosten() {
 
             <input type="date" value={neueAusgabe.datum}
               onChange={(e) => setNeueAusgabe({ ...neueAusgabe, datum: e.target.value })}
-              style={inputStyle} />
+              style={dateInputStyle} />
 
             <select value={neueAusgabe.bezahlt_von}
               onChange={(e) => setNeueAusgabe({ ...neueAusgabe, bezahlt_von: e.target.value })}
@@ -716,6 +736,15 @@ const inputStyle = {
   // min. 16px verhindert Auto-Zoom bei Fokus auf iOS Safari
   color: 'var(--text)', fontSize: '16px', minHeight: '44px',
   marginBottom: '10px', boxSizing: 'border-box',
+}
+
+// Eigener Style fürs Datumsfeld – appearance:none entfernt die native Breite
+// des Kalender-Widgets, das <input type="date"> sonst über den Screen hinausschieben kann
+const dateInputStyle = {
+  ...inputStyle,
+  maxWidth: '100%',
+  appearance: 'none',
+  WebkitAppearance: 'none',
 }
 
 const speichernButtonStyle = {

@@ -482,60 +482,68 @@ export default function TripFotos() {
       {/* Action-Bar im Auswahl-Modus – fixed am unteren Rand, sehr hoher z-index damit sie
           garantiert über allem liegt (auch im Light Mode sichtbar dank var(--card)) */}
       {auswahlModus && (
-        <div className="fade-in" style={{
+        <div style={{
           position: 'fixed',
           bottom: 'calc(85px + env(safe-area-inset-bottom))',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: 'calc(100% - 32px)',
-          maxWidth: '560px',
-          backgroundColor: 'var(--card)',
-          borderRadius: '20px',
-          padding: '12px 16px',
+          left: 0, right: 0,
           display: 'flex',
-          gap: '8px',
-          alignItems: 'center',
-          boxShadow: '0 -4px 32px rgba(0,0,0,0.15)',
-          zIndex: 500,
+          justifyContent: 'center',
+          padding: '0 16px',
           boxSizing: 'border-box',
+          zIndex: 500,
+          pointerEvents: 'none', // damit Tippen neben der Bar durchgeht
         }}>
-          <button onClick={alleAuswaehlenToggle} className="btn-press" style={{
-            backgroundColor: 'var(--sub)', color: 'var(--text)', border: 'none',
-            borderRadius: '12px', padding: '0 14px', minHeight: '44px', boxSizing: 'border-box',
-            cursor: 'pointer', fontSize: '0.8rem', fontWeight: '600', whiteSpace: 'nowrap', flexShrink: 0,
+          <div className="fade-in" style={{
+            width: '100%',
+            maxWidth: '560px',
+            backgroundColor: 'var(--card)',
+            borderRadius: '20px',
+            padding: '12px 16px',
+            display: 'flex',
+            gap: '8px',
+            alignItems: 'center',
+            boxShadow: '0 -4px 32px rgba(0,0,0,0.15)',
+            boxSizing: 'border-box',
+            pointerEvents: 'auto', // Buttons wieder klickbar
           }}>
-            {fotos.length > 0 && ausgewaehlteFotos.length === fotos.length ? t('alleAbwaehlen') : t('alleAuswaehlen')}
-          </button>
+            <button onClick={alleAuswaehlenToggle} className="btn-press" style={{
+              backgroundColor: 'var(--sub)', color: 'var(--text)', border: 'none',
+              borderRadius: '12px', padding: '0 14px', minHeight: '44px', boxSizing: 'border-box',
+              cursor: 'pointer', fontSize: '0.8rem', fontWeight: '600', whiteSpace: 'nowrap', flexShrink: 0,
+            }}>
+              {fotos.length > 0 && ausgewaehlteFotos.length === fotos.length ? t('alleAbwaehlen') : t('alleAuswaehlen')}
+            </button>
 
-          <button
-            onClick={alleHerunterladen}
-            disabled={ausgewaehlteFotos.length === 0 || herunterladenLaeuft}
-            className="btn-press"
-            style={{
-              flex: 1, backgroundColor: 'var(--gold)', color: '#ffffff', border: 'none',
-              borderRadius: '12px', minHeight: '44px', boxSizing: 'border-box',
-              cursor: 'pointer', fontSize: '0.8rem', fontWeight: '700',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
-              opacity: (ausgewaehlteFotos.length === 0 || herunterladenLaeuft) ? 0.5 : 1,
-              minWidth: 0,
-            }}
-          >
-            <Download size={15} /> {t('herunterladenAnzahl')(ausgewaehlteFotos.length)}
-          </button>
+            <button
+              onClick={alleHerunterladen}
+              disabled={ausgewaehlteFotos.length === 0 || herunterladenLaeuft}
+              className="btn-press"
+              style={{
+                flex: 1, backgroundColor: 'var(--gold)', color: '#ffffff', border: 'none',
+                borderRadius: '12px', minHeight: '44px', boxSizing: 'border-box',
+                cursor: 'pointer', fontSize: '0.8rem', fontWeight: '700',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                opacity: (ausgewaehlteFotos.length === 0 || herunterladenLaeuft) ? 0.5 : 1,
+                minWidth: 0,
+              }}
+            >
+              <Download size={15} /> {t('herunterladenAnzahl')(ausgewaehlteFotos.length)}
+            </button>
 
-          <button
-            onClick={() => setLoescheBestaetigung(true)}
-            disabled={eigeneAusgewaehlteAnzahl === 0}
-            className="btn-press"
-            style={{
-              backgroundColor: 'rgba(233,69,96,0.1)', color: 'var(--error)', border: 'none',
-              borderRadius: '12px', width: '44px', height: '44px', boxSizing: 'border-box',
-              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              opacity: eigeneAusgewaehlteAnzahl === 0 ? 0.4 : 1, flexShrink: 0,
-            }}
-          >
-            <Trash2 size={16} />
-          </button>
+            <button
+              onClick={() => setLoescheBestaetigung(true)}
+              disabled={eigeneAusgewaehlteAnzahl === 0}
+              className="btn-press"
+              style={{
+                backgroundColor: 'rgba(233,69,96,0.1)', color: 'var(--error)', border: 'none',
+                borderRadius: '12px', width: '44px', height: '44px', boxSizing: 'border-box',
+                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                opacity: eigeneAusgewaehlteAnzahl === 0 ? 0.4 : 1, flexShrink: 0,
+              }}
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
         </div>
       )}
 

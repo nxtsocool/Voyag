@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom'
 import { supabase } from '../supabase'
 import TripNav from '../components/TripNav'
 import {
-  Trash2, SquarePen, ExternalLink, MapPin, Check,
+  Trash2, SquarePen, ExternalLink, MapPin, Check, ChevronDown,
   Utensils, Landmark, Palmtree, Zap, ShoppingBag, Hotel, Beer, Plus, X,
 } from 'lucide-react'
 import { useSettings } from '../context/SettingsContext'
@@ -31,6 +31,18 @@ export default function TripOrte() {
   const [formularOffen, setFormularOffen] = useState(false)
   const [bearbeiteOrt, setBearbeiteOrt] = useState(null) // null = neu anlegen
   const [formDaten, setFormDaten] = useState({ name: '', kategorie: 'sonstiges', notiz: '', maps_link: '' })
+
+  // Kategorien, die aufgeklappt sind – standardmäßig alle
+  const [offeneKategorien, setOffeneKategorien] = useState(new Set(KATEGORIEN.map(k => k.id)))
+
+  const kategorieToggle = (kategorieId) => {
+    setOffeneKategorien(prev => {
+      const neu = new Set(prev)
+      if (neu.has(kategorieId)) neu.delete(kategorieId)
+      else neu.add(kategorieId)
+      return neu
+    })
+  }
 
   useEffect(() => {
     const datenLaden = async () => {
@@ -209,25 +221,43 @@ export default function TripOrte() {
             const GruppeIcon = gruppe.Icon
             return (
               <div key={gruppe.id} className={`fade-in-${Math.min(gruppenIdx + 2, 5)}`}>
-                {/* Kategorie-Überschrift */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px', marginTop: gruppenIdx > 0 ? '24px' : '0' }}>
-                  <div style={{
-                    width: '32px', height: '32px', borderRadius: '9px',
-                    backgroundColor: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.18)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                  }}>
-                    <GruppeIcon size={15} color="var(--gold)" />
+                {/* Kategorie-Überschrift – klickbar zum Auf-/Zuklappen */}
+                <div
+                  onClick={() => kategorieToggle(gruppe.id)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '10px',
+                    justifyContent: 'space-between',
+                    padding: '12px 0', marginTop: gruppenIdx > 0 ? '12px' : '0',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                    <div style={{
+                      width: '32px', height: '32px', borderRadius: '9px',
+                      backgroundColor: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.18)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                    }}>
+                      <GruppeIcon size={15} color="var(--gold)" />
+                    </div>
+                    <p style={{ fontWeight: '700', color: 'var(--text)', margin: 0, fontSize: '0.92rem' }}>
+                      {t(gruppe.labelKey)}
+                    </p>
+                    <span style={{ color: 'var(--text-sub)', fontSize: '0.78rem', fontWeight: '600' }}>
+                      ({gruppe.orte.length})
+                    </span>
                   </div>
-                  <p style={{ fontWeight: '700', color: 'var(--text)', margin: 0, fontSize: '0.92rem' }}>
-                    {t(gruppe.labelKey)}
-                  </p>
-                  <span style={{ color: 'var(--text-sub)', fontSize: '0.78rem', fontWeight: '600' }}>
-                    ({gruppe.orte.length})
-                  </span>
+                  <ChevronDown
+                    size={18} color="var(--text-sub)"
+                    style={{
+                      flexShrink: 0,
+                      transform: offeneKategorien.has(gruppe.id) ? 'rotate(180deg)' : 'rotate(0deg)',
+                      transition: 'transform 0.2s ease',
+                    }}
+                  />
                 </div>
 
-                {/* Ort-Karten */}
-                {gruppe.orte.map(ort => {
+                {/* Ort-Karten – nur sichtbar wenn Kategorie aufgeklappt */}
+                {offeneKategorien.has(gruppe.id) && gruppe.orte.map(ort => {
                   const KatInfo = KATEGORIEN.find(k => k.id === ort.kategorie) || KATEGORIEN[7]
                   const KatIcon = KatInfo.Icon
                   const mapsUrl = ort.maps_link
