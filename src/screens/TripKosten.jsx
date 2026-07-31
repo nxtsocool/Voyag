@@ -136,34 +136,55 @@ function TripKosten() {
 
   // Wer schuldet wem was – abzüglich bereits Abgerechnetem
   const schuldenBerechnen = () => {
-    if (teilnehmer.length === 0 || gesamt === 0) return []
-    const schulden = []
+  if (teilnehmer.length === 0 || gesamt === 0) return []
+  const schulden = []
 
-    teilnehmer.forEach(person => {
-      const bezahlt = ausgaben.filter(a => a.bezahlt_von === person.name).reduce((sum, a) => sum + a.betrag, 0)
-      const anteil = ausgaben.reduce((sum, a) => sum + anteilBerechnen(a, person.name), 0)
-      const differenz = bezahlt - anteil
+  // Saldo für jeden berechnen
+  const salden = teilnehmer.map(person => {
+    const bezahlt = ausgaben
+      .filter(a => a.bezahlt_von === person.name)
+      .reduce((sum, a) => sum + a.betrag, 0)
+    const anteil = ausgaben.reduce((sum, a) => sum + anteilBerechnen(a, person.name), 0)
+    const bereitsAbgerechnetAls = abrechnungen
+      .filter(ab => ab.von === person.name)
+      .reduce((sum, ab) => sum + ab.betrag, 0)
+    const bereitsErhaltenAls = abrechnungen
+      .filter(ab => ab.an === person.name)
+      .reduce((sum, ab) => sum + ab.betrag, 0)
 
-      if (differenz < -0.01) {
-        const glaeubiger = teilnehmer.find(p => {
-          const pBezahlt = ausgaben.filter(a => a.bezahlt_von === p.name).reduce((sum, a) => sum + a.betrag, 0)
-          const pAnteil = ausgaben.reduce((sum, a) => sum + anteilBerechnen(a, p.name), 0)
-          return pBezahlt - pAnteil > 0.01
-        })
-        if (glaeubiger) {
-          const bereitsAbgerechnet = abrechnungen
-            .filter(ab => ab.von === person.name && ab.an === glaeubiger.name)
-            .reduce((sum, ab) => sum + ab.betrag, 0)
+    return {
+      name: person.name,
+      saldo: (bezahlt - anteil) + bereitsAbgerechnetAls - bereitsErhaltenAls
+    }
+  })
 
-          const offenerBetrag = Math.abs(differenz) - bereitsAbgerechnet
+  // Schuldner (negativ) und Gläubiger (positiv) trennen
+  const schuldner = salden.filter(s => s.saldo < -0.01).map(s => ({ ...s, offen: Math.abs(s.saldo) }))
+  const glaeubiger = salden.filter(s => s.saldo > 0.01).map(s => ({ ...s, offen: s.saldo }))
 
-          if (offenerBetrag > 0.01) {
-            schulden.push({ von: person.name, an: glaeubiger.name, betrag: offenerBetrag.toFixed(2) })
-          }
-        }
-      }
-    })
-    return schulden
+  // Jeden Schuldner gegen alle Gläubiger aufteilen
+  for (const schuldnerPerson of schuldner) {
+    let nochOffen = schuldnerPerson.offen
+
+    for (const glaeubigerPerson of glaeubiger) {
+      if (nochOffen <= 0.01) break
+      if (glaeubigerPerson.offen <= 0.01) continue
+
+      // Wie viel kann dieser Gläubiger bekommen?
+      const betrag = Math.min(nochOffen, glaeubigerPerson.offen)
+
+      schulden.push({
+        von: schuldnerPerson.name,
+        an: glaeubigerPerson.name,
+        betrag: betrag.toFixed(2),
+      })
+
+      nochOffen -= betrag
+      glaeubigerPerson.offen -= betrag
+    }
+  }
+
+  return schulden
   }
 
   const schulden = schuldenBerechnen()
