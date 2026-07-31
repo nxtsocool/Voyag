@@ -679,7 +679,7 @@ function TripKosten() {
                   <div style={{
                     width: '22px', height: '22px', borderRadius: '50%',
                     backgroundColor: istGewaehlt ? 'var(--gold)' : 'transparent',
-                    border: istGewaehlt ? '2px solid var(--gold)' : '2px solid rgba(255,255,255,0.2)',
+                    border: istGewaehlt ? '2px solid var(--gold)' : '1px solid var(--gold)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                   }}>
                     {istGewaehlt && <span style={{ fontSize: '11px', color: '#0a0f1e', fontWeight: '700' }}>✓</span>}

@@ -1,16 +1,11 @@
 BUGFIX
-- Fotoscreen Light mode Bugfix
-- Bilder download fix
 - Packliste Checkbox Lightmode
-- Kostenscreen verbuggt
-
-
+- Automatische Währungsumrechnung aus Settings
 
 IDEEN
 - Orte Kategorien einklappen
 - Einladungslink
 - Navigation umdesignen beim Trip
-- Währungen umrechnen
 - TripHome Design/Anordnung ändern
 - Andere Konten anzeigen mit Reisen Karte usw
 - Karten für einzelne Teilnehmer mit Notizfenster
