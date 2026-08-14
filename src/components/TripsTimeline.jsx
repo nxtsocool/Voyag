@@ -1,9 +1,5 @@
-import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { supabase } from '../supabase'
 import laender from '../data/laender'
-import { CalendarDays } from 'lucide-react'
-import { useSettings } from '../context/SettingsContext'
 
 // Start-/Enddatum aus dem "DD.MM.YYYY - DD.MM.YYYY" Format parsen
 const parseZeitraum = (datum) => {
@@ -21,37 +17,9 @@ const parseZeitraum = (datum) => {
   return { start, ende }
 }
 
-function TimelineScreen() {
+// Zeitleisten-Ansicht der Reisen – wird in TripsOverview als Alternative zur Karten-Ansicht eingebettet
+function TripsTimeline({ trips, currentUser, t }) {
   const navigate = useNavigate()
-  const { t } = useSettings()
-  const [trips, setTrips] = useState([])
-  const [currentUser, setCurrentUser] = useState(null)
-  const [laden, setLaden] = useState(true)
-
-  useEffect(() => {
-    const datenLaden = async () => {
-      const { data: authData } = await supabase.auth.getUser()
-      const user = authData.user
-      setCurrentUser(user)
-
-      const { data: eigeneTrips } = await supabase
-        .from('trips').select('*').eq('user_id', user.id)
-
-      const { data: members } = await supabase
-        .from('trip_members').select('trip_id').eq('user_id', user.id)
-
-      let beigetreteneTrips = []
-      if (members && members.length > 0) {
-        const tripIds = members.map(m => m.trip_id)
-        const { data } = await supabase.from('trips').select('*').in('id', tripIds)
-        beigetreteneTrips = data || []
-      }
-
-      setTrips([...(eigeneTrips || []), ...beigetreteneTrips])
-      setLaden(false)
-    }
-    datenLaden()
-  }, [])
 
   const getFlaggeUrl = (code) => code ? `https://flagcdn.com/w40/${code.toLowerCase()}.png` : null
 
@@ -158,66 +126,36 @@ function TimelineScreen() {
     )
   }
 
-  if (laden) return (
-    <div style={{ maxWidth: '600px', margin: '0 auto', padding: '24px 20px', boxSizing: 'border-box' }}>
-      {[1, 2, 3].map(i => (
-        <div key={i} className="skeleton" style={{ height: '78px', borderRadius: '20px', marginBottom: '16px' }} />
-      ))}
-    </div>
-  )
+  // Leerer Zustand wird zentral in TripsOverview gerendert – hier nichts anzeigen
+  if (trips.length === 0) return null
 
   return (
-    <div style={{ maxWidth: '600px', margin: '0 auto', padding: '24px 20px', boxSizing: 'border-box', paddingBottom: 'calc(120px + env(safe-area-inset-bottom))' }}>
-      <h1 style={{ fontSize: '1.4rem', fontWeight: '800', margin: '0 0 24px', letterSpacing: '-0.5px' }}>
-        {t('navTimeline')}
-      </h1>
+    <div style={{ position: 'relative' }}>
+      {/* Durchgehende vertikale Linie */}
+      <div style={{
+        position: 'absolute', left: '5px', top: '18px', bottom: '18px',
+        width: '2px', backgroundColor: 'var(--border)',
+      }} />
 
-      {trips.length === 0 ? (
-        <div className="fade-in" style={{ textAlign: 'center', padding: '80px 20px' }}>
-          <div style={{
-            width: '72px', height: '72px', borderRadius: '50%',
-            backgroundColor: 'rgba(var(--gold-rgb), 0.1)', display: 'flex',
-            alignItems: 'center', justifyContent: 'center',
-            margin: '0 auto 20px',
-          }}>
-            <CalendarDays size={36} color="var(--gold)" />
+      {nichtVergangen.map((eintrag, index) => renderEintrag(eintrag, index))}
+
+      {vergangen.length > 0 && (
+        <div style={{ position: 'relative', paddingLeft: '28px', margin: '8px 0 16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{
+              color: 'var(--text-sub)', fontSize: '0.72rem', fontWeight: '700',
+              textTransform: 'uppercase', letterSpacing: '0.08em', whiteSpace: 'nowrap',
+            }}>
+              {t('timelineVergangenLabel')}
+            </span>
+            <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--border)' }} />
           </div>
-          <p style={{ fontWeight: '700', color: 'var(--text)', marginBottom: '8px', fontSize: '1.1rem' }}>
-            {t('timelineLeerTitel')}
-          </p>
-          <p style={{ fontSize: '0.9rem', color: 'var(--text-sub)', lineHeight: 1.5 }}>
-            {t('timelineLeerSubtitel')}
-          </p>
-        </div>
-      ) : (
-        <div style={{ position: 'relative' }}>
-          {/* Durchgehende vertikale Linie */}
-          <div style={{
-            position: 'absolute', left: '5px', top: '18px', bottom: '18px',
-            width: '2px', backgroundColor: 'var(--border)',
-          }} />
-
-          {nichtVergangen.map((eintrag, index) => renderEintrag(eintrag, index))}
-
-          {vergangen.length > 0 && (
-            <div style={{ position: 'relative', paddingLeft: '28px', margin: '8px 0 16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{
-                  color: 'var(--text-sub)', fontSize: '0.72rem', fontWeight: '700',
-                  textTransform: 'uppercase', letterSpacing: '0.08em', whiteSpace: 'nowrap',
-                }}>
-                  {t('timelineVergangenLabel')}
-                </span>
-                <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--border)' }} />
-              </div>
-            </div>
-          )}
-
-          {vergangen.map((eintrag, index) => renderEintrag(eintrag, index))}
         </div>
       )}
+
+      {vergangen.map((eintrag, index) => renderEintrag(eintrag, index))}
     </div>
   )
 }
 
-export default TimelineScreen
+export default TripsTimeline

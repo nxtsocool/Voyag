@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Plane, CalendarDays, Map, Settings } from 'lucide-react'
+import { Plane, Map, Settings } from 'lucide-react'
 import { useSettings } from '../context/SettingsContext'
 
 function BottomNav() {
@@ -9,7 +9,6 @@ function BottomNav() {
 
   const tabs = [
     { path: '/', label: t('reisen'), icon: Plane },
-    { path: '/timeline', label: t('navTimeline'), icon: CalendarDays },
     { path: '/map', label: t('karte'), icon: Map },
     { path: '/settings', label: t('einstellungen'), icon: Settings },
   ]

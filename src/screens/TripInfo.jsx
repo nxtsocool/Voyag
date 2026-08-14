@@ -250,9 +250,12 @@ function TripInfo() {
               <input placeholder={t('titelHinflugPlatzhalter')} value={neuerFlug.titel}
                 onChange={(e) => setNeuerFlug({ ...neuerFlug, titel: e.target.value })}
                 style={inputStyle} />
-              <input type="date" value={neuerFlug.datum}
-                onChange={(e) => setNeuerFlug({ ...neuerFlug, datum: e.target.value })}
-                style={dateInputStyle} />
+              <div style={{ marginBottom: '10px' }}>
+                <label style={datumFeldLabelStyle}>{t('flugDatum')}</label>
+                <input type="date" value={neuerFlug.datum || ''}
+                  onChange={(e) => setNeuerFlug({ ...neuerFlug, datum: e.target.value })}
+                  style={{ ...dateInputStyle, marginBottom: 0 }} />
+              </div>
               <input placeholder={t('flugnummerPlatzhalter')} value={neuerFlug.flugnummer}
                 onChange={(e) => setNeuerFlug({ ...neuerFlug, flugnummer: e.target.value })}
                 style={inputStyle} />
@@ -284,9 +287,12 @@ function TripInfo() {
                     <input placeholder={t('titelPlatzhalter')} value={bearbeiteFlug.titel}
                       onChange={(e) => setBearbeiteFlug({ ...bearbeiteFlug, titel: e.target.value })}
                       style={inputStyle} />
-                    <input type="date" value={bearbeiteFlug.datum || ''}
-                      onChange={(e) => setBearbeiteFlug({ ...bearbeiteFlug, datum: e.target.value })}
-                      style={dateInputStyle} />
+                    <div style={{ marginBottom: '10px' }}>
+                      <label style={datumFeldLabelStyle}>{t('flugDatum')}</label>
+                      <input type="date" value={bearbeiteFlug.datum || ''}
+                        onChange={(e) => setBearbeiteFlug({ ...bearbeiteFlug, datum: e.target.value })}
+                        style={{ ...dateInputStyle, marginBottom: 0 }} />
+                    </div>
                     <input placeholder={t('flugnummerKurzPlatzhalter')} value={bearbeiteFlug.flugnummer}
                       onChange={(e) => setBearbeiteFlug({ ...bearbeiteFlug, flugnummer: e.target.value })}
                       style={inputStyle} />
@@ -402,13 +408,19 @@ function TripInfo() {
               <input placeholder={t('adresse')} value={neueUnterkunft.adresse}
                 onChange={(e) => setNeueUnterkunft({ ...neueUnterkunft, adresse: e.target.value })}
                 style={inputStyle} />
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
-                <input type="date" value={neueUnterkunft.von_datum}
-                  onChange={(e) => setNeueUnterkunft({ ...neueUnterkunft, von_datum: e.target.value })}
-                  style={{ ...dateInputStyle, marginBottom: 0 }} />
-                <input type="date" value={neueUnterkunft.bis_datum}
-                  onChange={(e) => setNeueUnterkunft({ ...neueUnterkunft, bis_datum: e.target.value })}
-                  style={{ ...dateInputStyle, marginBottom: 0 }} />
+              <div className="unterkunft-datum-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
+                <div>
+                  <label style={datumFeldLabelStyle}>{t('unterkunftVon')}</label>
+                  <input type="date" value={neueUnterkunft.von_datum || ''}
+                    onChange={(e) => setNeueUnterkunft({ ...neueUnterkunft, von_datum: e.target.value })}
+                    style={{ ...dateInputStyle, marginBottom: 0 }} />
+                </div>
+                <div>
+                  <label style={datumFeldLabelStyle}>{t('unterkunftBis')}</label>
+                  <input type="date" value={neueUnterkunft.bis_datum || ''}
+                    onChange={(e) => setNeueUnterkunft({ ...neueUnterkunft, bis_datum: e.target.value })}
+                    style={{ ...dateInputStyle, marginBottom: 0 }} />
+                </div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <input placeholder={t('checkinPlatzhalter')} value={neueUnterkunft.checkin}
@@ -447,13 +459,19 @@ function TripInfo() {
                     <input placeholder={t('adresse')} value={bearbeiteUnterkunft.adresse}
                       onChange={(e) => setBearbeiteUnterkunft({ ...bearbeiteUnterkunft, adresse: e.target.value })}
                       style={inputStyle} />
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
-                      <input type="date" value={bearbeiteUnterkunft.von_datum || ''}
-                        onChange={(e) => setBearbeiteUnterkunft({ ...bearbeiteUnterkunft, von_datum: e.target.value })}
-                        style={{ ...dateInputStyle, marginBottom: 0 }} />
-                      <input type="date" value={bearbeiteUnterkunft.bis_datum || ''}
-                        onChange={(e) => setBearbeiteUnterkunft({ ...bearbeiteUnterkunft, bis_datum: e.target.value })}
-                        style={{ ...dateInputStyle, marginBottom: 0 }} />
+                    <div className="unterkunft-datum-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
+                      <div>
+                        <label style={datumFeldLabelStyle}>{t('unterkunftVon')}</label>
+                        <input type="date" value={bearbeiteUnterkunft.von_datum || ''}
+                          onChange={(e) => setBearbeiteUnterkunft({ ...bearbeiteUnterkunft, von_datum: e.target.value })}
+                          style={{ ...dateInputStyle, marginBottom: 0 }} />
+                      </div>
+                      <div>
+                        <label style={datumFeldLabelStyle}>{t('unterkunftBis')}</label>
+                        <input type="date" value={bearbeiteUnterkunft.bis_datum || ''}
+                          onChange={(e) => setBearbeiteUnterkunft({ ...bearbeiteUnterkunft, bis_datum: e.target.value })}
+                          style={{ ...dateInputStyle, marginBottom: 0 }} />
+                      </div>
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                       <input placeholder={t('checkinKurzPlatzhalter')} value={bearbeiteUnterkunft.checkin}
@@ -683,13 +701,30 @@ const inputStyle = {
   marginBottom: '10px', boxSizing: 'border-box',
 }
 
-// Eigener Style fürs Datumsfeld – appearance:none entfernt die native Breite
-// des Kalender-Widgets, das <input type="date"> sonst über den Screen hinausschieben kann
+// Eigener Style fürs Datumsfeld – native Date-Inputs haben auf iOS Safari eine
+// eigene Intrinsic-Width und zeigen bei leerem Wert nichts an; minWidth erzwingt
+// die volle Breite, appearance:none entfernt die native Breite des Kalender-Widgets
 const dateInputStyle = {
   ...inputStyle,
+  width: '100%',
+  minWidth: '100%',
   maxWidth: '100%',
+  minHeight: '48px',
+  fontFamily: 'inherit',
+  display: 'block',
   appearance: 'none',
   WebkitAppearance: 'none',
+}
+
+// Label über einem Datumsfeld – ersetzt den auf iOS unsichtbaren Placeholder
+const datumFeldLabelStyle = {
+  display: 'block',
+  color: 'var(--text-sub)',
+  fontSize: '0.78rem',
+  fontWeight: '600',
+  marginBottom: '6px',
+  textTransform: 'uppercase',
+  letterSpacing: '0.06em',
 }
 
 const badgeStyle = {

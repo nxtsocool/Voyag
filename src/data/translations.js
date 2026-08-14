@@ -3,7 +3,6 @@ export const translations = {
   de: {
     // Navigation (BottomNav + TripNav + TripHome Kacheln)
     reisen: 'Reisen',
-    navTimeline: 'Zeitleiste',
     karte: 'Karte',
     einstellungen: 'Einstellungen',
     navInfo: 'Info',
@@ -56,9 +55,9 @@ export const translations = {
     joinUngueltigText: 'Dieser Link ist ungültig oder die Reise existiert nicht mehr.',
     joinZurueckBtn: 'Zurück zur Übersicht',
 
-    // TimelineScreen
-    timelineLeerTitel: 'Noch keine Reisen in der Zeitleiste',
-    timelineLeerSubtitel: 'Deine eigenen und beigetretenen Reisen erscheinen hier chronologisch.',
+    // TripsTimeline (Zeitleisten-Ansicht in TripsOverview)
+    ansichtKarten: 'Karten',
+    ansichtTimeline: 'Zeitleiste',
     timelineVergangenLabel: 'Vergangen',
     timelineLaeuftGerade: 'Läuft gerade',
     timelineNochTage: (n) => `Noch ${n} ${n === 1 ? 'Tag' : 'Tage'}`,
@@ -107,6 +106,7 @@ export const translations = {
     flugnummerKurzPlatzhalter: 'Flugnummer',
     abflugKurzPlatzhalter: 'Abflug',
     ankunftKurzPlatzhalter: 'Ankunft',
+    flugDatum: 'Datum',
     keineFluege: 'Noch keine Flüge – tippe auf "+ Flug"',
     unterkuenfteTitel: 'Unterkünfte',
     unterkunftHinzufuegenBtn: '+ Unterkunft',
@@ -116,6 +116,8 @@ export const translations = {
     checkoutPlatzhalter: 'Check-out (11:00)',
     checkinKurzPlatzhalter: 'Check-in',
     checkoutKurzPlatzhalter: 'Check-out',
+    unterkunftVon: 'Check-in Datum',
+    unterkunftBis: 'Check-out Datum',
     keineUnterkuenfte: 'Noch keine Unterkünfte – tippe auf "+ Unterkunft"',
     linksTitel: 'Links',
     linkHinzufuegenBtn: '+ Link',
@@ -309,7 +311,6 @@ export const translations = {
   en: {
     // Navigation (BottomNav + TripNav + TripHome Kacheln)
     reisen: 'Trips',
-    navTimeline: 'Timeline',
     karte: 'Map',
     einstellungen: 'Settings',
     navInfo: 'Info',
@@ -362,9 +363,9 @@ export const translations = {
     joinUngueltigText: 'This link is invalid or the trip no longer exists.',
     joinZurueckBtn: 'Back to overview',
 
-    // TimelineScreen
-    timelineLeerTitel: 'No trips in the timeline yet',
-    timelineLeerSubtitel: 'Your own and joined trips will appear here in chronological order.',
+    // TripsTimeline (timeline view in TripsOverview)
+    ansichtKarten: 'Cards',
+    ansichtTimeline: 'Timeline',
     timelineVergangenLabel: 'Past',
     timelineLaeuftGerade: 'In progress',
     timelineNochTage: (n) => `${n} ${n === 1 ? 'day' : 'days'} left`,
@@ -413,6 +414,7 @@ export const translations = {
     flugnummerKurzPlatzhalter: 'Flight number',
     abflugKurzPlatzhalter: 'Departure',
     ankunftKurzPlatzhalter: 'Arrival',
+    flugDatum: 'Date',
     keineFluege: 'No flights yet – tap "+ Flight"',
     unterkuenfteTitel: 'Accommodations',
     unterkunftHinzufuegenBtn: '+ Accommodation',
@@ -422,6 +424,8 @@ export const translations = {
     checkoutPlatzhalter: 'Check-out (11:00)',
     checkinKurzPlatzhalter: 'Check-in',
     checkoutKurzPlatzhalter: 'Check-out',
+    unterkunftVon: 'Check-in date',
+    unterkunftBis: 'Check-out date',
     keineUnterkuenfte: 'No accommodations yet – tap "+ Accommodation"',
     linksTitel: 'Links',
     linkHinzufuegenBtn: '+ Link',

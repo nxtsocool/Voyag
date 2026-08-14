@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
 import laender from '../data/laender'
-import { Trash2, SquarePen, Globe, ChevronDown } from 'lucide-react'
+import { Trash2, SquarePen, Globe, ChevronDown, LayoutGrid, CalendarDays } from 'lucide-react'
+import TripsTimeline from '../components/TripsTimeline'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 import { de } from 'date-fns/locale'
@@ -95,9 +96,17 @@ function TripsOverview() {
   const [ausgewaehlteTeilnehmer, setAusgewaehlteTeilnehmer] = useState(null)
   // Archiv-Abschnitt für abgeschlossene Reisen – standardmäßig zugeklappt
   const [archivOffen, setArchivOffen] = useState(false)
+  // Ansicht merken damit sie beim nächsten Besuch erhalten bleibt
+  const [ansicht, setAnsicht] = useState(
+    () => localStorage.getItem('voyag_ansicht') || 'karten'
+  )
 
   useEffect(() => { tripsLaden() }, [])
   useBodyScrollLock(!!loescheTrip || verknuepfungsModal)
+
+  useEffect(() => {
+    localStorage.setItem('voyag_ansicht', ansicht)
+  }, [ansicht])
 
   const { ziehen, fortschritt, schwellenwert } = usePullToRefresh(tripsLaden)
 
@@ -532,6 +541,45 @@ function TripsOverview() {
         </div>
       </div>
 
+      {/* Ansichts-Umschalter – Karten oder Zeitleiste */}
+      <div style={{
+        display: 'flex',
+        backgroundColor: 'var(--sub)',
+        borderRadius: '14px',
+        padding: '4px',
+        marginBottom: '20px',
+        gap: '4px',
+      }}>
+        {[
+          { id: 'karten', label: t('ansichtKarten'), Icon: LayoutGrid },
+          { id: 'timeline', label: t('ansichtTimeline'), Icon: CalendarDays },
+        ].map(({ id, label, Icon }) => {
+          const aktiv = ansicht === id
+          return (
+            <button
+              key={id}
+              onClick={() => setAnsicht(id)}
+              className="btn-press"
+              style={{
+                flex: 1,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                padding: '10px', minHeight: '44px', boxSizing: 'border-box',
+                borderRadius: '11px', border: 'none', cursor: 'pointer',
+                backgroundColor: aktiv ? 'var(--card)' : 'transparent',
+                color: aktiv ? 'var(--gold)' : 'var(--text-sub)',
+                fontWeight: aktiv ? '700' : '500',
+                fontSize: '0.85rem',
+                boxShadow: aktiv ? '0 2px 8px rgba(0,0,0,0.08)' : 'none',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              <Icon size={16} />
+              <span className="ansicht-label">{label}</span>
+            </button>
+          )
+        })}
+      </div>
+
       <div style={{ paddingBottom: 'calc(120px + env(safe-area-inset-bottom))' }}>
 
         {/* Beitreten Formular */}
@@ -607,44 +655,50 @@ function TripsOverview() {
           </div>
         )}
 
-        {/* Trip Karten – aktive/kommende Reisen */}
-        {aktiveTrips.map((trip, index) => renderTripCard(trip, index, false))}
+        {ansicht === 'karten' ? (
+          <>
+            {/* Trip Karten – aktive/kommende Reisen */}
+            {aktiveTrips.map((trip, index) => renderTripCard(trip, index, false))}
 
-        {/* Archiv – abgeschlossene Reisen, standardmäßig zugeklappt */}
-        {archivierteTrips.length > 0 && (
-          <div className="fade-in" style={{ marginTop: aktiveTrips.length > 0 ? '20px' : 0 }}>
-            <div
-              onClick={() => setArchivOffen(!archivOffen)}
-              className="btn-press"
-              style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                cursor: 'pointer', padding: '14px 4px', minHeight: '44px', boxSizing: 'border-box',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ fontWeight: '700', fontSize: '0.95rem', color: 'var(--text)' }}>
-                  {t('archivTitel')}
-                </span>
-                <span style={{
-                  backgroundColor: 'var(--sub)', color: 'var(--text-sub)',
-                  borderRadius: '8px', padding: '2px 8px',
-                  fontSize: '0.75rem', fontWeight: '700',
-                }}>
-                  {archivierteTrips.length}
-                </span>
-              </div>
-              <ChevronDown
-                size={18} color="var(--text-sub)"
-                style={{ transform: archivOffen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}
-              />
-            </div>
+            {/* Archiv – abgeschlossene Reisen, standardmäßig zugeklappt */}
+            {archivierteTrips.length > 0 && (
+              <div className="fade-in" style={{ marginTop: aktiveTrips.length > 0 ? '20px' : 0 }}>
+                <div
+                  onClick={() => setArchivOffen(!archivOffen)}
+                  className="btn-press"
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    cursor: 'pointer', padding: '14px 4px', minHeight: '44px', boxSizing: 'border-box',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ fontWeight: '700', fontSize: '0.95rem', color: 'var(--text)' }}>
+                      {t('archivTitel')}
+                    </span>
+                    <span style={{
+                      backgroundColor: 'var(--sub)', color: 'var(--text-sub)',
+                      borderRadius: '8px', padding: '2px 8px',
+                      fontSize: '0.75rem', fontWeight: '700',
+                    }}>
+                      {archivierteTrips.length}
+                    </span>
+                  </div>
+                  <ChevronDown
+                    size={18} color="var(--text-sub)"
+                    style={{ transform: archivOffen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}
+                  />
+                </div>
 
-            {archivOffen && (
-              <div className="fade-in">
-                {archivierteTrips.map((trip, index) => renderTripCard(trip, index, true))}
+                {archivOffen && (
+                  <div className="fade-in">
+                    {archivierteTrips.map((trip, index) => renderTripCard(trip, index, true))}
+                  </div>
+                )}
               </div>
             )}
-          </div>
+          </>
+        ) : (
+          <TripsTimeline trips={trips} currentUser={currentUser} t={t} />
         )}
 
         {/* Leerer Zustand */}

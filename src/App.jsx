@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom'
 import { supabase } from './supabase'
 import TripsOverview from './screens/TripsOverview'
-import TimelineScreen from './screens/TimelineScreen'
 import MapScreen from './screens/MapScreen'
 import SettingsScreen from './screens/SettingsScreen'
 import LoginScreen from './screens/LoginScreen'
@@ -121,7 +120,6 @@ function App() {
           <PendingInviteRedirect />
           <Routes>
             <Route path="/" element={<><TripsOverview /><BottomNav /></>} />
-            <Route path="/timeline" element={<><TimelineScreen /><BottomNav /></>} />
             <Route path="/map" element={<><MapScreen /><BottomNav /></>} />
             <Route path="/settings" element={<><SettingsScreen /><BottomNav /></>} />
             <Route path="/trip/:id" element={<TripHome />} />

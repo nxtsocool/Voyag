@@ -198,6 +198,41 @@ input:focus, select:focus, textarea:focus {
   }
 }
 
+/* Unterkunft-Datumsfelder (von/bis) in TripInfo: auf sehr schmalen Screens
+   (< 360px) untereinander statt gequetscht nebeneinander */
+@media (max-width: 359px) {
+  .unterkunft-datum-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Kalender-Icon von <input type="date"> ans Theme anpassen – im Light Mode
+   ist das native (dunkle) Icon sonst kaum sichtbar */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0.6;
+  cursor: pointer;
+}
+[data-theme="light"] input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: none;
+}
+[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
+
+/* Leeres <input type="date"> auf iOS Safari nicht auf Intrinsic-Width kollabieren lassen */
+input[type="date"] {
+  min-height: 48px;
+  -webkit-min-logical-width: calc(100% - 28px);
+}
+
+/* Ansichts-Umschalter in TripsOverview: auf sehr schmalen Screens (< 360px)
+   nur die Icons zeigen, Labels ausblenden */
+@media (max-width: 359px) {
+  .ansicht-label {
+    display: none;
+  }
+}
+
 /* Datepicker immer ganz oben */
 .react-datepicker-popper {
   z-index: 9999 !important;
