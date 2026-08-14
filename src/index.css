@@ -50,8 +50,9 @@ html, body {
   width: 100%;
   background-color: var(--bg);
   color: var(--text);
-  /* Verhindert das "Gummiband"-Überziehen beim Scrollen an den Rändern (Pull-to-Refresh der App vorbehalten) */
-  /*overscroll-behavior: none; */
+  /* Verhindert das "Gummiband"-Überziehen beim Scrollen an den Rändern (Pull-to-Refresh der App vorbehalten),
+     blockiert aber – anders als 'none' – nicht das normale vertikale Scrollen der Seite selbst */
+  overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -182,6 +183,19 @@ input:focus, select:focus, textarea:focus {
 /* Scrollbar */
 ::-webkit-scrollbar {
   width: 0px;
+}
+
+/* Flug-Ticket in TripInfo: auf sehr schmalen Screens (< 360px) Abflug/Ankunft
+   untereinander statt nebeneinander gequetscht darstellen */
+@media (max-width: 359px) {
+  .flug-ticket-row {
+    flex-direction: column;
+    align-items: stretch !important;
+  }
+  .flug-ticket-row > div:first-child,
+  .flug-ticket-row > div:last-child {
+    text-align: center !important;
+  }
 }
 
 /* Datepicker immer ganz oben */

@@ -217,7 +217,7 @@ function MapScreen() {
       padding: 'clamp(14px, 4vw, 20px)',
       maxWidth: '680px',
       margin: '0 auto',
-      paddingBottom: 'calc(90px + env(safe-area-inset-bottom))',
+      paddingBottom: 'calc(120px + env(safe-area-inset-bottom))',
       boxSizing: 'border-box',
     }}>
 

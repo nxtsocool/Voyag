@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
 import laender from '../data/laender'
-import { ChevronLeft, Info, Users, CheckSquare, Wallet, Camera, MapPin, Rocket, PartyPopper } from 'lucide-react'
+import { ChevronLeft, Info, Users, CheckSquare, Wallet, MapPin, Rocket, PartyPopper } from 'lucide-react'
 import usePullToRefresh from '../hooks/usePullToRefresh'
 import PullToRefreshIndicator from '../components/PullToRefreshIndicator'
 import { useSettings } from '../context/SettingsContext'
@@ -119,7 +119,7 @@ function TripHome() {
   }
 
   return (
-    <div style={{ maxWidth: '600px', margin: '0 auto', paddingBottom: '100px', boxSizing: 'border-box' }}>
+    <div style={{ maxWidth: '600px', margin: '0 auto', paddingBottom: 'calc(120px + env(safe-area-inset-bottom))', boxSizing: 'border-box' }}>
 
       <PullToRefreshIndicator ziehen={ziehen} fortschritt={fortschritt} schwellenwert={schwellenwert} />
 
@@ -248,22 +248,15 @@ function TripHome() {
           )}
         </div>
 
-        {/* Kosten */}
+        {/* Kosten – spannt volle Breite, da 5. (ungerade) Kachel sonst eine Lücke lässt */}
         <div onClick={() => navigate(`/trip/${id}/kosten`)}
           className="karte-hover btn-press fade-in-5"
-          style={kachelStyle}>
-          <div style={iconWrapStyle}><Wallet size={20} color="var(--gold)" /></div>
-          <p style={kachelTitelStyle}>{t('navKosten')}</p>
-          <p style={kachelSubStyle}>{t('kostenAusgegeben')(gesamt.toFixed(0))}</p>
-        </div>
-
-        {/* Fotos */}
-        <div onClick={() => navigate(`/trip/${id}/fotos`)}
-          className="karte-hover btn-press fade-in-5"
-          style={kachelStyle}>
-          <div style={iconWrapStyle}><Camera size={20} color="var(--gold)" /></div>
-          <p style={kachelTitelStyle}>{t('navFotos')}</p>
-          <p style={kachelSubStyle}>{t('gemeinsamesAlbum')}</p>
+          style={{ ...kachelStyle, gridColumn: '1 / -1', flexDirection: 'row', alignItems: 'center', gap: '14px' }}>
+          <div style={{ ...iconWrapStyle, marginBottom: 0 }}><Wallet size={20} color="var(--gold)" /></div>
+          <div style={{ minWidth: 0 }}>
+            <p style={kachelTitelStyle}>{t('navKosten')}</p>
+            <p style={kachelSubStyle}>{t('kostenAusgegeben')(gesamt.toFixed(0))}</p>
+          </div>
         </div>
 
       </div>
@@ -273,7 +266,7 @@ function TripHome() {
 
 const kachelStyle = {
   backgroundColor: 'var(--card)',
-  borderRadius: '22px',
+  borderRadius: '20px',
   padding: 'clamp(18px, 4vw, 24px)',
   cursor: 'pointer',
   boxSizing: 'border-box',

@@ -2,22 +2,32 @@ import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { supabase } from '../supabase'
 import TripNav from '../components/TripNav'
-import { UserPlus, CheckCircle } from 'lucide-react'
+import { UserPlus, BadgeCheck, Search, Link2Off, Copy, Check, Share2 } from 'lucide-react'
 import { useSettings } from '../context/SettingsContext'
+import Toast from '../components/Toast'
+import useToast from '../hooks/useToast.jsx'
+import useBodyScrollLock from '../hooks/useBodyScrollLock'
 
 export default function TripPersonen() {
   const { id } = useParams()
   const { t } = useSettings()
+  const { toasts, setToasts, toast } = useToast()
   const [trip, setTrip] = useState(null)
   const [teilnehmer, setTeilnehmer] = useState([])
   const [profile, setProfile] = useState({})
   const [neuerTeilnehmer, setNeuerTeilnehmer] = useState('')
   const [laden, setLaden] = useState(true)
 
-  // State für User verknüpfen
+  // State für User verknüpfen – Live-Suche in profiles statt reinem Email-Feld
   const [verknuepfenId, setVerknuepfenId] = useState(null)
-  const [userEmail, setUserEmail] = useState('')
-  const [verknuepfenFehler, setVerknuepfenFehler] = useState('')
+  const [sucheText, setSucheText] = useState('')
+  const [sucheErgebnisse, setSucheErgebnisse] = useState([])
+  const [sucheLaedt, setSucheLaedt] = useState(false)
+  // Bestätigungs-Bottom-Sheet zum Lösen einer Verknüpfung
+  const [loeseVerknuepfungTeilnehmer, setLoeseVerknuepfungTeilnehmer] = useState(null)
+  // Icon-Wechsel nach dem Kopieren des Einladungscodes (1.5s)
+  const [codeKopiert, setCodeKopiert] = useState(false)
+  useBodyScrollLock(!!loeseVerknuepfungTeilnehmer)
 
   useEffect(() => {
     const datenLaden = async () => {
@@ -70,24 +80,38 @@ export default function TripPersonen() {
     else setTeilnehmer(teilnehmer.filter(t => t.id !== teilnehmerId))
   }
 
+  // Bereits mit dieser Reise verknüpfte User-IDs – aus den Suchergebnissen herausfiltern
+  const verknuepfteUserIds = teilnehmer.filter(p => p.user_id).map(p => p.user_id)
+
+  // Live-Suche in profiles – ab 3 Zeichen, debounced um 300ms
+  useEffect(() => {
+    if (!verknuepfenId) return
+    const timer = setTimeout(async () => {
+      if (sucheText.trim().length < 3) {
+        setSucheErgebnisse([])
+        return
+      }
+      setSucheLaedt(true)
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .or(`name.ilike.%${sucheText}%,email.ilike.%${sucheText}%`)
+        .limit(10)
+      const gefiltert = (data || []).filter(p => !verknuepfteUserIds.includes(p.id))
+      setSucheErgebnisse(gefiltert)
+      setSucheLaedt(false)
+      if (gefiltert.length === 0) toast(t('keinNutzerGefunden'), 'error')
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [sucheText, verknuepfenId])
+
   // Voyag User mit Teilnehmer verknüpfen
-  const userVerknuepfen = async (teilnehmerId) => {
-    setVerknuepfenFehler('')
-    if (!userEmail) return
-
-    // Direkt über profiles Tabelle suchen
-    const { data: profileData } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('email', userEmail)
-      .single()
-
-    if (!profileData) {
-      setVerknuepfenFehler(t('keinNutzerGefunden'))
+  const userVerknuepfen = async (teilnehmerId, profileData) => {
+    if (verknuepfteUserIds.includes(profileData.id)) {
+      toast(t('bereitsVerknuepftFehler'), 'error')
       return
     }
 
-    // Teilnehmer verknüpfen
     const { error: updateError } = await supabase
       .from('teilnehmer')
       .update({ user_id: profileData.id })
@@ -95,17 +119,54 @@ export default function TripPersonen() {
 
     if (updateError) { console.error('Fehler:', updateError); return }
 
-    // State aktualisieren
     const neueTeilnehmer = teilnehmer.map(t =>
       t.id === teilnehmerId ? { ...t, user_id: profileData.id } : t
     )
     setTeilnehmer([...neueTeilnehmer])
     setProfile(prev => ({ ...prev, [profileData.id]: profileData }))
     setVerknuepfenId(null)
-    setUserEmail('')
+    setSucheText('')
+    setSucheErgebnisse([])
+    toast(t('verknuepftErfolgreich'), 'success')
   }
 
-  console.log('Fertig! Neuer Teilnehmer State:', teilnehmer)
+  // Verknüpfung eines Teilnehmers wieder lösen (user_id zurück auf null)
+  const verknuepfungLoesen = async (teilnehmerId) => {
+    const { error } = await supabase
+      .from('teilnehmer')
+      .update({ user_id: null })
+      .eq('id', teilnehmerId)
+
+    if (error) { console.error('Fehler:', error); return }
+
+    setTeilnehmer(teilnehmer.map(t => t.id === teilnehmerId ? { ...t, user_id: null } : t))
+    setLoeseVerknuepfungTeilnehmer(null)
+    toast(t('verknuepfungGeloest'), 'success')
+  }
+
+  // Einladungscode in die Zwischenablage kopieren – Icon wechselt kurz zu Check
+  const codeKopieren = async () => {
+    await navigator.clipboard.writeText(trip.invite_code)
+    toast(t('kopiert'), 'success')
+    setCodeKopiert(true)
+    setTimeout(() => setCodeKopiert(false), 1500)
+  }
+
+  // Einladungslink teilen – Web Share API mit Zwischenablage als Fallback
+  const linkTeilen = async () => {
+    const link = `${window.location.origin}/join/${trip.invite_code}`
+    const text = t('einladungText')(trip.name)
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'Voyag', text, url: link })
+      } catch (err) {
+        if (err.name !== 'AbortError') console.error(err)
+      }
+    } else {
+      await navigator.clipboard.writeText(link)
+      toast(t('linkKopiert'), 'success')
+    }
+  }
 
   // Initialen aus Name extrahieren (max. 2 Buchstaben)
   const getInitialen = (name) => {
@@ -140,7 +201,7 @@ export default function TripPersonen() {
   )
 
   return (
-    <div style={{ paddingBottom: '100px' }}>
+    <div style={{ paddingBottom: 'calc(120px + env(safe-area-inset-bottom))' }}>
       <TripNav tripName={trip.name} />
 
       <div style={{ padding: '0 clamp(14px, 4vw, 20px)', maxWidth: '600px', margin: '0 auto', boxSizing: 'border-box' }}>
@@ -181,7 +242,7 @@ export default function TripPersonen() {
                           {initials}
                         </span>
                       </div>
-                      {/* Gold Checkmark Badge für verknüpfte Accounts */}
+                      {/* Gold Badge-Check für verknüpfte Accounts */}
                       {verknuepftProfil && (
                         <div style={{
                           position: 'absolute', bottom: '-2px', right: '-2px',
@@ -190,7 +251,7 @@ export default function TripPersonen() {
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           border: '2px solid var(--card)',
                         }}>
-                          <CheckCircle size={12} color="#080d1a" />
+                          <BadgeCheck size={12} color="#080d1a" />
                         </div>
                       )}
                     </div>
@@ -201,8 +262,8 @@ export default function TripPersonen() {
                         {person.name}
                       </p>
                       {verknuepftProfil ? (
-                        <p style={{ color: 'var(--gold)', fontSize: '0.78rem', margin: 0, fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          @{verknuepftProfil.name || t('voyagNutzerFallback')} · {t('verknuepftSuffix')}
+                        <p style={{ color: 'var(--gold)', fontSize: '0.78rem', margin: 0, fontWeight: '600', overflowWrap: 'break-word', wordBreak: 'break-word' }}>
+                          @{verknuepftProfil.name || t('voyagNutzerFallback')}
                         </p>
                       ) : (
                         <p style={{ color: 'var(--text-sub)', fontSize: '0.78rem', margin: 0 }}>
@@ -220,8 +281,8 @@ export default function TripPersonen() {
                         className="btn-press"
                         onClick={() => {
                           setVerknuepfenId(person.id)
-                          setUserEmail('')
-                          setVerknuepfenFehler('')
+                          setSucheText('')
+                          setSucheErgebnisse([])
                         }}
                         style={{
                           backgroundColor: 'rgba(201,168,76,0.1)',
@@ -233,6 +294,22 @@ export default function TripPersonen() {
                         }}
                       >
                         {t('verknuepfen')}
+                      </button>
+                    )}
+                    {/* Verknüpfung lösen – nur wenn bereits verknüpft */}
+                    {person.user_id && (
+                      <button
+                        className="btn-press"
+                        onClick={() => setLoeseVerknuepfungTeilnehmer(person)}
+                        style={{
+                          backgroundColor: 'rgba(136,146,164,0.1)',
+                          border: '1px solid var(--border)',
+                          color: 'var(--text-sub)', cursor: 'pointer',
+                          width: '44px', height: '44px', borderRadius: '50%', boxSizing: 'border-box',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                        }}
+                      >
+                        <Link2Off size={15} />
                       </button>
                     )}
                     {/* Löschen – min. 44x44px Touch-Target (Apple HIG) */}
@@ -247,7 +324,7 @@ export default function TripPersonen() {
                   </div>
                 </div>
 
-                {/* Verknüpfen Formular – inline */}
+                {/* Verknüpfen – Live-Suche nach Voyag-Nutzern */}
                 {verknuepfenId === person.id && (
                   <div className="fade-in" style={{
                     marginTop: '14px', paddingTop: '14px',
@@ -256,33 +333,66 @@ export default function TripPersonen() {
                     <p style={{ color: 'var(--text-sub)', fontSize: '0.82rem', marginBottom: '10px' }}>
                       {t('voyagKontoVerknuepfenText')}
                     </p>
-                    <input
-                      placeholder={t('emailNutzerPlatzhalter')}
-                      value={userEmail}
-                      onChange={(e) => setUserEmail(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && userVerknuepfen(person.id)}
-                      style={inputStyle}
-                    />
-                    {/* Fehlermeldung */}
-                    {verknuepfenFehler && (
-                      <p style={{ color: '#e94560', fontSize: '0.82rem', marginBottom: '10px', marginTop: '-4px' }}>
-                        {verknuepfenFehler}
-                      </p>
-                    )}
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button onClick={() => userVerknuepfen(person.id)} className="btn-press" style={{
-                        backgroundColor: 'var(--gold)', color: '#0a0f1e', border: 'none',
-                        padding: '10px 16px', minHeight: '44px', boxSizing: 'border-box', borderRadius: '12px', cursor: 'pointer',
-                        fontWeight: '700', fontSize: '0.88rem', flex: 1,
-                        boxShadow: '0 4px 12px rgba(201,168,76,0.3)',
-                      }}>{t('verknuepfen')}</button>
-                      <button onClick={() => setVerknuepfenId(null)} className="btn-press" style={{
-                        backgroundColor: 'transparent', color: 'var(--text-sub)',
-                        border: '1px solid var(--border)',
-                        padding: '10px 16px', minHeight: '44px', boxSizing: 'border-box', borderRadius: '12px', cursor: 'pointer',
-                        fontSize: '0.88rem', flex: 1,
-                      }}>{t('abbrechen')}</button>
+                    <div style={{ position: 'relative', marginBottom: '10px' }}>
+                      <Search size={16} color="var(--text-sub)" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                      <input
+                        placeholder={t('nutzerSuchenPlatzhalter')}
+                        value={sucheText}
+                        onChange={(e) => setSucheText(e.target.value)}
+                        autoFocus
+                        style={{ ...inputStyle, paddingLeft: '40px', marginBottom: 0 }}
+                      />
                     </div>
+
+                    {/* Suchergebnisse als antippbare Karten */}
+                    {sucheLaedt ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '10px' }}>
+                        <div className="skeleton" style={{ height: '58px', borderRadius: '14px' }} />
+                      </div>
+                    ) : sucheErgebnisse.length > 0 && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '10px' }}>
+                        {sucheErgebnisse.map(profilTreffer => {
+                          const treffInitiale = profilTreffer.name?.charAt(0)?.toUpperCase() || '?'
+                          return (
+                            <button
+                              key={profilTreffer.id}
+                              onClick={() => userVerknuepfen(person.id, profilTreffer)}
+                              className="btn-press"
+                              style={{
+                                display: 'flex', alignItems: 'center', gap: '12px',
+                                backgroundColor: 'var(--sub)', border: '1px solid var(--input-border)',
+                                borderRadius: '14px', padding: '10px 14px', cursor: 'pointer',
+                                textAlign: 'left', width: '100%', boxSizing: 'border-box', minHeight: '44px',
+                              }}
+                            >
+                              <div style={{
+                                width: '36px', height: '36px', borderRadius: '50%', flexShrink: 0,
+                                backgroundColor: 'var(--gold)', color: '#0a0f1e',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                fontWeight: '700', fontSize: '0.95rem',
+                              }}>
+                                {treffInitiale}
+                              </div>
+                              <div style={{ minWidth: 0 }}>
+                                <p style={{ margin: 0, fontWeight: '700', fontSize: '0.9rem', color: 'var(--text)', overflowWrap: 'break-word', wordBreak: 'break-word' }}>
+                                  {profilTreffer.name || t('voyagNutzerFallback')}
+                                </p>
+                                <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-sub)', overflowWrap: 'break-word', wordBreak: 'break-word' }}>
+                                  {profilTreffer.email}
+                                </p>
+                              </div>
+                            </button>
+                          )
+                        })}
+                      </div>
+                    )}
+
+                    <button onClick={() => setVerknuepfenId(null)} className="btn-press" style={{
+                      backgroundColor: 'transparent', color: 'var(--text-sub)',
+                      border: '1px solid var(--border)',
+                      padding: '10px 16px', minHeight: '44px', boxSizing: 'border-box', borderRadius: '12px', cursor: 'pointer',
+                      fontSize: '0.88rem', width: '100%',
+                    }}>{t('abbrechen')}</button>
                   </div>
                 )}
               </div>
@@ -341,17 +451,85 @@ export default function TripPersonen() {
                 {trip.invite_code}
               </p>
             </div>
+
+            {/* Code kopieren + Link teilen */}
+            <div style={{ display: 'flex', gap: '10px', marginTop: '14px' }}>
+              <button onClick={codeKopieren} className="btn-press" style={{
+                flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                backgroundColor: 'var(--sub)', color: 'var(--text)', border: '1px solid var(--border)',
+                padding: '0 14px', minHeight: '48px', borderRadius: '14px', boxSizing: 'border-box',
+                cursor: 'pointer', fontWeight: '600', fontSize: '0.88rem',
+              }}>
+                {codeKopiert ? <Check size={16} color="var(--success)" /> : <Copy size={16} />}
+                {codeKopiert ? t('kopiert') : t('codeKopieren')}
+              </button>
+              <button onClick={linkTeilen} className="btn-press" style={{
+                flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                backgroundColor: 'var(--gold)', color: '#0a0f1e', border: 'none',
+                padding: '0 14px', minHeight: '48px', borderRadius: '14px', boxSizing: 'border-box',
+                cursor: 'pointer', fontWeight: '700', fontSize: '0.88rem',
+              }}>
+                <Share2 size={16} /> {t('linkTeilen')}
+              </button>
+            </div>
           </div>
         )}
 
       </div>
+
+      {/* Bestätigungs-Bottom-Sheet zum Lösen einer Verknüpfung */}
+      {loeseVerknuepfungTeilnehmer && (
+        <div
+          onClick={() => setLoeseVerknuepfungTeilnehmer(null)}
+          style={{
+            position: 'fixed', inset: 0,
+            backgroundColor: 'rgba(0,0,0,0.6)',
+            display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+            zIndex: 9998,
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="fade-in"
+            style={{
+              backgroundColor: 'var(--card)', borderRadius: '24px 24px 0 0',
+              width: '100%', maxWidth: '600px',
+              maxHeight: '88vh', overflowY: 'auto', overflowX: 'hidden',
+              boxSizing: 'border-box',
+              padding: '24px 20px calc(32px + env(safe-area-inset-bottom))',
+              zIndex: 9999,
+            }}
+          >
+            <div style={{ width: '40px', height: '4px', backgroundColor: 'var(--sub)', borderRadius: '2px', margin: '0 auto 24px' }} />
+            <h3 style={{ margin: '0 0 8px', fontWeight: '700', fontSize: '1.2rem' }}>
+              {t('verknuepfungLoesenTitel')}
+            </h3>
+            <p style={{ color: 'var(--text-sub)', margin: '0 0 24px', fontSize: '0.92rem', lineHeight: 1.5 }}>
+              {t('verknuepfungLoesenText')(loeseVerknuepfungTeilnehmer.name)}
+            </p>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button onClick={() => verknuepfungLoesen(loeseVerknuepfungTeilnehmer.id)} className="btn-press" style={{
+                backgroundColor: '#e94560', color: '#fff', border: 'none',
+                padding: '14px', minHeight: '48px', boxSizing: 'border-box', borderRadius: '14px', cursor: 'pointer',
+                flex: 1, fontWeight: '700', fontSize: '0.95rem',
+              }}>{t('verknuepfungLoesenBtn')}</button>
+              <button onClick={() => setLoeseVerknuepfungTeilnehmer(null)} className="btn-press" style={{
+                backgroundColor: 'var(--sub)', color: 'var(--text)', border: 'none',
+                padding: '14px', minHeight: '48px', boxSizing: 'border-box', borderRadius: '14px', cursor: 'pointer', flex: 1, fontWeight: '600',
+              }}>{t('abbrechen')}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <Toast toasts={toasts} setToasts={setToasts} />
     </div>
   )
 }
 
 const karteStyle = {
   backgroundColor: 'var(--card)',
-  borderRadius: '22px',
+  borderRadius: '20px',
   padding: 'clamp(16px, 4vw, 22px)',
   marginBottom: '12px',
   boxSizing: 'border-box',

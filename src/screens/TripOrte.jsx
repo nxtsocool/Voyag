@@ -7,6 +7,7 @@ import {
   Utensils, Landmark, Palmtree, Zap, ShoppingBag, Hotel, Beer, Plus, X,
 } from 'lucide-react'
 import { useSettings } from '../context/SettingsContext'
+import useBodyScrollLock from '../hooks/useBodyScrollLock'
 
 // Kategorie-Definition mit Lucide Icons
 const KATEGORIEN = [
@@ -31,6 +32,7 @@ export default function TripOrte() {
   const [formularOffen, setFormularOffen] = useState(false)
   const [bearbeiteOrt, setBearbeiteOrt] = useState(null) // null = neu anlegen
   const [formDaten, setFormDaten] = useState({ name: '', kategorie: 'sonstiges', notiz: '', maps_link: '' })
+  useBodyScrollLock(formularOffen)
 
   // Kategorien, die aufgeklappt sind – standardmäßig alle
   const [offeneKategorien, setOffeneKategorien] = useState(new Set(KATEGORIEN.map(k => k.id)))
@@ -347,12 +349,12 @@ export default function TripOrte() {
         onClick={() => modalOeffnen()}
         className="btn-press"
         style={{
-          position: 'fixed', bottom: 'calc(92px + env(safe-area-inset-bottom))', right: '20px',
+          position: 'fixed', bottom: 'calc(90px + env(safe-area-inset-bottom))', right: '20px',
           width: '58px', height: '58px', borderRadius: '50%',
           backgroundColor: 'var(--gold)', border: 'none', cursor: 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           boxShadow: '0 8px 24px rgba(201,168,76,0.5)',
-          zIndex: 90,
+          zIndex: 200,
         }}
       >
         <Plus size={26} color="#0a0f1e" strokeWidth={2.5} />
@@ -360,17 +362,18 @@ export default function TripOrte() {
 
       {/* ── Bottom Sheet Modal (Neu / Bearbeiten) ── */}
       {formularOffen && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.75)',
+        <div onClick={modalSchliessen} style={{
+          position: 'fixed', inset: 0,
+          backgroundColor: 'rgba(0,0,0,0.6)',
           display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-          zIndex: 1000,
+          zIndex: 9998,
         }}>
-          <div className="fade-in" style={{
+          <div onClick={(e) => e.stopPropagation()} className="fade-in" style={{
             backgroundColor: 'var(--card)', borderRadius: '24px 24px 0 0',
-            padding: '24px 20px', paddingBottom: 'calc(32px + env(safe-area-inset-bottom))',
             width: '100%', maxWidth: '600px',
-            maxHeight: '90vh', overflowY: 'auto', boxSizing: 'border-box',
+            maxHeight: '88vh', overflowY: 'auto', overflowX: 'hidden', boxSizing: 'border-box',
+            padding: '24px 20px calc(32px + env(safe-area-inset-bottom))',
+            zIndex: 9999,
           }}>
             {/* Griff */}
             <div style={{ width: '40px', height: '4px', backgroundColor: 'var(--sub)', borderRadius: '2px', margin: '0 auto 20px' }} />

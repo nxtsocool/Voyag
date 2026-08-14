@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../supabase'
 import { User, Lock, Trash2, LogOut, Mail, ChevronRight, Globe, Palette, DollarSign, Info } from 'lucide-react'
 import { useSettings } from '../context/SettingsContext'
+import useBodyScrollLock from '../hooks/useBodyScrollLock'
 
 export default function SettingsScreen() {
   const [user, setUser] = useState(null)
@@ -14,6 +15,7 @@ export default function SettingsScreen() {
   const [nachricht, setNachricht] = useState('')
   const [appInfoOffen, setAppInfoOffen] = useState(false)
   const { setWaehrung: setGlobalWaehrung, setSprache: setGlobalSprache, setDesign: setGlobalDesign, t } = useSettings()
+  useBodyScrollLock(loeschenOffen)
 
   useEffect(() => {
     const laden = async () => {
@@ -109,6 +111,7 @@ export default function SettingsScreen() {
   if (trips) {
     for (const trip of trips) {
       await supabase.from('ausgaben').delete().eq('trip_id', trip.id)
+      await supabase.from('abrechnungen').delete().eq('trip_id', trip.id)
       await supabase.from('teilnehmer').delete().eq('trip_id', trip.id)
       await supabase.from('packliste').delete().eq('trip_id', trip.id)
       await supabase.from('trip_links').delete().eq('trip_id', trip.id)
@@ -143,7 +146,7 @@ export default function SettingsScreen() {
     : user.email[0].toUpperCase()
 
   return (
-    <div style={{ maxWidth: '600px', margin: '0 auto', paddingBottom: 'calc(100px + env(safe-area-inset-bottom))' }}>
+    <div style={{ maxWidth: '600px', margin: '0 auto', paddingBottom: 'calc(120px + env(safe-area-inset-bottom))' }}>
 
       {/* Header mit Avatar */}
       <div className="fade-in-1" style={{
@@ -364,7 +367,7 @@ export default function SettingsScreen() {
             <div style={{ marginTop: '16px' }}>
               <div style={infoZeileStyle}>
                 <span style={{ color: 'var(--text-sub)', fontSize: '0.85rem' }}>{t('versionLabel')}</span>
-                <span style={{ fontSize: '0.85rem', fontWeight: '500', color: 'var(--gold)' }}>V0.8.2</span>
+                <span style={{ fontSize: '0.85rem', fontWeight: '500', color: 'var(--gold)' }}>V0.9.0</span>
               </div>
               <div style={infoZeileStyle}>
                 <span style={{ color: 'var(--text-sub)', fontSize: '0.85rem' }}>{t('entwicklerLabel')}</span>
@@ -413,17 +416,18 @@ export default function SettingsScreen() {
             <ChevronRight size={16} color="#e94560" />
           </button>
         ) : (
-          <div style={{
-            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.75)',
+          <div onClick={() => setLoeschenOffen(false)} style={{
+            position: 'fixed', inset: 0,
+            backgroundColor: 'rgba(0,0,0,0.6)',
             display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-            zIndex: 1000,
+            zIndex: 9998,
           }}>
-            <div className="fade-in" style={{
+            <div onClick={(e) => e.stopPropagation()} className="fade-in" style={{
               backgroundColor: 'var(--card)', borderRadius: '24px 24px 0 0',
-              padding: '32px 24px calc(48px + env(safe-area-inset-bottom))',
-              width: '100%', maxWidth: '600px', boxSizing: 'border-box',
-              maxHeight: '85vh', overflowY: 'auto',
+              width: '100%', maxWidth: '600px',
+              maxHeight: '88vh', overflowY: 'auto', overflowX: 'hidden', boxSizing: 'border-box',
+              padding: '24px 20px calc(32px + env(safe-area-inset-bottom))',
+              zIndex: 9999,
             }}>
               <div style={{ width: '40px', height: '4px', backgroundColor: 'var(--sub)', borderRadius: '2px', margin: '0 auto 24px' }} />
               <h3 style={{ margin: '0 0 8px', fontWeight: '800', fontSize: '1.3rem' }}>{t('accountLoeschenTitel')}</h3>

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
 import laender from '../data/laender'
-import { Trash2, SquarePen, Globe } from 'lucide-react'
+import { Trash2, SquarePen, Globe, ChevronDown } from 'lucide-react'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 import { de } from 'date-fns/locale'
@@ -10,6 +10,7 @@ import Toast from '../components/Toast'
 import useToast from '../hooks/useToast.jsx'
 import usePullToRefresh from '../hooks/usePullToRefresh'
 import PullToRefreshIndicator from '../components/PullToRefreshIndicator'
+import useBodyScrollLock from '../hooks/useBodyScrollLock'
 import { useSettings } from '../context/SettingsContext'
 
 
@@ -56,6 +57,18 @@ const getFlaggeUrl = (code) => {
   return `https://flagcdn.com/w40/${code.toLowerCase()}.png`
 }
 
+// Prüft ob eine Reise abgeschlossen ist (Enddatum liegt in der Vergangenheit)
+const istAbgeschlossen = (datum) => {
+  if (!datum) return false
+  const endTeil = datum.split(' - ')[1]
+  if (!endTeil) return false
+  const [tag, monat, jahr] = endTeil.split('.')
+  if (!jahr) return false
+  const ende = new Date(`${jahr}-${monat}-${tag}`)
+  ende.setHours(23, 59, 59)
+  return ende < new Date()
+}
+
 function TripsOverview() {
   const { t, design } = useSettings()
   const navigate = useNavigate()
@@ -79,10 +92,12 @@ function TripsOverview() {
   // Verknüpfungs-Modal State
   const [verknuepfungsModal, setVerknuepfungsModal] = useState(false)
   const [unverknuepfteTeilnehmer, setUnverknuepfteTeilnehmer] = useState([])
-  const [aktuelleBeigetreteneReise, setAktuelleBeigetreteneReise] = useState(null)
   const [ausgewaehlteTeilnehmer, setAusgewaehlteTeilnehmer] = useState(null)
+  // Archiv-Abschnitt für abgeschlossene Reisen – standardmäßig zugeklappt
+  const [archivOffen, setArchivOffen] = useState(false)
 
   useEffect(() => { tripsLaden() }, [])
+  useBodyScrollLock(!!loescheTrip || verknuepfungsModal)
 
   const { ziehen, fortschritt, schwellenwert } = usePullToRefresh(tripsLaden)
 
@@ -185,6 +200,7 @@ function TripsOverview() {
   const reiseEntfernen = async (tripId) => {
     await supabase.from('teilnehmer').delete().eq('trip_id', tripId)
     await supabase.from('ausgaben').delete().eq('trip_id', tripId)
+    await supabase.from('abrechnungen').delete().eq('trip_id', tripId)
     await supabase.from('visited_countries').delete().eq('trip_id', tripId)
     await supabase.from('trip_members').delete().eq('trip_id', tripId)
     await supabase.from('packliste').delete().eq('trip_id', tripId)
@@ -192,6 +208,7 @@ function TripsOverview() {
     await supabase.from('trip_fluege').delete().eq('trip_id', tripId)
     await supabase.from('trip_unterkuenfte').delete().eq('trip_id', tripId)
     await supabase.from('trip_orte').delete().eq('trip_id', tripId)
+    await supabase.from('trip_photos').delete().eq('trip_id', tripId)
     const { error } = await supabase.from('trips').delete().eq('id', tripId)
     if (error) console.error('Fehler:', error)
     else {
@@ -252,9 +269,17 @@ function TripsOverview() {
       .is('user_id', null)
 
     if (unverknuepfte && unverknuepfte.length > 0) {
+      // Eigenen Profilnamen laden und – falls genau ein Teilnehmer namensgleich ist (case-insensitive) – vorauswählen
+      const { data: eigenesProfil } = await supabase
+        .from('profiles').select('name').eq('id', user.id).single()
+
+      const treffer = eigenesProfil?.name
+        ? unverknuepfte.filter(p => p.name?.toLowerCase() === eigenesProfil.name.toLowerCase())
+        : []
+
       // Modal anzeigen zur optionalen Selbst-Verknüpfung
       setUnverknuepfteTeilnehmer(unverknuepfte)
-      setAktuelleBeigetreteneReise(trip)
+      setAusgewaehlteTeilnehmer(treffer.length === 1 ? treffer[0] : null)
       setVerknuepfungsModal(true)
     } else {
       await tripsLaden()
@@ -271,7 +296,6 @@ function TripsOverview() {
     if (!error) toast(t('verknuepftErfolgreich'), 'success')
     setVerknuepfungsModal(false)
     setAusgewaehlteTeilnehmer(null)
-    setAktuelleBeigetreteneReise(null)
     await tripsLaden()
   }
 
@@ -279,8 +303,154 @@ function TripsOverview() {
   const verknuepfungUeberspringen = async () => {
     setVerknuepfungsModal(false)
     setAusgewaehlteTeilnehmer(null)
-    setAktuelleBeigetreteneReise(null)
     await tripsLaden()
+  }
+
+  // Aktive/kommende Reisen oben, abgeschlossene Reisen unten im Archiv
+  const aktiveTrips = trips.filter(trip => !istAbgeschlossen(trip.datum))
+  const archivierteTrips = trips.filter(trip => istAbgeschlossen(trip.datum))
+
+  // Eine Reisekarte rendern – identisch für aktive und archivierte Reisen,
+  // archivierte Karten nur gedämpft und mit "Abgeschlossen" statt Countdown
+  const renderTripCard = (trip, index, archiviert) => {
+    const farbe = getRegionFarbe(trip.land_code)
+    const countdown = archiviert ? t('archivAbgeschlossenLabel') : getCountdown(trip.datum, t)
+    const landName = laender.find(l => l.code === trip.land_code)?.name || ''
+    const eigenTrip = trip.user_id === currentUser?.id
+
+    return (
+      <div key={trip.id} className={`fly-in-${Math.min(index + 1, 5)}`} style={{ marginBottom: '12px', opacity: archiviert ? 0.7 : 1 }}>
+        <div
+          className="karte-hover"
+          style={{
+            borderRadius: '20px',
+            boxShadow: 'var(--shadow)',
+            cursor: 'pointer',
+          }}
+        >
+          {/* Banner oben – im Light Mode hell, im Dark Mode regionaler Dunkel-Gradient */}
+          <div
+            onClick={() => navigate(`/trip/${trip.id}`)}
+            style={{
+              background: design === 'light'
+                ? 'linear-gradient(135deg, #c9a84c 10%, #faf7f2 100%)'
+                : `linear-gradient(135deg, ${farbe.accent} 0%, ${farbe.bg} 100%)`,
+              padding: '20px',
+              borderRadius: '20px 20px 0 0',
+              display: 'flex', alignItems: 'center', gap: '12px',
+              boxSizing: 'border-box',
+            }}
+          >
+            {/* Flaggen Bild */}
+            <div style={{
+              width: '48px', height: '36px', borderRadius: '8px',
+              overflow: 'hidden', flexShrink: 0,
+              boxShadow: design === 'light' ? '0 2px 8px rgba(0,0,0,0.12)' : 'none',
+            }}>
+              <img
+                src={getFlaggeUrl(trip.land_code)}
+                alt={trip.land_code}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            </div>
+
+            {/* Name + Land */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <h2 style={{
+                margin: '0 0 3px', fontSize: 'clamp(0.95rem, 4.5vw, 1.15rem)',
+                fontWeight: '800', letterSpacing: '-0.5px',
+                color: design === 'light' ? 'var(--text)' : '#ede8de',
+                overflowWrap: 'break-word', wordBreak: 'break-word',
+              }}>
+                {trip.name}
+              </h2>
+              <p style={{
+                margin: 0, fontSize: '0.82rem',
+                color: design === 'light' ? 'var(--text-sub)' : 'var(--text-sub)',
+                overflowWrap: 'break-word', wordBreak: 'break-word',
+              }}>
+                {landName} · {trip.datum}
+              </p>
+            </div>
+
+            {/* Aktions Buttons – min. 44x44px Touch-Target (Apple HIG) */}
+            <div style={{ display: 'flex', gap: '2px', flexShrink: 0 }}>
+              {eigenTrip ? (
+                <>
+                  <button onClick={(e) => { e.stopPropagation(); bearbeitenOeffnen(trip) }}
+                    className="btn-press" style={{
+                      backgroundColor: design === 'light' ? 'var(--sub)' : 'rgba(255,255,255,0.1)',
+                      border: 'none',
+                      color: design === 'light' ? 'var(--text-sub)' : 'rgba(255,255,255,0.7)',
+                      borderRadius: '10px',
+                      width: '44px', height: '44px',
+                      cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                    <SquarePen size={14} />
+                  </button>
+                  <button onClick={(e) => { e.stopPropagation(); setLoescheTrip(trip) }}
+                    className="btn-press" style={{
+                      backgroundColor: 'rgba(233,69,96,0.15)', border: 'none',
+                      color: '#e94560', borderRadius: '10px',
+                      width: '44px', height: '44px',
+                      cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                    <Trash2 size={14} />
+                  </button>
+                </>
+              ) : (
+                <button onClick={(e) => { e.stopPropagation(); reiseVerlassen(trip.id) }}
+                  className="btn-press" style={{
+                    backgroundColor: design === 'light' ? 'var(--sub)' : 'rgba(255,255,255,0.08)',
+                    border: 'none',
+                    color: design === 'light' ? 'var(--text-sub)' : 'rgba(255,255,255,0.5)',
+                    padding: '0 12px',
+                    minHeight: '44px', boxSizing: 'border-box',
+                    borderRadius: '10px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: '600',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                  {t('verlassen')}
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Footer unten */}
+          <div onClick={() => navigate(`/trip/${trip.id}`)} style={{
+            backgroundColor: 'var(--card)', padding: '12px 20px',
+            borderRadius: '0 0 20px 20px',
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          }}>
+            {/* Einladungscode oder Badge */}
+            {eigenTrip && trip.invite_code ? (
+              <span style={{
+                backgroundColor: 'rgba(201,168,76,0.1)', color: 'var(--gold)',
+                padding: '4px 10px', borderRadius: '8px',
+                fontSize: '0.75rem', fontWeight: '700', letterSpacing: '0.08em',
+              }}>
+                {trip.invite_code}
+              </span>
+            ) : (
+              <span style={{
+                backgroundColor: 'rgba(136,146,164,0.1)', color: 'var(--text-sub)',
+                padding: '4px 10px', borderRadius: '8px',
+                fontSize: '0.75rem', fontWeight: '600',
+              }}>
+                {t('beigetreten')}
+              </span>
+            )}
+
+            {/* Countdown / Abgeschlossen-Status */}
+            {countdown && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: 'var(--gold)' }} />
+                <span style={{ color: 'var(--text-sub)', fontSize: '0.78rem' }}>{countdown}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    )
   }
 
   if (laden) return (
@@ -362,7 +532,7 @@ function TripsOverview() {
         </div>
       </div>
 
-      <div style={{ paddingBottom: 'calc(100px + env(safe-area-inset-bottom))' }}>
+      <div style={{ paddingBottom: 'calc(120px + env(safe-area-inset-bottom))' }}>
 
         {/* Beitreten Formular */}
         {beitretenOffen && (
@@ -437,147 +607,45 @@ function TripsOverview() {
           </div>
         )}
 
-        {/* Trip Karten */}
-        {trips.map((trip, index) => {
-          const farbe = getRegionFarbe(trip.land_code)
-          const countdown = getCountdown(trip.datum, t)
-          const landName = laender.find(l => l.code === trip.land_code)?.name || ''
-          const eigenTrip = trip.user_id === currentUser?.id
+        {/* Trip Karten – aktive/kommende Reisen */}
+        {aktiveTrips.map((trip, index) => renderTripCard(trip, index, false))}
 
-          return (
-            <div key={trip.id} className={`fly-in-${Math.min(index + 1, 5)}`} style={{ marginBottom: '12px' }}>
-              <div
-                className="karte-hover"
-                style={{
-                  borderRadius: '20px',
-                  boxShadow: 'var(--shadow)',
-                  cursor: 'pointer',
-                }}
-              >
-                {/* Banner oben – im Light Mode hell, im Dark Mode regionaler Dunkel-Gradient */}
-                <div
-                  onClick={() => navigate(`/trip/${trip.id}`)}
-                  style={{
-                    background: design === 'light'
-                      ? 'linear-gradient(135deg, #c9a84c 10%, #faf7f2 100%)'
-                      : `linear-gradient(135deg, ${farbe.accent} 0%, ${farbe.bg} 100%)`,
-                    padding: '20px',
-                    borderRadius: '20px 20px 0 0',
-                    display: 'flex', alignItems: 'center', gap: '12px',
-                    boxSizing: 'border-box',
-                  }}
-                >
-                  {/* Flaggen Bild */}
-                  <div style={{
-                    width: '48px', height: '36px', borderRadius: '8px',
-                    overflow: 'hidden', flexShrink: 0,
-                    boxShadow: design === 'light' ? '0 2px 8px rgba(0,0,0,0.12)' : 'none',
-                  }}>
-                    <img
-                      src={getFlaggeUrl(trip.land_code)}
-                      alt={trip.land_code}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    />
-                  </div>
-
-                  {/* Name + Land */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <h2 style={{
-                      margin: '0 0 3px', fontSize: 'clamp(0.95rem, 4.5vw, 1.15rem)',
-                      fontWeight: '800', letterSpacing: '-0.5px',
-                      color: design === 'light' ? 'var(--text)' : '#ede8de',
-                      overflowWrap: 'break-word', wordBreak: 'break-word',
-                    }}>
-                      {trip.name}
-                    </h2>
-                    <p style={{
-                      margin: 0, fontSize: '0.82rem',
-                      color: design === 'light' ? 'var(--text-sub)' : 'var(--text-sub)',
-                      overflowWrap: 'break-word', wordBreak: 'break-word',
-                    }}>
-                      {landName} · {trip.datum}
-                    </p>
-                  </div>
-
-                  {/* Aktions Buttons – min. 44x44px Touch-Target (Apple HIG) */}
-                  <div style={{ display: 'flex', gap: '2px', flexShrink: 0 }}>
-                    {eigenTrip ? (
-                      <>
-                        <button onClick={(e) => { e.stopPropagation(); bearbeitenOeffnen(trip) }}
-                          className="btn-press" style={{
-                            backgroundColor: design === 'light' ? 'var(--sub)' : 'rgba(255,255,255,0.1)',
-                            border: 'none',
-                            color: design === 'light' ? 'var(--text-sub)' : 'rgba(255,255,255,0.7)',
-                            borderRadius: '10px',
-                            width: '44px', height: '44px',
-                            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          }}>
-                          <SquarePen size={14} />
-                        </button>
-                        <button onClick={(e) => { e.stopPropagation(); setLoescheTrip(trip) }}
-                          className="btn-press" style={{
-                            backgroundColor: 'rgba(233,69,96,0.15)', border: 'none',
-                            color: '#e94560', borderRadius: '10px',
-                            width: '44px', height: '44px',
-                            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          }}>
-                          <Trash2 size={14} />
-                        </button>
-                      </>
-                    ) : (
-                      <button onClick={(e) => { e.stopPropagation(); reiseVerlassen(trip.id) }}
-                        className="btn-press" style={{
-                          backgroundColor: design === 'light' ? 'var(--sub)' : 'rgba(255,255,255,0.08)',
-                          border: 'none',
-                          color: design === 'light' ? 'var(--text-sub)' : 'rgba(255,255,255,0.5)',
-                          padding: '0 12px',
-                          minHeight: '44px', boxSizing: 'border-box',
-                          borderRadius: '10px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: '600',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        }}>
-                        {t('verlassen')}
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Footer unten */}
-                <div onClick={() => navigate(`/trip/${trip.id}`)} style={{
-                  backgroundColor: 'var(--card)', padding: '12px 20px',
-                  borderRadius: '0 0 20px 20px',
-                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        {/* Archiv – abgeschlossene Reisen, standardmäßig zugeklappt */}
+        {archivierteTrips.length > 0 && (
+          <div className="fade-in" style={{ marginTop: aktiveTrips.length > 0 ? '20px' : 0 }}>
+            <div
+              onClick={() => setArchivOffen(!archivOffen)}
+              className="btn-press"
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                cursor: 'pointer', padding: '14px 4px', minHeight: '44px', boxSizing: 'border-box',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ fontWeight: '700', fontSize: '0.95rem', color: 'var(--text)' }}>
+                  {t('archivTitel')}
+                </span>
+                <span style={{
+                  backgroundColor: 'var(--sub)', color: 'var(--text-sub)',
+                  borderRadius: '8px', padding: '2px 8px',
+                  fontSize: '0.75rem', fontWeight: '700',
                 }}>
-                  {/* Einladungscode oder Badge */}
-                  {eigenTrip && trip.invite_code ? (
-                    <span style={{
-                      backgroundColor: 'rgba(201,168,76,0.1)', color: 'var(--gold)',
-                      padding: '4px 10px', borderRadius: '8px',
-                      fontSize: '0.75rem', fontWeight: '700', letterSpacing: '0.08em',
-                    }}>
-                      {trip.invite_code}
-                    </span>
-                  ) : (
-                    <span style={{
-                      backgroundColor: 'rgba(136,146,164,0.1)', color: 'var(--text-sub)',
-                      padding: '4px 10px', borderRadius: '8px',
-                      fontSize: '0.75rem', fontWeight: '600',
-                    }}>
-                      {t('beigetreten')}
-                    </span>
-                  )}
-
-                  {/* Countdown */}
-                  {countdown && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <div style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: 'var(--gold)' }} />
-                      <span style={{ color: 'var(--text-sub)', fontSize: '0.78rem' }}>{countdown}</span>
-                    </div>
-                  )}
-                </div>
+                  {archivierteTrips.length}
+                </span>
               </div>
+              <ChevronDown
+                size={18} color="var(--text-sub)"
+                style={{ transform: archivOffen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}
+              />
             </div>
-          )
-        })}
+
+            {archivOffen && (
+              <div className="fade-in">
+                {archivierteTrips.map((trip, index) => renderTripCard(trip, index, true))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Leerer Zustand */}
         {trips.length === 0 && !formularOffen && !beitretenOffen && (
@@ -603,17 +671,18 @@ function TripsOverview() {
 
       {/* Bestätigungsdialog Löschen */}
       {loescheTrip && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.75)',
+        <div onClick={() => setLoescheTrip(null)} style={{
+          position: 'fixed', inset: 0,
+          backgroundColor: 'rgba(0,0,0,0.6)',
           display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-          zIndex: 1000,
+          zIndex: 9998,
         }}>
-          <div className="fade-in" style={{
+          <div onClick={(e) => e.stopPropagation()} className="fade-in" style={{
             backgroundColor: 'var(--card)', borderRadius: '24px 24px 0 0',
-            padding: '32px 24px calc(48px + env(safe-area-inset-bottom))',
-            width: '100%', maxWidth: '600px', boxSizing: 'border-box',
-            maxHeight: '85vh', overflowY: 'auto',
+            width: '100%', maxWidth: '600px',
+            maxHeight: '88vh', overflowY: 'auto', overflowX: 'hidden', boxSizing: 'border-box',
+            padding: '24px 20px calc(32px + env(safe-area-inset-bottom))',
+            zIndex: 9999,
           }}>
             <div style={{
               width: '40px', height: '4px', backgroundColor: 'var(--sub)',
@@ -642,17 +711,18 @@ function TripsOverview() {
       )}
       {/* Verknüpfungs-Modal – Bottom Sheet von unten */}
       {verknuepfungsModal && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.75)',
+        <div onClick={verknuepfungUeberspringen} style={{
+          position: 'fixed', inset: 0,
+          backgroundColor: 'rgba(0,0,0,0.6)',
           display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-          zIndex: 1000,
+          zIndex: 9998,
         }}>
-          <div className="fade-in" style={{
+          <div onClick={(e) => e.stopPropagation()} className="fade-in" style={{
             backgroundColor: 'var(--card)', borderRadius: '24px 24px 0 0',
-            padding: '32px 24px calc(48px + env(safe-area-inset-bottom))',
-            width: '100%', maxWidth: '600px', boxSizing: 'border-box',
-            maxHeight: '85vh', overflowY: 'auto',
+            width: '100%', maxWidth: '600px',
+            maxHeight: '88vh', overflowY: 'auto', overflowX: 'hidden', boxSizing: 'border-box',
+            padding: '24px 20px calc(32px + env(safe-area-inset-bottom))',
+            zIndex: 9999,
           }}>
             {/* Drag Handle */}
             <div style={{

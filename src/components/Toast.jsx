@@ -1,4 +1,3 @@
-import { useEffect } from 'react'
 import { CheckCircle, XCircle, Info, X } from 'lucide-react'
 
 // Toast Typen mit Farben und Icons
@@ -11,11 +10,11 @@ const toastConfig = {
 export default function Toast({ toasts, setToasts }) {
   return (
     <div style={{
-      position: 'fixed', bottom: '90px', left: '50%',
-      transform: 'translateX(-50%)',
+      position: 'fixed', bottom: '90px',
+      left: 0, right: 0, marginLeft: 'auto', marginRight: 'auto',
       zIndex: 9999, display: 'flex',
       flexDirection: 'column', gap: '8px',
-      width: 'calc(100% - 40px)', maxWidth: '400px',
+      width: 'calc(100% - 40px)', maxWidth: '400px', boxSizing: 'border-box',
       pointerEvents: 'none',
     }}>
       {toasts.map(toast => {

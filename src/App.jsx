@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom'
 import { supabase } from './supabase'
 import TripsOverview from './screens/TripsOverview'
+import TimelineScreen from './screens/TimelineScreen'
 import MapScreen from './screens/MapScreen'
 import SettingsScreen from './screens/SettingsScreen'
 import LoginScreen from './screens/LoginScreen'
@@ -12,10 +13,23 @@ import TripInfo from './screens/TripInfo'
 import TripPersonen from './screens/TripPersonen'
 import TripPackliste from './screens/TripPackliste'
 import TripKosten from './screens/TripKosten'
-import TripFotos from './screens/TripFotos'
 import TripOrte from './screens/TripOrte'
+import JoinScreen from './screens/JoinScreen'
 import { SettingsProvider } from './context/SettingsContext'
 
+// Key unter dem ein Einladungscode zwischengespeichert wird, wenn ein
+// nicht eingeloggter Nutzer über einen /join/:code Link in die App kommt
+export const PENDING_INVITE_KEY = 'voyag_pending_invite'
+
+// Leitet nach dem Login/Onboarding automatisch zu einem gemerkten Einladungslink weiter
+function PendingInviteRedirect() {
+  const navigate = useNavigate()
+  useEffect(() => {
+    const code = sessionStorage.getItem(PENDING_INVITE_KEY)
+    if (code) navigate(`/join/${code}`, { replace: true })
+  }, [navigate])
+  return null
+}
 
 function App() {
   const [user, setUser] = useState(null)
@@ -79,7 +93,22 @@ function App() {
     return () => subscription.unsubscribe()
   }, [])
 
-  if (laden) return <p style={{ color: '#fff', padding: '20px' }}>Lädt...</p>
+  // Solange nicht eingeloggt: einen /join/:code Link merken und die URL bereinigen,
+  // da ohne aktive Session noch kein Router gemountet ist (siehe unten)
+  useEffect(() => {
+    if (laden || user) return
+    const match = window.location.pathname.match(/^\/join\/([^/]+)/)
+    if (match) {
+      sessionStorage.setItem(PENDING_INVITE_KEY, match[1])
+      window.history.replaceState(null, '', '/')
+    }
+  }, [laden, user])
+
+  if (laden) return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#080d1a' }}>
+      <div className="skeleton" style={{ width: '120px', height: '28px', borderRadius: '10px' }} />
+    </div>
+  )
 
   return (
     <SettingsProvider>
@@ -89,8 +118,10 @@ function App() {
         <OnboardingScreen user={user} onComplete={() => setOnboardingNoetig(false)} />
       ) : (
         <BrowserRouter>
+          <PendingInviteRedirect />
           <Routes>
             <Route path="/" element={<><TripsOverview /><BottomNav /></>} />
+            <Route path="/timeline" element={<><TimelineScreen /><BottomNav /></>} />
             <Route path="/map" element={<><MapScreen /><BottomNav /></>} />
             <Route path="/settings" element={<><SettingsScreen /><BottomNav /></>} />
             <Route path="/trip/:id" element={<TripHome />} />
@@ -98,8 +129,8 @@ function App() {
             <Route path="/trip/:id/personen" element={<TripPersonen />} />
             <Route path="/trip/:id/packliste" element={<TripPackliste />} />
             <Route path="/trip/:id/kosten" element={<TripKosten />} />
-            <Route path="/trip/:id/fotos" element={<TripFotos />} />
             <Route path="/trip/:id/orte" element={<TripOrte />} />
+            <Route path="/join/:code" element={<JoinScreen />} />
           </Routes>
         </BrowserRouter>
       )}

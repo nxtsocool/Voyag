@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
-import { Info, Users, CheckSquare, Wallet, ChevronLeft, Camera, MapPin } from 'lucide-react'
+import { Info, Users, CheckSquare, Wallet, ChevronLeft, MapPin } from 'lucide-react'
 import { useSettings } from '../context/SettingsContext'
 
 function TripNav({ tripName }) {
@@ -16,7 +16,6 @@ function TripNav({ tripName }) {
     { path: `/trip/${id}/personen`, label: t('navPersonen'), icon: Users },
     { path: `/trip/${id}/packliste`, label: t('navPackliste'), icon: CheckSquare },
     { path: `/trip/${id}/kosten`, label: t('navKosten'), icon: Wallet },
-    { path: `/trip/${id}/fotos`, label: t('navFotos'), icon: Camera },
   ]
 
   // Aktiven Tab automatisch in die Mitte scrollen

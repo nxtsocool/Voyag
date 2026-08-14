@@ -157,7 +157,7 @@ export default function TripPackliste() {
   )
 
   return (
-    <div style={{ paddingBottom: '100px' }}>
+    <div style={{ paddingBottom: 'calc(120px + env(safe-area-inset-bottom))' }}>
       <TripNav tripName={trip.name} />
 
       <div style={{ padding: '0 clamp(14px, 4vw, 20px)', maxWidth: '600px', margin: '0 auto', boxSizing: 'border-box' }}>

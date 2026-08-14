@@ -7,9 +7,18 @@ import Toast from '../components/Toast'
 import useToast from '../hooks/useToast.jsx'
 import usePullToRefresh from '../hooks/usePullToRefresh'
 import PullToRefreshIndicator from '../components/PullToRefreshIndicator'
+import useBodyScrollLock from '../hooks/useBodyScrollLock'
 import { useSettings } from '../context/SettingsContext'
 import useWechselkurse from '../hooks/useWechselkurse'
 import { WAEHRUNGEN } from '../data/waehrungen'
+
+// Wandelt das fuer-Feld sicher in ein Array um – Supabase liefert es mal als
+// JSON-String, mal als echtes Array zurück
+const fuerAlsArray = (fuer) => {
+  if (!fuer) return []
+  if (Array.isArray(fuer)) return fuer
+  try { return JSON.parse(fuer) } catch { return [] }
+}
 
 function TripKosten() {
   const { id } = useParams()
@@ -36,6 +45,7 @@ function TripKosten() {
   })
 
   useEffect(() => { datenLaden() }, [id])
+  useBodyScrollLock(formularOffen)
 
   // Warnung anzeigen, falls die API nicht erreichbar war und Näherungswerte verwendet werden
   useEffect(() => {
@@ -148,11 +158,8 @@ function TripKosten() {
 
   // Anteil einer Person an einer Ausgabe berechnen
   function anteilBerechnen(ausgabe, personName) {
-    let fuerArray = ausgabe.fuer
-    if (typeof fuerArray === 'string') {
-      try { fuerArray = JSON.parse(fuerArray) } catch { fuerArray = null }
-    }
-    const betroffene = (fuerArray && fuerArray.length > 0) ? fuerArray : teilnehmer.map(p => p.name)
+    const fuerArray = fuerAlsArray(ausgabe.fuer)
+    const betroffene = fuerArray.length > 0 ? fuerArray : teilnehmer.map(p => p.name)
     if (betroffene.includes(personName)) return ausgabe.betrag / betroffene.length
     return 0
   }
@@ -456,9 +463,13 @@ function TripKosten() {
                               </div>
                               <p style={{ color: 'var(--text-sub)', fontSize: '0.78rem', margin: 0, overflowWrap: 'break-word', wordBreak: 'break-word' }}>
                                 {t('bezahltVonText')(ausgabe.bezahlt_von)}
-                                {ausgabe.fuer && ausgabe.fuer.length > 0 && (
-                                  <span> · {t('fuerWenText')(Array.isArray(ausgabe.fuer) ? ausgabe.fuer.join(', ') : ausgabe.fuer)}</span>
-                                )}
+                                {(() => {
+                                  const fuerArr = fuerAlsArray(ausgabe.fuer)
+                                  const alleBetroffen = fuerArr.length === 0 || fuerArr.length === teilnehmer.length
+                                  return (
+                                    <span> · {alleBetroffen ? t('fuerAlleText') : t('fuerWenText')(fuerArr.join(', '))}</span>
+                                  )
+                                })()}
                               </p>
                             </div>
 
@@ -582,7 +593,7 @@ function TripKosten() {
         onClick={() => setFormularOffen(true)}
         className="btn-press"
         style={{
-          position: 'fixed', bottom: 'calc(85px + env(safe-area-inset-bottom))', right: '20px',
+          position: 'fixed', bottom: 'calc(90px + env(safe-area-inset-bottom))', right: '20px',
           width: '58px', height: '58px', borderRadius: '50%',
           backgroundColor: 'var(--gold)', border: 'none', cursor: 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -593,19 +604,20 @@ function TripKosten() {
         <Plus size={26} color="#0a0f1e" strokeWidth={2.5} />
       </button>
 
-      {/* Neue Ausgabe – Bottom Sheet Modal – hoher z-index damit das Sheet immer über allem liegt */}
+      {/* Neue Ausgabe – Bottom Sheet Modal */}
       {formularOffen && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.75)',
+        <div onClick={() => setFormularOffen(false)} style={{
+          position: 'fixed', inset: 0,
+          backgroundColor: 'rgba(0,0,0,0.6)',
           display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
           zIndex: 9998,
         }}>
-          <div className="fade-in" style={{
+          <div onClick={(e) => e.stopPropagation()} className="fade-in" style={{
             backgroundColor: 'var(--card)', borderRadius: '24px 24px 0 0',
-            padding: '24px 20px 32px', width: '100%', maxWidth: '600px',
-            maxHeight: '85vh', overflowY: 'auto', overflowX: 'hidden', boxSizing: 'border-box',
-            position: 'relative', zIndex: 9999,
+            width: '100%', maxWidth: '600px',
+            maxHeight: '88vh', overflowY: 'auto', overflowX: 'hidden', boxSizing: 'border-box',
+            padding: '24px 20px calc(32px + env(safe-area-inset-bottom))',
+            zIndex: 9999,
           }}>
             {/* Griff oben */}
             <div style={{ width: '40px', height: '4px', backgroundColor: 'var(--sub)', borderRadius: '2px', margin: '0 auto 20px' }} />
@@ -725,7 +737,7 @@ function TripKosten() {
 }
 
 const karteStyle = {
-  backgroundColor: 'var(--card)', borderRadius: '22px',
+  backgroundColor: 'var(--card)', borderRadius: '20px',
   padding: 'clamp(18px, 4vw, 24px)', marginBottom: '16px',
   boxSizing: 'border-box', boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
 }

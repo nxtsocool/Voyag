@@ -2,26 +2,37 @@ import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { supabase } from '../supabase'
 import TripNav from '../components/TripNav'
-import { Plane, Hotel, Link, Trash2, NotebookPen, SquarePen, ExternalLink } from 'lucide-react'
+import { Plane, Hotel, Link, Trash2, NotebookPen, SquarePen, ExternalLink, ChevronDown } from 'lucide-react'
 import { useSettings } from '../context/SettingsContext'
+
+// Datum als Label formatieren, z.B. "Fr, 31. Juli 2026"
+const formatDatumLabel = (datumStr, sprache) => {
+  if (!datumStr) return ''
+  const datum = new Date(`${datumStr}T00:00:00`)
+  return datum.toLocaleDateString(sprache === 'de' ? 'de-DE' : 'en-GB', {
+    weekday: 'short', day: 'numeric', month: 'long', year: 'numeric',
+  })
+}
 
 function TripInfo() {
   const { id } = useParams()
-  const { t } = useSettings()
+  const { t, sprache } = useSettings()
   const [trip, setTrip] = useState(null)
   const [laden, setLaden] = useState(true)
 
   // State für Flüge
   const [fluege, setFluege] = useState([])
+  const [fluegeOffen, setFluegeOffen] = useState(true)
   const [flugFormularOffen, setFlugFormularOffen] = useState(false)
   const [bearbeiteFlug, setBearbeiteFlug] = useState(null)
-  const [neuerFlug, setNeuerFlug] = useState({ titel: '', flugnummer: '', abflug: '', ankunft: '' })
+  const [neuerFlug, setNeuerFlug] = useState({ titel: '', flugnummer: '', abflug: '', ankunft: '', datum: '' })
 
   // State für Unterkünfte
   const [unterkuenfte, setUnterkuenfte] = useState([])
+  const [unterkuenfteOffen, setUnterkuenfteOffen] = useState(true)
   const [unterkunftFormularOffen, setUnterkunftFormularOffen] = useState(false)
   const [bearbeiteUnterkunft, setBearbeiteUnterkunft] = useState(null)
-  const [neueUnterkunft, setNeueUnterkunft] = useState({ titel: '', name: '', adresse: '', checkin: '', checkout: '' })
+  const [neueUnterkunft, setNeueUnterkunft] = useState({ titel: '', name: '', adresse: '', checkin: '', checkout: '', von_datum: '', bis_datum: '' })
 
   // State für Links
   const [links, setLinks] = useState([])
@@ -62,12 +73,12 @@ function TripInfo() {
     if (!neuerFlug.titel) return
     const { data, error } = await supabase
       .from('trip_fluege')
-      .insert([{ ...neuerFlug, trip_id: id }])
+      .insert([{ ...neuerFlug, datum: neuerFlug.datum || null, trip_id: id }])
       .select()
     if (error) console.error('Fehler:', error)
     else {
       setFluege([...fluege, data[0]])
-      setNeuerFlug({ titel: '', flugnummer: '', abflug: '', ankunft: '' })
+      setNeuerFlug({ titel: '', flugnummer: '', abflug: '', ankunft: '', datum: '' })
       setFlugFormularOffen(false)
     }
   }
@@ -82,6 +93,7 @@ function TripInfo() {
         flugnummer: bearbeiteFlug.flugnummer,
         abflug: bearbeiteFlug.abflug,
         ankunft: bearbeiteFlug.ankunft,
+        datum: bearbeiteFlug.datum || null,
       })
       .eq('id', bearbeiteFlug.id)
     if (error) console.error('Fehler:', error)
@@ -102,12 +114,12 @@ function TripInfo() {
     if (!neueUnterkunft.titel) return
     const { data, error } = await supabase
       .from('trip_unterkuenfte')
-      .insert([{ ...neueUnterkunft, trip_id: id }])
+      .insert([{ ...neueUnterkunft, von_datum: neueUnterkunft.von_datum || null, bis_datum: neueUnterkunft.bis_datum || null, trip_id: id }])
       .select()
     if (error) console.error('Fehler:', error)
     else {
       setUnterkuenfte([...unterkuenfte, data[0]])
-      setNeueUnterkunft({ titel: '', name: '', adresse: '', checkin: '', checkout: '' })
+      setNeueUnterkunft({ titel: '', name: '', adresse: '', checkin: '', checkout: '', von_datum: '', bis_datum: '' })
       setUnterkunftFormularOffen(false)
     }
   }
@@ -123,6 +135,8 @@ function TripInfo() {
         adresse: bearbeiteUnterkunft.adresse,
         checkin: bearbeiteUnterkunft.checkin,
         checkout: bearbeiteUnterkunft.checkout,
+        von_datum: bearbeiteUnterkunft.von_datum || null,
+        bis_datum: bearbeiteUnterkunft.bis_datum || null,
       })
       .eq('id', bearbeiteUnterkunft.id)
     if (error) console.error('Fehler:', error)
@@ -177,6 +191,22 @@ function TripInfo() {
     }
   }
 
+  // Flüge nach Datum aufsteigend, Einträge ohne Datum ans Ende
+  const fluegeSortiert = [...fluege].sort((a, b) => {
+    if (!a.datum && !b.datum) return 0
+    if (!a.datum) return 1
+    if (!b.datum) return -1
+    return a.datum.localeCompare(b.datum)
+  })
+
+  // Unterkünfte nach von_datum aufsteigend, ohne Datum ans Ende
+  const unterkuenfteSortiert = [...unterkuenfte].sort((a, b) => {
+    if (!a.von_datum && !b.von_datum) return 0
+    if (!a.von_datum) return 1
+    if (!b.von_datum) return -1
+    return a.von_datum.localeCompare(b.von_datum)
+  })
+
   if (laden) return (
     <div style={{ paddingBottom: '40px' }}>
       <div style={{ padding: '20px' }}>
@@ -187,7 +217,7 @@ function TripInfo() {
   )
 
   return (
-    <div style={{ paddingBottom: '100px' }}>
+    <div style={{ paddingBottom: 'calc(120px + env(safe-area-inset-bottom))' }}>
       <TripNav tripName={trip.name} />
 
       <div style={{ padding: '0 clamp(14px, 4vw, 20px)', maxWidth: '600px', margin: '0 auto', boxSizing: 'border-box' }}>
@@ -195,21 +225,34 @@ function TripInfo() {
         {/* ── Flüge ── */}
         <div className="fade-in-1" style={sectionStyle}>
           <div style={sectionHeaderStyle}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div onClick={() => setFluegeOffen(!fluegeOffen)} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', minWidth: 0 }}>
               <div style={sectionIconStyle}><Plane size={16} color="var(--gold)" /></div>
               <h3 style={sectionTitelStyle}>{t('fluegeTitel')}</h3>
+              {fluege.length > 0 && (
+                <span style={badgeStyle}>{fluege.length}</span>
+              )}
+              <ChevronDown size={16} color="var(--text-sub)" style={{
+                flexShrink: 0,
+                transform: fluegeOffen ? 'rotate(180deg)' : 'rotate(0deg)',
+                transition: 'transform 0.2s ease',
+              }} />
             </div>
-            <button onClick={() => setFlugFormularOffen(!flugFormularOffen)} className="btn-press" style={addButtonStyle}>
+            <button onClick={() => { setFlugFormularOffen(!flugFormularOffen); setFluegeOffen(true) }} className="btn-press" style={addButtonStyle}>
               {flugFormularOffen ? t('abbrechen') : t('flugHinzufuegenBtn')}
             </button>
           </div>
 
+          {fluegeOffen && (
+          <div className="fade-in">
           {/* Flug Formular */}
           {flugFormularOffen && (
             <div className="fade-in" style={formularStyle}>
               <input placeholder={t('titelHinflugPlatzhalter')} value={neuerFlug.titel}
                 onChange={(e) => setNeuerFlug({ ...neuerFlug, titel: e.target.value })}
                 style={inputStyle} />
+              <input type="date" value={neuerFlug.datum}
+                onChange={(e) => setNeuerFlug({ ...neuerFlug, datum: e.target.value })}
+                style={dateInputStyle} />
               <input placeholder={t('flugnummerPlatzhalter')} value={neuerFlug.flugnummer}
                 onChange={(e) => setNeuerFlug({ ...neuerFlug, flugnummer: e.target.value })}
                 style={inputStyle} />
@@ -227,17 +270,23 @@ function TripInfo() {
             </div>
           )}
 
-          {/* Flüge Liste */}
+          {/* Flüge Liste – nach Datum sortiert */}
           {fluege.length === 0 ? (
             <p style={leerTextStyle}>{t('keineFluege')}</p>
           ) : (
-            fluege.map(flug => (
+            fluegeSortiert.map(flug => (
               <div key={flug.id} style={{ marginBottom: '12px' }}>
+                {flug.datum && bearbeiteFlug?.id !== flug.id && (
+                  <p style={datumLabelStyle}>{formatDatumLabel(flug.datum, sprache)}</p>
+                )}
                 {bearbeiteFlug?.id === flug.id ? (
                   <div className="fade-in" style={formularStyle}>
                     <input placeholder={t('titelPlatzhalter')} value={bearbeiteFlug.titel}
                       onChange={(e) => setBearbeiteFlug({ ...bearbeiteFlug, titel: e.target.value })}
                       style={inputStyle} />
+                    <input type="date" value={bearbeiteFlug.datum || ''}
+                      onChange={(e) => setBearbeiteFlug({ ...bearbeiteFlug, datum: e.target.value })}
+                      style={dateInputStyle} />
                     <input placeholder={t('flugnummerKurzPlatzhalter')} value={bearbeiteFlug.flugnummer}
                       onChange={(e) => setBearbeiteFlug({ ...bearbeiteFlug, flugnummer: e.target.value })}
                       style={inputStyle} />
@@ -279,9 +328,9 @@ function TripInfo() {
                       </div>
                     </div>
 
-                    {/* Ticket Visual – Abflug ←→ Ankunft */}
+                    {/* Ticket Visual – Abflug ←→ Ankunft – auf sehr schmalen Screens (<360px) untereinander statt gequetscht */}
                     {(flug.abflug || flug.ankunft) && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div className="flug-ticket-row" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         {/* Abflug */}
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <p style={{ fontSize: 'clamp(1.5rem, 6vw, 2rem)', fontWeight: '800', margin: '0 0 2px', color: 'var(--text)', lineHeight: 1 }}>
@@ -315,20 +364,32 @@ function TripInfo() {
               </div>
             ))
           )}
+          </div>
+          )}
         </div>
 
         {/* ── Unterkünfte ── */}
         <div className="fade-in-2" style={sectionStyle}>
           <div style={sectionHeaderStyle}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div onClick={() => setUnterkuenfteOffen(!unterkuenfteOffen)} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', minWidth: 0 }}>
               <div style={sectionIconStyle}><Hotel size={16} color="var(--gold)" /></div>
               <h3 style={sectionTitelStyle}>{t('unterkuenfteTitel')}</h3>
+              {unterkuenfte.length > 0 && (
+                <span style={badgeStyle}>{unterkuenfte.length}</span>
+              )}
+              <ChevronDown size={16} color="var(--text-sub)" style={{
+                flexShrink: 0,
+                transform: unterkuenfteOffen ? 'rotate(180deg)' : 'rotate(0deg)',
+                transition: 'transform 0.2s ease',
+              }} />
             </div>
-            <button onClick={() => setUnterkunftFormularOffen(!unterkunftFormularOffen)} className="btn-press" style={addButtonStyle}>
+            <button onClick={() => { setUnterkunftFormularOffen(!unterkunftFormularOffen); setUnterkuenfteOffen(true) }} className="btn-press" style={addButtonStyle}>
               {unterkunftFormularOffen ? t('abbrechen') : t('unterkunftHinzufuegenBtn')}
             </button>
           </div>
 
+          {unterkuenfteOffen && (
+          <div className="fade-in">
           {/* Unterkunft Formular */}
           {unterkunftFormularOffen && (
             <div className="fade-in" style={formularStyle}>
@@ -341,6 +402,14 @@ function TripInfo() {
               <input placeholder={t('adresse')} value={neueUnterkunft.adresse}
                 onChange={(e) => setNeueUnterkunft({ ...neueUnterkunft, adresse: e.target.value })}
                 style={inputStyle} />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
+                <input type="date" value={neueUnterkunft.von_datum}
+                  onChange={(e) => setNeueUnterkunft({ ...neueUnterkunft, von_datum: e.target.value })}
+                  style={{ ...dateInputStyle, marginBottom: 0 }} />
+                <input type="date" value={neueUnterkunft.bis_datum}
+                  onChange={(e) => setNeueUnterkunft({ ...neueUnterkunft, bis_datum: e.target.value })}
+                  style={{ ...dateInputStyle, marginBottom: 0 }} />
+              </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <input placeholder={t('checkinPlatzhalter')} value={neueUnterkunft.checkin}
                   onChange={(e) => setNeueUnterkunft({ ...neueUnterkunft, checkin: e.target.value })}
@@ -355,12 +424,18 @@ function TripInfo() {
             </div>
           )}
 
-          {/* Unterkünfte Liste */}
+          {/* Unterkünfte Liste – nach von_datum sortiert */}
           {unterkuenfte.length === 0 ? (
             <p style={leerTextStyle}>{t('keineUnterkuenfte')}</p>
           ) : (
-            unterkuenfte.map(unterkunft => (
+            unterkuenfteSortiert.map(unterkunft => (
               <div key={unterkunft.id} style={{ marginBottom: '12px' }}>
+                {unterkunft.von_datum && bearbeiteUnterkunft?.id !== unterkunft.id && (
+                  <p style={datumLabelStyle}>
+                    {formatDatumLabel(unterkunft.von_datum, sprache)}
+                    {unterkunft.bis_datum ? ` – ${formatDatumLabel(unterkunft.bis_datum, sprache)}` : ''}
+                  </p>
+                )}
                 {bearbeiteUnterkunft?.id === unterkunft.id ? (
                   <div className="fade-in" style={formularStyle}>
                     <input placeholder={t('titelPlatzhalter')} value={bearbeiteUnterkunft.titel}
@@ -372,6 +447,14 @@ function TripInfo() {
                     <input placeholder={t('adresse')} value={bearbeiteUnterkunft.adresse}
                       onChange={(e) => setBearbeiteUnterkunft({ ...bearbeiteUnterkunft, adresse: e.target.value })}
                       style={inputStyle} />
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
+                      <input type="date" value={bearbeiteUnterkunft.von_datum || ''}
+                        onChange={(e) => setBearbeiteUnterkunft({ ...bearbeiteUnterkunft, von_datum: e.target.value })}
+                        style={{ ...dateInputStyle, marginBottom: 0 }} />
+                      <input type="date" value={bearbeiteUnterkunft.bis_datum || ''}
+                        onChange={(e) => setBearbeiteUnterkunft({ ...bearbeiteUnterkunft, bis_datum: e.target.value })}
+                        style={{ ...dateInputStyle, marginBottom: 0 }} />
+                    </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                       <input placeholder={t('checkinKurzPlatzhalter')} value={bearbeiteUnterkunft.checkin}
                         onChange={(e) => setBearbeiteUnterkunft({ ...bearbeiteUnterkunft, checkin: e.target.value })}
@@ -434,6 +517,8 @@ function TripInfo() {
                 )}
               </div>
             ))
+          )}
+          </div>
           )}
         </div>
 
@@ -538,7 +623,7 @@ function TripInfo() {
 
 const sectionStyle = {
   backgroundColor: 'var(--card)',
-  borderRadius: '22px',
+  borderRadius: '20px',
   padding: 'clamp(18px, 4vw, 24px)',
   marginBottom: '16px',
   boxSizing: 'border-box',
@@ -596,6 +681,26 @@ const inputStyle = {
   // min. 16px verhindert Auto-Zoom bei Fokus auf iOS Safari
   color: 'var(--text)', fontSize: '16px',
   marginBottom: '10px', boxSizing: 'border-box',
+}
+
+// Eigener Style fürs Datumsfeld – appearance:none entfernt die native Breite
+// des Kalender-Widgets, das <input type="date"> sonst über den Screen hinausschieben kann
+const dateInputStyle = {
+  ...inputStyle,
+  maxWidth: '100%',
+  appearance: 'none',
+  WebkitAppearance: 'none',
+}
+
+const badgeStyle = {
+  backgroundColor: 'var(--sub)', color: 'var(--text-sub)',
+  borderRadius: '8px', padding: '2px 8px',
+  fontSize: '0.72rem', fontWeight: '700', flexShrink: 0,
+}
+
+const datumLabelStyle = {
+  color: 'var(--text-sub)', fontSize: '0.72rem', fontWeight: '700',
+  margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.06em',
 }
 
 const addButtonStyle = {

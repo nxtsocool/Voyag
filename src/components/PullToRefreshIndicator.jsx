@@ -9,8 +9,9 @@ function PullToRefreshIndicator({ ziehen, fortschritt, schwellenwert }) {
     <div style={{
       position: 'fixed',
       top: 'calc(10px + env(safe-area-inset-top))',
-      left: '50%',
-      transform: `translateX(-50%) translateY(${sichtbarkeit * 6}px)`,
+      left: 0, right: 0, marginLeft: 'auto', marginRight: 'auto',
+      width: '44px',
+      transform: `translateY(${sichtbarkeit * 6}px)`,
       opacity: sichtbarkeit,
       zIndex: 200,
       pointerEvents: 'none',
