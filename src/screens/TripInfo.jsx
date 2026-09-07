@@ -5,6 +5,8 @@ import TripNav from '../components/TripNav'
 import { Plane, Hotel, Link, Trash2, NotebookPen, SquarePen, ExternalLink, ChevronDown } from 'lucide-react'
 import { useSettings } from '../context/SettingsContext'
 import TripNichtGefunden from '../components/TripNichtGefunden'
+import Toast from '../components/Toast'
+import useToast from '../hooks/useToast.jsx'
 
 // Datum als Label formatieren, z.B. "Fr, 31. Juli 2026"
 const formatDatumLabel = (datumStr, sprache) => {
@@ -18,6 +20,7 @@ const formatDatumLabel = (datumStr, sprache) => {
 function TripInfo() {
   const { id } = useParams()
   const { t, sprache } = useSettings()
+  const { toasts, setToasts, toast } = useToast()
   const [trip, setTrip] = useState(null)
   const [laden, setLaden] = useState(true)
 
@@ -46,25 +49,28 @@ function TripInfo() {
 
   useEffect(() => {
     const datenLaden = async () => {
-      const { data: tripData, error: tripError } = await supabase
-        .from('trips').select('*').eq('id', id).single()
-      if (tripError) console.error('Fehler beim Laden des Trips:', tripError)
-      setTrip(tripData)
-      if (!tripData) { setLaden(false); return }
-      if (tripData.notizen) setNotizen(tripData.notizen)
+      // Alle Queries hängen nur von der Trip-ID ab, nicht voneinander – parallel laden
+      const [tripRes, fluegeRes, unterkuenfteRes, linksRes] = await Promise.all([
+        supabase.from('trips').select('*').eq('id', id).single(),
+        supabase.from('trip_fluege').select('*').eq('trip_id', id),
+        supabase.from('trip_unterkuenfte').select('*').eq('trip_id', id),
+        supabase.from('trip_links').select('*').eq('trip_id', id),
+      ])
+
+      if (tripRes.error) console.error('Fehler beim Laden des Trips:', tripRes.error)
+      setTrip(tripRes.data)
+      if (!tripRes.data) { setLaden(false); return }
+      if (tripRes.data.notizen) setNotizen(tripRes.data.notizen)
       else setNotizen('')
 
-      const { data: fluegeData } = await supabase
-        .from('trip_fluege').select('*').eq('trip_id', id)
-      setFluege(fluegeData || [])
+      if (fluegeRes.error || unterkuenfteRes.error || linksRes.error) {
+        console.error('Fehler beim Laden der Trip-Daten:', fluegeRes.error || unterkuenfteRes.error || linksRes.error)
+        toast(t('verbindungsfehler'), 'error')
+      }
 
-      const { data: unterkuenfteData } = await supabase
-        .from('trip_unterkuenfte').select('*').eq('trip_id', id)
-      setUnterkuenfte(unterkuenfteData || [])
-
-      const { data: linksData } = await supabase
-        .from('trip_links').select('*').eq('trip_id', id)
-      setLinks(linksData || [])
+      setFluege(fluegeRes.data || [])
+      setUnterkuenfte(unterkuenfteRes.data || [])
+      setLinks(linksRes.data || [])
 
       setLaden(false)
     }
@@ -638,6 +644,8 @@ function TripInfo() {
         </div>
 
       </div>
+
+      <Toast toasts={toasts} setToasts={setToasts} />
     </div>
   )
 }

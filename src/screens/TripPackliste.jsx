@@ -5,6 +5,8 @@ import TripNav from '../components/TripNav'
 import { Trash2, SquarePen, PackageCheck } from 'lucide-react'
 import { useSettings } from '../context/SettingsContext'
 import TripNichtGefunden from '../components/TripNichtGefunden'
+import Toast from '../components/Toast'
+import useToast from '../hooks/useToast.jsx'
 
 // Wischt man ein Item 60px nach links, erscheint der rote Hintergrund mit Trash Icon.
 // Ab 120px wird das Item beim Loslassen gelöscht.
@@ -83,6 +85,7 @@ function SwipeToDelete({ onDelete, children }) {
 export default function TripPackliste() {
   const { id } = useParams()
   const { t } = useSettings()
+  const { toasts, setToasts, toast } = useToast()
   const [trip, setTrip] = useState(null)
   const [packliste, setPackliste] = useState([])
   const [neuesItem, setNeuesItem] = useState('')
@@ -94,14 +97,21 @@ export default function TripPackliste() {
 
   useEffect(() => {
     const datenLaden = async () => {
-      const { data: tripData, error: tripError } = await supabase
-        .from('trips').select('*').eq('id', id).single()
-      if (tripError) console.error('Fehler beim Laden des Trips:', tripError)
-      setTrip(tripData)
-      if (!tripData) { setLaden(false); return }
-      const { data: packlisteData } = await supabase
-        .from('packliste').select('*').eq('trip_id', id)
-      setPackliste(packlisteData || [])
+      // Beide Queries hängen nur von der Trip-ID ab, nicht voneinander – parallel laden
+      const [tripRes, packlisteRes] = await Promise.all([
+        supabase.from('trips').select('*').eq('id', id).single(),
+        supabase.from('packliste').select('*').eq('trip_id', id),
+      ])
+
+      if (tripRes.error) console.error('Fehler beim Laden des Trips:', tripRes.error)
+      setTrip(tripRes.data)
+      if (!tripRes.data) { setLaden(false); return }
+
+      if (packlisteRes.error) {
+        console.error('Fehler beim Laden der Packliste:', packlisteRes.error)
+        toast(t('verbindungsfehler'), 'error')
+      }
+      setPackliste(packlisteRes.data || [])
       setLaden(false)
     }
     datenLaden()
@@ -355,6 +365,8 @@ export default function TripPackliste() {
         </div>
 
       </div>
+
+      <Toast toasts={toasts} setToasts={setToasts} />
     </div>
   )
 }

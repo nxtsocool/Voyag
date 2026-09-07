@@ -115,12 +115,18 @@ function TripsOverview() {
     const user = authData.user
     setCurrentUser(user)
 
-    const { data: eigeneTrips } = await supabase
-      .from('trips').select('*').eq('user_id', user.id)
+    // Eigene Trips und Mitgliedschaften hängen nur vom User ab, nicht voneinander – parallel laden
+    const [eigeneTripsRes, membersRes] = await Promise.all([
+      supabase.from('trips').select('*').eq('user_id', user.id),
+      supabase.from('trip_members').select('trip_id').eq('user_id', user.id),
+    ])
 
-    const { data: members } = await supabase
-      .from('trip_members').select('trip_id').eq('user_id', user.id)
+    if (eigeneTripsRes.error || membersRes.error) {
+      console.error('Fehler beim Laden der Trips:', eigeneTripsRes.error || membersRes.error)
+      toast(t('verbindungsfehler'), 'error')
+    }
 
+    const members = membersRes.data
     let beigetreteneTrips = []
     if (members && members.length > 0) {
       const tripIds = members.map(m => m.trip_id)
@@ -128,7 +134,7 @@ function TripsOverview() {
       beigetreteneTrips = data || []
     }
 
-    setTrips([...(eigeneTrips || []), ...beigetreteneTrips])
+    setTrips([...(eigeneTripsRes.data || []), ...beigetreteneTrips])
     setLaden(false)
   }
 

@@ -46,27 +46,33 @@ export default function TripPersonen() {
 
   useEffect(() => {
     const datenLaden = async () => {
-      // Trip laden
-      const { data: tripData, error: tripError } = await supabase
-        .from('trips').select('*').eq('id', id).single()
-      if (tripError) console.error('Fehler beim Laden des Trips:', tripError)
-      setTrip(tripData)
+      // Trip, Teilnehmer und Ausgaben hängen nur von der Trip-ID ab, nicht
+      // voneinander – parallel laden. Profile hängen von den Teilnehmern ab
+      // und werden erst danach geladen.
+      const [tripRes, teilnehmerRes, ausgabenRes] = await Promise.all([
+        supabase.from('trips').select('*').eq('id', id).single(),
+        supabase.from('teilnehmer').select('*').eq('trip_id', id),
+        // Ausgaben werden geladen um vor dem Entfernen eines Teilnehmers zu prüfen,
+        // ob er bereits etwas bezahlt hat oder ihm eine Ausgabe zugeordnet ist
+        supabase.from('ausgaben').select('*').eq('trip_id', id),
+      ])
 
-      if (!tripData) { setLaden(false); return }
+      if (tripRes.error) console.error('Fehler beim Laden des Trips:', tripRes.error)
+      setTrip(tripRes.data)
 
-      // Teilnehmer laden
-      const { data: teilnehmerData } = await supabase
-        .from('teilnehmer').select('*').eq('trip_id', id)
-      setTeilnehmer(teilnehmerData || [])
+      if (!tripRes.data) { setLaden(false); return }
 
-      // Ausgaben laden – um vor dem Entfernen eines Teilnehmers zu prüfen,
-      // ob er bereits etwas bezahlt hat oder ihm eine Ausgabe zugeordnet ist
-      const { data: ausgabenData } = await supabase
-        .from('ausgaben').select('*').eq('trip_id', id)
-      setAusgaben(ausgabenData || [])
+      if (teilnehmerRes.error || ausgabenRes.error) {
+        console.error('Fehler beim Laden der Trip-Daten:', teilnehmerRes.error || ausgabenRes.error)
+        toast(t('verbindungsfehler'), 'error')
+      }
+
+      const teilnehmerData = teilnehmerRes.data || []
+      setTeilnehmer(teilnehmerData)
+      setAusgaben(ausgabenRes.data || [])
 
       // Profile der verknüpften User laden
-      const userIds = (teilnehmerData || [])
+      const userIds = teilnehmerData
         .filter(t => t.user_id)
         .map(t => t.user_id)
 

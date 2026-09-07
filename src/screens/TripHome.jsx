@@ -6,12 +6,15 @@ import { ChevronLeft, Info, Users, CheckSquare, Wallet, MapPin, Rocket, PartyPop
 import usePullToRefresh from '../hooks/usePullToRefresh'
 import PullToRefreshIndicator from '../components/PullToRefreshIndicator'
 import TripNichtGefunden from '../components/TripNichtGefunden'
+import Toast from '../components/Toast'
+import useToast from '../hooks/useToast.jsx'
 import { useSettings } from '../context/SettingsContext'
 
 function TripHome() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { t } = useSettings()
+  const { toasts, setToasts, toast } = useToast()
 
   const [trip, setTrip] = useState(null)
   const [teilnehmer, setTeilnehmer] = useState([])
@@ -25,30 +28,29 @@ function TripHome() {
   const { ziehen, fortschritt, schwellenwert } = usePullToRefresh(datenLaden)
 
   async function datenLaden() {
-    const { data: tripData, error: tripError } = await supabase
-      .from('trips').select('*').eq('id', id).single()
-    if (tripError) console.error('Fehler beim Laden des Trips:', tripError)
-    setTrip(tripData)
+    // Alle Queries hängen nur von der Trip-ID ab, nicht voneinander – parallel laden
+    const [tripRes, teilnehmerRes, ausgabenRes, packlisteRes, orteRes] = await Promise.all([
+      supabase.from('trips').select('*').eq('id', id).single(),
+      supabase.from('teilnehmer').select('*').eq('trip_id', id),
+      supabase.from('ausgaben').select('*').eq('trip_id', id),
+      supabase.from('packliste').select('*').eq('trip_id', id),
+      supabase.from('trip_orte').select('id').eq('trip_id', id),
+    ])
 
-    if (!tripData) { setLaden(false); return }
+    if (tripRes.error) console.error('Fehler beim Laden des Trips:', tripRes.error)
+    setTrip(tripRes.data)
 
-    const { data: teilnehmerData } = await supabase
-      .from('teilnehmer').select('*').eq('trip_id', id)
-    setTeilnehmer(teilnehmerData || [])
+    if (!tripRes.data) { setLaden(false); return }
 
-    const { data: ausgabenData } = await supabase
-      .from('ausgaben').select('*').eq('trip_id', id)
-    setAusgaben(ausgabenData || [])
+    if (teilnehmerRes.error || ausgabenRes.error || packlisteRes.error || orteRes.error) {
+      console.error('Fehler beim Laden der Trip-Daten:', teilnehmerRes.error || ausgabenRes.error || packlisteRes.error || orteRes.error)
+      toast(t('verbindungsfehler'), 'error')
+    }
 
-    // Packliste aus Supabase laden
-    const { data: packlisteData } = await supabase
-      .from('packliste').select('*').eq('trip_id', id)
-    setPackliste(packlisteData || [])
-
-    // Anzahl gespeicherter Orte laden
-    const { data: orteData } = await supabase
-      .from('trip_orte').select('id').eq('trip_id', id)
-    setOrteAnzahl((orteData || []).length)
+    setTeilnehmer(teilnehmerRes.data || [])
+    setAusgaben(ausgabenRes.data || [])
+    setPackliste(packlisteRes.data || [])
+    setOrteAnzahl((orteRes.data || []).length)
 
     setLaden(false)
   }
@@ -266,6 +268,8 @@ function TripHome() {
         </div>
 
       </div>
+
+      <Toast toasts={toasts} setToasts={setToasts} />
     </div>
   )
 }

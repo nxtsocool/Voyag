@@ -9,6 +9,8 @@ import {
 import { useSettings } from '../context/SettingsContext'
 import useBodyScrollLock from '../hooks/useBodyScrollLock'
 import TripNichtGefunden from '../components/TripNichtGefunden'
+import Toast from '../components/Toast'
+import useToast from '../hooks/useToast.jsx'
 
 // Kategorie-Definition mit Lucide Icons
 const KATEGORIEN = [
@@ -25,6 +27,7 @@ const KATEGORIEN = [
 export default function TripOrte() {
   const { id } = useParams()
   const { t } = useSettings()
+  const { toasts, setToasts, toast } = useToast()
   const [trip, setTrip] = useState(null)
   const [orte, setOrte] = useState([])
   const [laden, setLaden] = useState(true)
@@ -51,16 +54,22 @@ export default function TripOrte() {
 
   useEffect(() => {
     const datenLaden = async () => {
-      const { data: tripData, error: tripError } = await supabase
-        .from('trips').select('*').eq('id', id).single()
-      if (tripError) console.error('Fehler beim Laden des Trips:', tripError)
-      setTrip(tripData)
+      // Beide Queries hängen nur von der Trip-ID ab, nicht voneinander – parallel laden
+      const [tripRes, orteRes] = await Promise.all([
+        supabase.from('trips').select('*').eq('id', id).single(),
+        supabase.from('trip_orte').select('*').eq('trip_id', id).order('created_at', { ascending: true }),
+      ])
 
-      if (!tripData) { setLaden(false); return }
+      if (tripRes.error) console.error('Fehler beim Laden des Trips:', tripRes.error)
+      setTrip(tripRes.data)
 
-      const { data: orteData } = await supabase
-        .from('trip_orte').select('*').eq('trip_id', id).order('created_at', { ascending: true })
-      setOrte(orteData || [])
+      if (!tripRes.data) { setLaden(false); return }
+
+      if (orteRes.error) {
+        console.error('Fehler beim Laden der Orte:', orteRes.error)
+        toast(t('verbindungsfehler'), 'error')
+      }
+      setOrte(orteRes.data || [])
 
       setLaden(false)
     }
@@ -475,6 +484,8 @@ export default function TripOrte() {
           </div>
         </div>
       )}
+
+      <Toast toasts={toasts} setToasts={setToasts} />
     </div>
   )
 }

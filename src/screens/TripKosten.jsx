@@ -58,25 +58,27 @@ function TripKosten() {
   const { ziehen, fortschritt, schwellenwert } = usePullToRefresh(datenLaden)
 
   async function datenLaden() {
-    const { data: tripData, error: tripError } = await supabase
-      .from('trips').select('*').eq('id', id).single()
-    if (tripError) console.error('Fehler beim Laden des Trips:', tripError)
-    setTrip(tripData)
+    // Alle Queries hängen nur von der Trip-ID ab, nicht voneinander – parallel laden
+    const [tripRes, ausgabenRes, teilnehmerRes, abrechnungenRes] = await Promise.all([
+      supabase.from('trips').select('*').eq('id', id).single(),
+      supabase.from('ausgaben').select('*').eq('trip_id', id).order('datum', { ascending: false }),
+      supabase.from('teilnehmer').select('*').eq('trip_id', id),
+      supabase.from('abrechnungen').select('*').eq('trip_id', id),
+    ])
 
-    if (!tripData) { setLaden(false); return }
+    if (tripRes.error) console.error('Fehler beim Laden des Trips:', tripRes.error)
+    setTrip(tripRes.data)
 
-    const { data: ausgabenData } = await supabase
-      .from('ausgaben').select('*').eq('trip_id', id)
-      .order('datum', { ascending: false })
-    setAusgaben(ausgabenData || [])
+    if (!tripRes.data) { setLaden(false); return }
 
-    const { data: teilnehmerData } = await supabase
-      .from('teilnehmer').select('*').eq('trip_id', id)
-    setTeilnehmer(teilnehmerData || [])
+    if (ausgabenRes.error || teilnehmerRes.error || abrechnungenRes.error) {
+      console.error('Fehler beim Laden der Trip-Daten:', ausgabenRes.error || teilnehmerRes.error || abrechnungenRes.error)
+      toast(t('verbindungsfehler'), 'error')
+    }
 
-    const { data: abrechnungenData } = await supabase
-      .from('abrechnungen').select('*').eq('trip_id', id)
-    setAbrechnungen(abrechnungenData || [])
+    setAusgaben(ausgabenRes.data || [])
+    setTeilnehmer(teilnehmerRes.data || [])
+    setAbrechnungen(abrechnungenRes.data || [])
 
     setLaden(false)
   }
