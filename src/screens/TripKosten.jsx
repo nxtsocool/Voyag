@@ -38,6 +38,8 @@ function TripKosten() {
   const [abrechnenOffen, setAbrechnenOffen] = useState(false)
   // Ob die gesamte Ausgaben-Liste aufgeklappt ist – standardmäßig aufgeklappt
   const [ausgabenOffen, setAusgabenOffen] = useState(true)
+  // Schützt gegen doppeltes Anlegen einer Ausgabe durch schnelles Doppel-Tippen
+  const [speichernLaeuft, setSpeichernLaeuft] = useState(false)
 
   const [neueAusgabe, setNeueAusgabe] = useState({
     beschreibung: '', betrag: '', bezahlt_von: '', fuer: [],
@@ -83,44 +85,52 @@ function TripKosten() {
 
   // Neue Ausgabe speichern
   const ausgabeHinzufuegen = async () => {
+    // Schnelles Doppel-Tippen auf den Speichern-Button würde sonst die Ausgabe doppelt anlegen
+    if (speichernLaeuft) return
+
     if (!neueAusgabe.beschreibung || !neueAusgabe.betrag || !neueAusgabe.bezahlt_von) {
       toast(t('bitteAlleFelderAusfuellen'), 'error')
       return
     }
 
-    // Original-Betrag immer in die Heimwährung umrechnen – Saldo/Schulden basieren nur auf betrag
-    const betragInHeim = umrechnen(
-      parseFloat(neueAusgabe.betrag),
-      neueAusgabe.waehrung.iso,
-      heimISO
-    )
+    setSpeichernLaeuft(true)
+    try {
+      // Original-Betrag immer in die Heimwährung umrechnen – Saldo/Schulden basieren nur auf betrag
+      const betragInHeim = umrechnen(
+        parseFloat(neueAusgabe.betrag),
+        neueAusgabe.waehrung.iso,
+        heimISO
+      )
 
-    const { data, error } = await supabase
-      .from('ausgaben')
-      .insert([{
-        beschreibung: neueAusgabe.beschreibung,
-        betrag: parseFloat(betragInHeim.toFixed(2)),
-        betrag_original: parseFloat(neueAusgabe.betrag),
-        waehrung_original: neueAusgabe.waehrung.symbol,
-        bezahlt_von: neueAusgabe.bezahlt_von,
-        trip_id: id,
-        datum: neueAusgabe.datum,
-        fuer: neueAusgabe.fuer.length > 0 ? neueAusgabe.fuer : null,
-      }])
-      .select()
+      const { data, error } = await supabase
+        .from('ausgaben')
+        .insert([{
+          beschreibung: neueAusgabe.beschreibung,
+          betrag: parseFloat(betragInHeim.toFixed(2)),
+          betrag_original: parseFloat(neueAusgabe.betrag),
+          waehrung_original: neueAusgabe.waehrung.symbol,
+          bezahlt_von: neueAusgabe.bezahlt_von,
+          trip_id: id,
+          datum: neueAusgabe.datum,
+          fuer: neueAusgabe.fuer.length > 0 ? neueAusgabe.fuer : null,
+        }])
+        .select()
 
-    if (error) {
-      console.error('Fehler:', error)
-      toast(t('fehlerBeimSpeichern'), 'error')
-    } else {
-      setAusgaben([data[0], ...ausgaben])
-      setNeueAusgabe({
-        beschreibung: '', betrag: '', bezahlt_von: '', fuer: [],
-        datum: new Date().toISOString().split('T')[0],
-        waehrung: { symbol: '€', iso: 'EUR' },
-      })
-      setFormularOffen(false)
-      toast(t('ausgabeHinzugefuegt'), 'success')
+      if (error) {
+        console.error('Fehler:', error)
+        toast(t('fehlerBeimSpeichern'), 'error')
+      } else {
+        setAusgaben([data[0], ...ausgaben])
+        setNeueAusgabe({
+          beschreibung: '', betrag: '', bezahlt_von: '', fuer: [],
+          datum: new Date().toISOString().split('T')[0],
+          waehrung: { symbol: '€', iso: 'EUR' },
+        })
+        setFormularOffen(false)
+        toast(t('ausgabeHinzugefuegt'), 'success')
+      }
+    } finally {
+      setSpeichernLaeuft(false)
     }
   }
 
@@ -730,7 +740,9 @@ function TripKosten() {
             })}
 
             <div style={{ display: 'flex', gap: '10px', marginTop: '18px' }}>
-              <button onClick={ausgabeHinzufuegen} className="btn-press" style={{ ...speichernButtonStyle, flex: 1 }}>{t('speichern')}</button>
+              <button onClick={ausgabeHinzufuegen} disabled={speichernLaeuft} className="btn-press" style={{ ...speichernButtonStyle, flex: 1, opacity: speichernLaeuft ? 0.6 : 1 }}>
+                {speichernLaeuft ? t('wirdGespeichert') : t('speichern')}
+              </button>
               <button onClick={() => setFormularOffen(false)} className="btn-press" style={{ ...abbrechenButtonStyle, flex: 1 }}>{t('abbrechen')}</button>
             </div>
           </div>

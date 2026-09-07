@@ -33,6 +33,8 @@ export default function TripOrte() {
   const [formularOffen, setFormularOffen] = useState(false)
   const [bearbeiteOrt, setBearbeiteOrt] = useState(null) // null = neu anlegen
   const [formDaten, setFormDaten] = useState({ name: '', kategorie: 'sonstiges', notiz: '', maps_link: '' })
+  // Schützt gegen doppeltes Anlegen/Speichern eines Orts durch schnelles Doppel-Tippen
+  const [speichernLaeuft, setSpeichernLaeuft] = useState(false)
   useBodyScrollLock(formularOffen)
 
   // Kategorien, die aufgeklappt sind – standardmäßig alle
@@ -82,40 +84,47 @@ export default function TripOrte() {
 
   // Speichern – je nach Modus Insert oder Update
   const formSpeichern = async () => {
+    // Schnelles Doppel-Tippen auf den Speichern-Button würde sonst den Ort doppelt anlegen
+    if (speichernLaeuft) return
     if (!formDaten.name.trim()) return
 
-    if (bearbeiteOrt) {
-      // Vorhandenen Ort aktualisieren
-      const { error } = await supabase
-        .from('trip_orte')
-        .update({
-          name: formDaten.name,
-          kategorie: formDaten.kategorie,
-          notiz: formDaten.notiz || null,
-          maps_link: formDaten.maps_link || null,
-        })
-        .eq('id', bearbeiteOrt.id)
+    setSpeichernLaeuft(true)
+    try {
+      if (bearbeiteOrt) {
+        // Vorhandenen Ort aktualisieren
+        const { error } = await supabase
+          .from('trip_orte')
+          .update({
+            name: formDaten.name,
+            kategorie: formDaten.kategorie,
+            notiz: formDaten.notiz || null,
+            maps_link: formDaten.maps_link || null,
+          })
+          .eq('id', bearbeiteOrt.id)
 
-      if (error) { console.error('Fehler beim Speichern:', error); return }
-      setOrte(orte.map(o => o.id === bearbeiteOrt.id ? { ...o, ...formDaten } : o))
-    } else {
-      // Neuen Ort anlegen – trip_id als Integer übergeben
-      const { data, error } = await supabase
-        .from('trip_orte')
-        .insert([{
-          trip_id: parseInt(id, 10),
-          name: formDaten.name,
-          kategorie: formDaten.kategorie,
-          notiz: formDaten.notiz || null,
-          maps_link: formDaten.maps_link || null,
-        }])
-        .select()
+        if (error) { console.error('Fehler beim Speichern:', error); return }
+        setOrte(orte.map(o => o.id === bearbeiteOrt.id ? { ...o, ...formDaten } : o))
+      } else {
+        // Neuen Ort anlegen – trip_id als Integer übergeben
+        const { data, error } = await supabase
+          .from('trip_orte')
+          .insert([{
+            trip_id: parseInt(id, 10),
+            name: formDaten.name,
+            kategorie: formDaten.kategorie,
+            notiz: formDaten.notiz || null,
+            maps_link: formDaten.maps_link || null,
+          }])
+          .select()
 
-      if (error) { console.error('Fehler beim Hinzufügen:', error); return }
-      setOrte([...orte, data[0]])
+        if (error) { console.error('Fehler beim Hinzufügen:', error); return }
+        setOrte([...orte, data[0]])
+      }
+
+      modalSchliessen()
+    } finally {
+      setSpeichernLaeuft(false)
     }
-
-    modalSchliessen()
   }
 
   // Ort löschen
@@ -456,8 +465,8 @@ export default function TripOrte() {
 
             {/* Speichern / Abbrechen */}
             <div style={{ display: 'flex', gap: '10px', marginTop: '6px' }}>
-              <button onClick={formSpeichern} className="btn-press" style={{ ...speichernButtonStyle, flex: 1 }}>
-                {t('speichern')}
+              <button onClick={formSpeichern} disabled={speichernLaeuft} className="btn-press" style={{ ...speichernButtonStyle, flex: 1, opacity: speichernLaeuft ? 0.6 : 1 }}>
+                {speichernLaeuft ? t('wirdGespeichert') : t('speichern')}
               </button>
               <button onClick={modalSchliessen} className="btn-press" style={{ ...abbrechenButtonStyle, flex: 1 }}>
                 {t('abbrechen')}

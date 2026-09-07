@@ -28,6 +28,8 @@ export default function TripPersonen() {
   const [loeseVerknuepfungTeilnehmer, setLoeseVerknuepfungTeilnehmer] = useState(null)
   // Icon-Wechsel nach dem Kopieren des Einladungscodes (1.5s)
   const [codeKopiert, setCodeKopiert] = useState(false)
+  // Schützt gegen doppeltes Anlegen eines Teilnehmers durch schnelles Doppel-Tippen
+  const [speichernLaeuft, setSpeichernLaeuft] = useState(false)
   useBodyScrollLock(!!loeseVerknuepfungTeilnehmer)
 
   useEffect(() => {
@@ -65,15 +67,23 @@ export default function TripPersonen() {
 
   // Neuen Teilnehmer hinzufügen
   const teilnehmerHinzufuegen = async () => {
+    // Schnelles Doppel-Tippen auf den "+" Button würde sonst den Teilnehmer doppelt anlegen
+    if (speichernLaeuft) return
     if (!neuerTeilnehmer) return
-    const { data, error } = await supabase
-      .from('teilnehmer')
-      .insert([{ name: neuerTeilnehmer, trip_id: id }])
-      .select()
-    if (error) console.error('Fehler:', error)
-    else {
-      setTeilnehmer([...teilnehmer, data[0]])
-      setNeuerTeilnehmer('')
+
+    setSpeichernLaeuft(true)
+    try {
+      const { data, error } = await supabase
+        .from('teilnehmer')
+        .insert([{ name: neuerTeilnehmer, trip_id: id }])
+        .select()
+      if (error) console.error('Fehler:', error)
+      else {
+        setTeilnehmer([...teilnehmer, data[0]])
+        setNeuerTeilnehmer('')
+      }
+    } finally {
+      setSpeichernLaeuft(false)
     }
   }
 
@@ -427,11 +437,12 @@ export default function TripPersonen() {
               onKeyDown={(e) => e.key === 'Enter' && teilnehmerHinzufuegen()}
               style={{ ...inputStyle, flex: 1, marginBottom: 0 }}
             />
-            <button onClick={teilnehmerHinzufuegen} className="btn-press" style={{
+            <button onClick={teilnehmerHinzufuegen} disabled={speichernLaeuft} className="btn-press" style={{
               backgroundColor: 'var(--gold)', color: '#0a0f1e', border: 'none',
               padding: '0 20px', minHeight: '48px', borderRadius: '14px',
               cursor: 'pointer', fontSize: '1.3rem', fontWeight: '600', flexShrink: 0,
               boxShadow: '0 4px 14px rgba(201,168,76,0.3)',
+              opacity: speichernLaeuft ? 0.6 : 1,
             }}>+</button>
           </div>
         </div>

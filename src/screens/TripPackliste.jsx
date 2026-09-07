@@ -89,6 +89,8 @@ export default function TripPackliste() {
   const [laden, setLaden] = useState(true)
   // State für das Item das gerade bearbeitet wird
   const [bearbeiteItem, setBearbeiteItem] = useState(null)
+  // Schützt gegen doppeltes Anlegen eines Items durch schnelles Doppel-Tippen
+  const [speichernLaeuft, setSpeichernLaeuft] = useState(false)
 
   useEffect(() => {
     const datenLaden = async () => {
@@ -106,15 +108,23 @@ export default function TripPackliste() {
   }, [id])
 
   const itemHinzufuegen = async () => {
+    // Schnelles Doppel-Tippen auf den "+" Button würde sonst das Item doppelt anlegen
+    if (speichernLaeuft) return
     if (!neuesItem) return
-    const { data, error } = await supabase
-      .from('packliste')
-      .insert([{ text: neuesItem, erledigt: false, trip_id: id }])
-      .select()
-    if (error) console.error('Fehler:', error)
-    else {
-      setPackliste([...packliste, data[0]])
-      setNeuesItem('')
+
+    setSpeichernLaeuft(true)
+    try {
+      const { data, error } = await supabase
+        .from('packliste')
+        .insert([{ text: neuesItem, erledigt: false, trip_id: id }])
+        .select()
+      if (error) console.error('Fehler:', error)
+      else {
+        setPackliste([...packliste, data[0]])
+        setNeuesItem('')
+      }
+    } finally {
+      setSpeichernLaeuft(false)
     }
   }
 
@@ -333,12 +343,13 @@ export default function TripPackliste() {
               onKeyDown={(e) => e.key === 'Enter' && itemHinzufuegen()}
               style={{ ...inputStyle, flex: 1, minWidth: 0, marginBottom: 0 }}
             />
-            <button onClick={itemHinzufuegen} className="btn-press" style={{
+            <button onClick={itemHinzufuegen} disabled={speichernLaeuft} className="btn-press" style={{
               backgroundColor: 'var(--gold)', color: '#0a0f1e', border: 'none',
               padding: '0 20px', minHeight: '48px', borderRadius: '14px',
               cursor: 'pointer', fontSize: '1.3rem', fontWeight: '600',
               flexShrink: 0, boxSizing: 'border-box',
               boxShadow: '0 4px 14px rgba(201,168,76,0.3)',
+              opacity: speichernLaeuft ? 0.6 : 1,
             }}>+</button>
           </div>
         </div>
