@@ -6,6 +6,7 @@ import { Compass } from 'lucide-react'
 import { useSettings } from '../context/SettingsContext'
 import useBodyScrollLock from '../hooks/useBodyScrollLock'
 import { PENDING_INVITE_KEY } from '../App'
+import { findeVorauswahl } from '../utils/teilnehmerVerknuepfung'
 
 export default function JoinScreen() {
   const { code } = useParams()
@@ -66,17 +67,7 @@ export default function JoinScreen() {
       const { data: eigenesProfil } = await supabase
         .from('profiles').select('name').eq('id', user.id).single()
 
-      const nameNormalisiert = eigenesProfil?.name?.trim().toLowerCase()
-      const namensTreffer = nameNormalisiert
-        ? unverknuepfte.filter(p => p.name?.trim().toLowerCase() === nameNormalisiert)
-        : []
-
-      // Bei eindeutigem Namens-Match diesen vorauswählen; gibt es keinen Match,
-      // aber insgesamt nur einen einzigen unverknüpften Teilnehmer, auch diesen
-      // vorauswählen – spart einen Klick, ohne bei mehreren Kandidaten zu raten
-      const vorauswahl = namensTreffer.length === 1
-        ? namensTreffer[0]
-        : (unverknuepfte.length === 1 ? unverknuepfte[0] : null)
+      const vorauswahl = findeVorauswahl(unverknuepfte, eigenesProfil?.name)
 
       setJoinedTripId(tripData.id)
       setUnverknuepfteTeilnehmer(unverknuepfte)

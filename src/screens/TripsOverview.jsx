@@ -13,6 +13,7 @@ import usePullToRefresh from '../hooks/usePullToRefresh'
 import PullToRefreshIndicator from '../components/PullToRefreshIndicator'
 import useBodyScrollLock from '../hooks/useBodyScrollLock'
 import { useSettings } from '../context/SettingsContext'
+import { findeVorauswahl } from '../utils/teilnehmerVerknuepfung'
 
 
 // Farbe anhand Trip-ID auswählen
@@ -288,13 +289,9 @@ function TripsOverview() {
       const { data: eigenesProfil } = await supabase
         .from('profiles').select('name').eq('id', user.id).single()
 
-      const treffer = eigenesProfil?.name
-        ? unverknuepfte.filter(p => p.name?.toLowerCase() === eigenesProfil.name.toLowerCase())
-        : []
-
       // Modal anzeigen zur optionalen Selbst-Verknüpfung
       setUnverknuepfteTeilnehmer(unverknuepfte)
-      setAusgewaehlteTeilnehmer(treffer.length === 1 ? treffer[0] : null)
+      setAusgewaehlteTeilnehmer(findeVorauswahl(unverknuepfte, eigenesProfil?.name))
       setVerknuepfungsModal(true)
     } else {
       await tripsLaden()
