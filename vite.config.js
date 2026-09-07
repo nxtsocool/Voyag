@@ -2,7 +2,17 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
+  build: {
+    rollupOptions: {
+      output: {
+        // console.*/debugger nur im Production-Build entfernen (Vite 8 nutzt
+        // Rolldown/Oxc statt esbuild zum Minifizieren) – im Dev-Server
+        // (command === 'serve') bleiben sie für die lokale Fehlersuche erhalten
+        minify: command === 'build' ? { compress: { dropConsole: true, dropDebugger: true } } : false,
+      },
+    },
+  },
   plugins: [
     react(),
     VitePWA({
@@ -64,4 +74,4 @@ export default defineConfig({
       },
     }),
   ],
-})
+}))
