@@ -9,15 +9,27 @@ import useToast from '../hooks/useToast.jsx'
 import useBodyScrollLock from '../hooks/useBodyScrollLock'
 import TripNichtGefunden from '../components/TripNichtGefunden'
 
+// Wandelt das fuer-Feld sicher in ein Array um – Supabase liefert es mal als
+// JSON-String, mal als echtes Array zurück (gleiche Logik wie in TripKosten.jsx)
+const fuerAlsArray = (fuer) => {
+  if (!fuer) return []
+  if (Array.isArray(fuer)) return fuer
+  try { return JSON.parse(fuer) } catch { return [] }
+}
+
 export default function TripPersonen() {
   const { id } = useParams()
-  const { t } = useSettings()
+  const { t, waehrung } = useSettings()
   const { toasts, setToasts, toast } = useToast()
   const [trip, setTrip] = useState(null)
   const [teilnehmer, setTeilnehmer] = useState([])
+  const [ausgaben, setAusgaben] = useState([])
   const [profile, setProfile] = useState({})
   const [neuerTeilnehmer, setNeuerTeilnehmer] = useState('')
   const [laden, setLaden] = useState(true)
+  // Teilnehmer der entfernt werden soll, aber erst noch bestätigt werden muss
+  // (weil er bereits Ausgaben bezahlt hat/ihm Ausgaben zugeordnet sind)
+  const [entferneTeilnehmer, setEntferneTeilnehmer] = useState(null)
 
   // State für User verknüpfen – Live-Suche in profiles statt reinem Email-Feld
   const [verknuepfenId, setVerknuepfenId] = useState(null)
@@ -30,7 +42,7 @@ export default function TripPersonen() {
   const [codeKopiert, setCodeKopiert] = useState(false)
   // Schützt gegen doppeltes Anlegen eines Teilnehmers durch schnelles Doppel-Tippen
   const [speichernLaeuft, setSpeichernLaeuft] = useState(false)
-  useBodyScrollLock(!!loeseVerknuepfungTeilnehmer)
+  useBodyScrollLock(!!loeseVerknuepfungTeilnehmer || !!entferneTeilnehmer)
 
   useEffect(() => {
     const datenLaden = async () => {
@@ -46,6 +58,12 @@ export default function TripPersonen() {
       const { data: teilnehmerData } = await supabase
         .from('teilnehmer').select('*').eq('trip_id', id)
       setTeilnehmer(teilnehmerData || [])
+
+      // Ausgaben laden – um vor dem Entfernen eines Teilnehmers zu prüfen,
+      // ob er bereits etwas bezahlt hat oder ihm eine Ausgabe zugeordnet ist
+      const { data: ausgabenData } = await supabase
+        .from('ausgaben').select('*').eq('trip_id', id)
+      setAusgaben(ausgabenData || [])
 
       // Profile der verknüpften User laden
       const userIds = (teilnehmerData || [])
@@ -71,6 +89,15 @@ export default function TripPersonen() {
     if (speichernLaeuft) return
     if (!neuerTeilnehmer) return
 
+    // Namensdopplung verhindern – ausgaben.bezahlt_von/fuer speichern den Namen als
+    // String, nicht die teilnehmer.id, daher würden zwei gleichnamige Teilnehmer
+    // zu falschen Saldo-Berechnungen führen
+    const nameNormalisiert = neuerTeilnehmer.trim().toLowerCase()
+    if (teilnehmer.some(p => p.name.trim().toLowerCase() === nameNormalisiert)) {
+      toast(t('teilnehmerNameVorhanden'), 'error')
+      return
+    }
+
     setSpeichernLaeuft(true)
     try {
       const { data, error } = await supabase
@@ -87,11 +114,25 @@ export default function TripPersonen() {
     }
   }
 
+  // Summe der von diesem Teilnehmer bezahlten Ausgaben (für die Lösch-Warnung)
+  const teilnehmerBezahltBetrag = (name) =>
+    ausgaben.filter(a => a.bezahlt_von === name).reduce((sum, a) => sum + a.betrag, 0)
+
+  // Prüft ob der Teilnehmer in irgendeiner Ausgabe vorkommt (bezahlt_von oder fuer)
+  const teilnehmerWirdVerwendet = (name) =>
+    ausgaben.some(a => a.bezahlt_von === name || fuerAlsArray(a.fuer).includes(name))
+
   // Teilnehmer entfernen
   const teilnehmerEntfernen = async (teilnehmerId) => {
     const { error } = await supabase.from('teilnehmer').delete().eq('id', teilnehmerId)
     if (error) console.error('Fehler:', error)
     else setTeilnehmer(teilnehmer.filter(t => t.id !== teilnehmerId))
+  }
+
+  // Löschen anstoßen – zeigt bei Verwendung in Ausgaben erst eine Warnung an
+  const teilnehmerEntfernenAnfragen = (person) => {
+    if (teilnehmerWirdVerwendet(person.name)) setEntferneTeilnehmer(person)
+    else teilnehmerEntfernen(person.id)
   }
 
   // Bereits mit dieser Reise verknüpfte User-IDs – aus den Suchergebnissen herausfiltern
@@ -329,7 +370,7 @@ export default function TripPersonen() {
                       </button>
                     )}
                     {/* Löschen – min. 44x44px Touch-Target (Apple HIG) */}
-                    <button onClick={() => teilnehmerEntfernen(person.id)} className="btn-press" style={{
+                    <button onClick={() => teilnehmerEntfernenAnfragen(person)} className="btn-press" style={{
                       backgroundColor: 'rgba(233,69,96,0.08)',
                       border: '1px solid rgba(233,69,96,0.2)',
                       color: '#e94560', cursor: 'pointer',
@@ -531,6 +572,51 @@ export default function TripPersonen() {
                 flex: 1, fontWeight: '700', fontSize: '0.95rem',
               }}>{t('verknuepfungLoesenBtn')}</button>
               <button onClick={() => setLoeseVerknuepfungTeilnehmer(null)} className="btn-press" style={{
+                backgroundColor: 'var(--sub)', color: 'var(--text)', border: 'none',
+                padding: '14px', minHeight: '48px', boxSizing: 'border-box', borderRadius: '14px', cursor: 'pointer', flex: 1, fontWeight: '600',
+              }}>{t('abbrechen')}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bestätigungs-Bottom-Sheet zum Entfernen eines Teilnehmers mit bereits bezahlten Ausgaben */}
+      {entferneTeilnehmer && (
+        <div
+          onClick={() => setEntferneTeilnehmer(null)}
+          style={{
+            position: 'fixed', inset: 0,
+            backgroundColor: 'rgba(0,0,0,0.6)',
+            display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+            zIndex: 9998,
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="fade-in"
+            style={{
+              backgroundColor: 'var(--card)', borderRadius: '24px 24px 0 0',
+              width: '100%', maxWidth: '600px',
+              maxHeight: '88vh', overflowY: 'auto', overflowX: 'hidden',
+              boxSizing: 'border-box',
+              padding: '24px 20px calc(32px + env(safe-area-inset-bottom))',
+              zIndex: 9999,
+            }}
+          >
+            <div style={{ width: '40px', height: '4px', backgroundColor: 'var(--sub)', borderRadius: '2px', margin: '0 auto 24px' }} />
+            <h3 style={{ margin: '0 0 8px', fontWeight: '700', fontSize: '1.2rem' }}>
+              {t('teilnehmerEntfernenTitel')}
+            </h3>
+            <p style={{ color: 'var(--text-sub)', margin: '0 0 24px', fontSize: '0.92rem', lineHeight: 1.5 }}>
+              {t('teilnehmerEntfernenWarnung')(entferneTeilnehmer.name, `${teilnehmerBezahltBetrag(entferneTeilnehmer.name).toFixed(2)}${waehrung}`)}
+            </p>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button onClick={() => { teilnehmerEntfernen(entferneTeilnehmer.id); setEntferneTeilnehmer(null) }} className="btn-press" style={{
+                backgroundColor: '#e94560', color: '#fff', border: 'none',
+                padding: '14px', minHeight: '48px', boxSizing: 'border-box', borderRadius: '14px', cursor: 'pointer',
+                flex: 1, fontWeight: '700', fontSize: '0.95rem',
+              }}>{t('loeschen')}</button>
+              <button onClick={() => setEntferneTeilnehmer(null)} className="btn-press" style={{
                 backgroundColor: 'var(--sub)', color: 'var(--text)', border: 'none',
                 padding: '14px', minHeight: '48px', boxSizing: 'border-box', borderRadius: '14px', cursor: 'pointer', flex: 1, fontWeight: '600',
               }}>{t('abbrechen')}</button>
