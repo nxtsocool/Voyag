@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'react-router-dom'
 import { supabase } from '../supabase'
 import TripNav from '../components/TripNav'
@@ -138,10 +138,17 @@ export default function TripPersonen() {
   // Bereits mit dieser Reise verknüpfte User-IDs – aus den Suchergebnissen herausfiltern
   const verknuepfteUserIds = teilnehmer.filter(p => p.user_id).map(p => p.user_id)
 
+  // Zählt die gestarteten Such-Requests hoch – verhindert, dass ein spät
+  // zurückkommendes Ergebnis einer älteren Eingabe die Ergebnisse einer
+  // neueren Eingabe überschreibt (Race Condition bei schnellem Tippen)
+  const sucheRequestId = useRef(0)
+
   // Live-Suche in profiles – ab 3 Zeichen, debounced um 300ms
   useEffect(() => {
     if (!verknuepfenId) return
     const timer = setTimeout(async () => {
+      const requestId = ++sucheRequestId.current
+
       if (sucheText.trim().length < 3) {
         setSucheErgebnisse([])
         return
@@ -152,6 +159,10 @@ export default function TripPersonen() {
         .select('*')
         .or(`name.ilike.%${sucheText}%,email.ilike.%${sucheText}%`)
         .limit(10)
+
+      // Zwischenzeitlich ist bereits eine neuere Suche gestartet worden – dieses Ergebnis verwerfen
+      if (requestId !== sucheRequestId.current) return
+
       const gefiltert = (data || []).filter(p => !verknuepfteUserIds.includes(p.id))
       setSucheErgebnisse(gefiltert)
       setSucheLaedt(false)
