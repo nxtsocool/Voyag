@@ -7,6 +7,7 @@ import { useSettings } from '../context/SettingsContext'
 import Toast from '../components/Toast'
 import useToast from '../hooks/useToast.jsx'
 import useBodyScrollLock from '../hooks/useBodyScrollLock'
+import TripNichtGefunden from '../components/TripNichtGefunden'
 
 export default function TripPersonen() {
   const { id } = useParams()
@@ -32,9 +33,12 @@ export default function TripPersonen() {
   useEffect(() => {
     const datenLaden = async () => {
       // Trip laden
-      const { data: tripData } = await supabase
+      const { data: tripData, error: tripError } = await supabase
         .from('trips').select('*').eq('id', id).single()
+      if (tripError) console.error('Fehler beim Laden des Trips:', tripError)
       setTrip(tripData)
+
+      if (!tripData) { setLaden(false); return }
 
       // Teilnehmer laden
       const { data: teilnehmerData } = await supabase
@@ -199,6 +203,8 @@ export default function TripPersonen() {
       </div>
     </div>
   )
+
+  if (!trip) return <TripNichtGefunden />
 
   return (
     <div style={{ paddingBottom: 'calc(120px + env(safe-area-inset-bottom))' }}>

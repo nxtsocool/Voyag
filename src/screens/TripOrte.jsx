@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { useSettings } from '../context/SettingsContext'
 import useBodyScrollLock from '../hooks/useBodyScrollLock'
+import TripNichtGefunden from '../components/TripNichtGefunden'
 
 // Kategorie-Definition mit Lucide Icons
 const KATEGORIEN = [
@@ -48,9 +49,12 @@ export default function TripOrte() {
 
   useEffect(() => {
     const datenLaden = async () => {
-      const { data: tripData } = await supabase
+      const { data: tripData, error: tripError } = await supabase
         .from('trips').select('*').eq('id', id).single()
+      if (tripError) console.error('Fehler beim Laden des Trips:', tripError)
       setTrip(tripData)
+
+      if (!tripData) { setLaden(false); return }
 
       const { data: orteData } = await supabase
         .from('trip_orte').select('*').eq('trip_id', id).order('created_at', { ascending: true })
@@ -159,6 +163,8 @@ export default function TripOrte() {
       </div>
     </div>
   )
+
+  if (!trip) return <TripNichtGefunden />
 
   return (
     <div style={{ paddingBottom: 'calc(150px + env(safe-area-inset-bottom))' }}>

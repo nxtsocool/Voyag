@@ -307,6 +307,11 @@ export const translations = {
     loeschen: 'Löschen',
     bearbeiten: 'Bearbeiten',
     laedt: 'Lädt...',
+    tripNichtGefundenTitel: 'Reise nicht gefunden',
+    tripNichtGefundenText: 'Diese Reise existiert nicht mehr oder du hast keinen Zugriff darauf.',
+    wirdGespeichert: 'Wird gespeichert...',
+    keineVerbindung: 'Keine Internetverbindung – Daten evtl. nicht aktuell',
+    verbindungsfehler: 'Verbindungsfehler – bitte erneut versuchen',
   },
   en: {
     // Navigation (BottomNav + TripNav + TripHome Kacheln)
@@ -615,5 +620,10 @@ export const translations = {
     loeschen: 'Delete',
     bearbeiten: 'Edit',
     laedt: 'Loading...',
+    tripNichtGefundenTitel: 'Trip not found',
+    tripNichtGefundenText: "This trip no longer exists or you don't have access to it.",
+    wirdGespeichert: 'Saving...',
+    keineVerbindung: 'No internet connection – data may not be up to date',
+    verbindungsfehler: 'Connection error – please try again',
   },
 }

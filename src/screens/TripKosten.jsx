@@ -8,6 +8,7 @@ import useToast from '../hooks/useToast.jsx'
 import usePullToRefresh from '../hooks/usePullToRefresh'
 import PullToRefreshIndicator from '../components/PullToRefreshIndicator'
 import useBodyScrollLock from '../hooks/useBodyScrollLock'
+import TripNichtGefunden from '../components/TripNichtGefunden'
 import { useSettings } from '../context/SettingsContext'
 import useWechselkurse from '../hooks/useWechselkurse'
 import { WAEHRUNGEN } from '../data/waehrungen'
@@ -55,9 +56,12 @@ function TripKosten() {
   const { ziehen, fortschritt, schwellenwert } = usePullToRefresh(datenLaden)
 
   async function datenLaden() {
-    const { data: tripData } = await supabase
+    const { data: tripData, error: tripError } = await supabase
       .from('trips').select('*').eq('id', id).single()
+    if (tripError) console.error('Fehler beim Laden des Trips:', tripError)
     setTrip(tripData)
+
+    if (!tripData) { setLaden(false); return }
 
     const { data: ausgabenData } = await supabase
       .from('ausgaben').select('*').eq('trip_id', id)
@@ -278,6 +282,8 @@ function TripKosten() {
       </div>
     </div>
   )
+
+  if (!trip) return <TripNichtGefunden />
 
   return (
     <div style={{ paddingBottom: 'calc(180px + env(safe-area-inset-bottom))' }}>

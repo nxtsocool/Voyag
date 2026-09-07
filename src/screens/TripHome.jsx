@@ -5,6 +5,7 @@ import laender from '../data/laender'
 import { ChevronLeft, Info, Users, CheckSquare, Wallet, MapPin, Rocket, PartyPopper } from 'lucide-react'
 import usePullToRefresh from '../hooks/usePullToRefresh'
 import PullToRefreshIndicator from '../components/PullToRefreshIndicator'
+import TripNichtGefunden from '../components/TripNichtGefunden'
 import { useSettings } from '../context/SettingsContext'
 
 function TripHome() {
@@ -24,9 +25,12 @@ function TripHome() {
   const { ziehen, fortschritt, schwellenwert } = usePullToRefresh(datenLaden)
 
   async function datenLaden() {
-    const { data: tripData } = await supabase
+    const { data: tripData, error: tripError } = await supabase
       .from('trips').select('*').eq('id', id).single()
+    if (tripError) console.error('Fehler beim Laden des Trips:', tripError)
     setTrip(tripData)
+
+    if (!tripData) { setLaden(false); return }
 
     const { data: teilnehmerData } = await supabase
       .from('teilnehmer').select('*').eq('trip_id', id)
@@ -76,6 +80,8 @@ function TripHome() {
       <div className="skeleton" style={{ width: '200px', height: '24px', borderRadius: '12px' }} />
     </div>
   )
+
+  if (!trip) return <TripNichtGefunden />
 
   const landName = laender.find(l => l.code === trip.land_code)?.name
   const flagUrl = trip.land_code

@@ -4,6 +4,7 @@ import { supabase } from '../supabase'
 import TripNav from '../components/TripNav'
 import { Plane, Hotel, Link, Trash2, NotebookPen, SquarePen, ExternalLink, ChevronDown } from 'lucide-react'
 import { useSettings } from '../context/SettingsContext'
+import TripNichtGefunden from '../components/TripNichtGefunden'
 
 // Datum als Label formatieren, z.B. "Fr, 31. Juli 2026"
 const formatDatumLabel = (datumStr, sprache) => {
@@ -45,9 +46,11 @@ function TripInfo() {
 
   useEffect(() => {
     const datenLaden = async () => {
-      const { data: tripData } = await supabase
+      const { data: tripData, error: tripError } = await supabase
         .from('trips').select('*').eq('id', id).single()
+      if (tripError) console.error('Fehler beim Laden des Trips:', tripError)
       setTrip(tripData)
+      if (!tripData) { setLaden(false); return }
       if (tripData.notizen) setNotizen(tripData.notizen)
       else setNotizen('')
 
@@ -215,6 +218,8 @@ function TripInfo() {
       </div>
     </div>
   )
+
+  if (!trip) return <TripNichtGefunden />
 
   return (
     <div style={{ paddingBottom: 'calc(120px + env(safe-area-inset-bottom))' }}>

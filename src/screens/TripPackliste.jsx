@@ -4,6 +4,7 @@ import { supabase } from '../supabase'
 import TripNav from '../components/TripNav'
 import { Trash2, SquarePen, PackageCheck } from 'lucide-react'
 import { useSettings } from '../context/SettingsContext'
+import TripNichtGefunden from '../components/TripNichtGefunden'
 
 // Wischt man ein Item 60px nach links, erscheint der rote Hintergrund mit Trash Icon.
 // Ab 120px wird das Item beim Loslassen gelöscht.
@@ -91,9 +92,11 @@ export default function TripPackliste() {
 
   useEffect(() => {
     const datenLaden = async () => {
-      const { data: tripData } = await supabase
+      const { data: tripData, error: tripError } = await supabase
         .from('trips').select('*').eq('id', id).single()
+      if (tripError) console.error('Fehler beim Laden des Trips:', tripError)
       setTrip(tripData)
+      if (!tripData) { setLaden(false); return }
       const { data: packlisteData } = await supabase
         .from('packliste').select('*').eq('trip_id', id)
       setPackliste(packlisteData || [])
@@ -155,6 +158,8 @@ export default function TripPackliste() {
       </div>
     </div>
   )
+
+  if (!trip) return <TripNichtGefunden />
 
   return (
     <div style={{ paddingBottom: 'calc(120px + env(safe-area-inset-bottom))' }}>
