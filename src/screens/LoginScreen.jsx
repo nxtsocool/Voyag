@@ -32,6 +32,7 @@ function LoginScreen({ emailNichtBestaetigt }) {
   }, [emailNichtBestaetigt])
 
   const handleSubmit = async () => {
+    if (laden) return
     setFehler('')
 
     if (isRegistrieren) {
@@ -464,7 +465,7 @@ function LoginScreen({ emailNichtBestaetigt }) {
 
           {/* Login Button */}
           <div className="button-animation">
-            <button onClick={handleSubmit} className="btn-press" style={{
+            <button onClick={handleSubmit} disabled={laden} className="btn-press" style={{
               backgroundColor: 'var(--gold)', color: 'var(--bg)',
               border: 'none', padding: '16px', borderRadius: '16px',
               fontSize: '1rem', fontWeight: '700',

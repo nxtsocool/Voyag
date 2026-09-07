@@ -83,6 +83,7 @@ function TripsOverview() {
   const [formularOffen, setFormularOffen] = useState(false)
   const [beitretenOffen, setBeitretenOffen] = useState(false)
   const [einladungsCode, setEinladungsCode] = useState('')
+  const [beitretenLaeuft, setBeitretenLaeuft] = useState(false)
   const [loescheTrip, setLoescheTrip] = useState(null)
   const [bearbeiteTrip, setBearbeiteTrip] = useState(null)
   const [bearbeiteDaten, setBearbeiteDaten] = useState({
@@ -242,59 +243,64 @@ function TripsOverview() {
   }
 
   const reiseBeitreten = async () => {
-    if (!einladungsCode) return
-    const { data: trip, error } = await supabase
-      .from('trips').select('*').eq('invite_code', einladungsCode.toUpperCase()).single()
+    if (beitretenLaeuft || !einladungsCode) return
+    setBeitretenLaeuft(true)
+    try {
+      const { data: trip, error } = await supabase
+        .from('trips').select('*').eq('invite_code', einladungsCode.toUpperCase()).single()
 
-    if (error || !trip) { toast(t('codeNichtGefunden'), 'error'); return }
+      if (error || !trip) { toast(t('codeNichtGefunden'), 'error'); return }
 
-    const { data: authData } = await supabase.auth.getUser()
-    const user = authData.user
+      const { data: authData } = await supabase.auth.getUser()
+      const user = authData.user
 
-    if (trip.user_id === user.id) { toast(t('eigeneReise'), 'error'); return }
+      if (trip.user_id === user.id) { toast(t('eigeneReise'), 'error'); return }
 
-    const { data: bereitsVorhanden } = await supabase
-      .from('trip_members').select('*').eq('trip_id', trip.id).eq('user_id', user.id).single()
+      const { data: bereitsVorhanden } = await supabase
+        .from('trip_members').select('*').eq('trip_id', trip.id).eq('user_id', user.id).single()
 
-    if (bereitsVorhanden) { toast(t('bereitsMitglied'), 'error'); return }
+      if (bereitsVorhanden) { toast(t('bereitsMitglied'), 'error'); return }
 
-    await supabase.from('trip_members').insert([{ trip_id: trip.id, user_id: user.id }])
-    const { data: vorhandenBeitreten } = await supabase
-      .from('visited_countries')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('country_code', trip.land_code)
-      .single()
+      await supabase.from('trip_members').insert([{ trip_id: trip.id, user_id: user.id }])
+      const { data: vorhandenBeitreten } = await supabase
+        .from('visited_countries')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('country_code', trip.land_code)
+        .single()
 
-    if (!vorhandenBeitreten) {
-      await supabase.from('visited_countries').insert([{
-        user_id: user.id,
-        country_code: trip.land_code,
-        trip_id: trip.id
-      }])
-    }
+      if (!vorhandenBeitreten) {
+        await supabase.from('visited_countries').insert([{
+          user_id: user.id,
+          country_code: trip.land_code,
+          trip_id: trip.id
+        }])
+      }
 
-    setEinladungsCode('')
-    setBeitretenOffen(false)
+      setEinladungsCode('')
+      setBeitretenOffen(false)
 
-    // Prüfen ob unverknüpfte Teilnehmer vorhanden sind
-    const { data: unverknuepfte } = await supabase
-      .from('teilnehmer')
-      .select('*')
-      .eq('trip_id', trip.id)
-      .is('user_id', null)
+      // Prüfen ob unverknüpfte Teilnehmer vorhanden sind
+      const { data: unverknuepfte } = await supabase
+        .from('teilnehmer')
+        .select('*')
+        .eq('trip_id', trip.id)
+        .is('user_id', null)
 
-    if (unverknuepfte && unverknuepfte.length > 0) {
-      // Eigenen Profilnamen laden und – falls genau ein Teilnehmer namensgleich ist (case-insensitive) – vorauswählen
-      const { data: eigenesProfil } = await supabase
-        .from('profiles').select('name').eq('id', user.id).single()
+      if (unverknuepfte && unverknuepfte.length > 0) {
+        // Eigenen Profilnamen laden und – falls genau ein Teilnehmer namensgleich ist (case-insensitive) – vorauswählen
+        const { data: eigenesProfil } = await supabase
+          .from('profiles').select('name').eq('id', user.id).single()
 
-      // Modal anzeigen zur optionalen Selbst-Verknüpfung
-      setUnverknuepfteTeilnehmer(unverknuepfte)
-      setAusgewaehlteTeilnehmer(findeVorauswahl(unverknuepfte, eigenesProfil?.name))
-      setVerknuepfungsModal(true)
-    } else {
-      await tripsLaden()
+        // Modal anzeigen zur optionalen Selbst-Verknüpfung
+        setUnverknuepfteTeilnehmer(unverknuepfte)
+        setAusgewaehlteTeilnehmer(findeVorauswahl(unverknuepfte, eigenesProfil?.name))
+        setVerknuepfungsModal(true)
+      } else {
+        await tripsLaden()
+      }
+    } finally {
+      setBeitretenLaeuft(false)
     }
   }
 
@@ -591,9 +597,11 @@ function TripsOverview() {
             <h3 style={{ marginBottom: '16px', fontWeight: '700' }}>{t('reiseBeitretenTitel')}</h3>
             <input placeholder={t('einladungscodePlatzhalter')} value={einladungsCode}
               onChange={(e) => setEinladungsCode(e.target.value.toUpperCase())}
-              onKeyDown={(e) => e.key === 'Enter' && reiseBeitreten()} style={inputStyle} />
+              onKeyDown={(e) => e.key === 'Enter' && !beitretenLaeuft && reiseBeitreten()} style={inputStyle} />
             <div style={{ display: 'flex', gap: '8px' }}>
-              <button onClick={reiseBeitreten} className="btn-press" style={speichernButtonStyle}>{t('beitreten')}</button>
+              <button onClick={reiseBeitreten} disabled={beitretenLaeuft} className="btn-press" style={{ ...speichernButtonStyle, opacity: beitretenLaeuft ? 0.6 : 1 }}>
+                {beitretenLaeuft ? t('wirdGespeichert') : t('beitreten')}
+              </button>
               <button onClick={() => setBeitretenOffen(false)} className="btn-press" style={abbrechenButtonStyle}>{t('abbrechen')}</button>
             </div>
           </div>

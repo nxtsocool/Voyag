@@ -40,6 +40,11 @@ function TripKosten() {
   const [ausgabenOffen, setAusgabenOffen] = useState(true)
   // Schützt gegen doppeltes Anlegen einer Ausgabe durch schnelles Doppel-Tippen
   const [speichernLaeuft, setSpeichernLaeuft] = useState(false)
+  // Schützt gegen doppeltes Bearbeiten/Abrechnen durch schnelles Doppel-Tippen –
+  // als Set (nicht ein einzelner Boolean), da mehrere Einträge unabhängig
+  // voneinander gleichzeitig in der Liste bearbeitbar sind
+  const [bearbeitenLaeuft, setBearbeitenLaeuft] = useState(new Set())
+  const [abrechnenLaeuft, setAbrechnenLaeuft] = useState(new Set())
 
   const [neueAusgabe, setNeueAusgabe] = useState({
     beschreibung: '', betrag: '', bezahlt_von: '', fuer: [],
@@ -158,17 +163,23 @@ function TripKosten() {
   }
 
   const ausgabeBearbeiten = async (ausgabeId, updates) => {
-    const { error } = await supabase
-      .from('ausgaben')
-      .update(updates)
-      .eq('id', ausgabeId)
+    if (bearbeitenLaeuft.has(ausgabeId)) return
+    setBearbeitenLaeuft(prev => new Set(prev).add(ausgabeId))
+    try {
+      const { error } = await supabase
+        .from('ausgaben')
+        .update(updates)
+        .eq('id', ausgabeId)
 
-    if (error) {
-      console.error('Fehler:', error)
-      toast(t('speichernFehlgeschlagen'), 'error')
-    } else {
-      setAusgaben(ausgaben.map(a => a.id === ausgabeId ? { ...a, ...updates } : a))
-      toast(t('gespeichertHaken'), 'success')
+      if (error) {
+        console.error('Fehler:', error)
+        toast(t('speichernFehlgeschlagen'), 'error')
+      } else {
+        setAusgaben(ausgaben.map(a => a.id === ausgabeId ? { ...a, ...updates } : a))
+        toast(t('gespeichertHaken'), 'success')
+      }
+    } finally {
+      setBearbeitenLaeuft(prev => { const next = new Set(prev); next.delete(ausgabeId); return next })
     }
   }
 
@@ -237,24 +248,32 @@ function TripKosten() {
 
   // Schuld als bezahlt markieren – mit optimistic update gegen Doppelklicks
   const schuldAbrechnen = async (schuld) => {
+    const schuldKey = `${schuld.von}|${schuld.an}`
+    if (abrechnenLaeuft.has(schuldKey)) return
+    setAbrechnenLaeuft(prev => new Set(prev).add(schuldKey))
+
     const neueAbrechnung = { trip_id: id, von: schuld.von, an: schuld.an, betrag: parseFloat(schuld.betrag) }
 
     // Sofort lokal hinzufügen – Schuld verschwindet sofort aus der Liste,
     // verhindert dass durch Doppelklick zweimal abgerechnet wird
     setAbrechnungen(prev => [...prev, neueAbrechnung])
 
-    const { error } = await supabase.from('abrechnungen').insert([neueAbrechnung])
+    try {
+      const { error } = await supabase.from('abrechnungen').insert([neueAbrechnung])
 
-    if (error) {
-      console.error('Fehler:', error)
-      // Bei Fehler rückgängig machen
-      setAbrechnungen(prev => prev.filter(a => a !== neueAbrechnung))
-      toast(t('abrechnenFehlgeschlagen'), 'error')
-    } else {
-      // Mit echten Daten synchronisieren (korrekte IDs)
-      const { data } = await supabase.from('abrechnungen').select('*').eq('trip_id', id)
-      setAbrechnungen(data || [])
-      toast(t('beglichenHaken'), 'success')
+      if (error) {
+        console.error('Fehler:', error)
+        // Bei Fehler rückgängig machen
+        setAbrechnungen(prev => prev.filter(a => a !== neueAbrechnung))
+        toast(t('abrechnenFehlgeschlagen'), 'error')
+      } else {
+        // Mit echten Daten synchronisieren (korrekte IDs)
+        const { data } = await supabase.from('abrechnungen').select('*').eq('trip_id', id)
+        setAbrechnungen(data || [])
+        toast(t('beglichenHaken'), 'success')
+      }
+    } finally {
+      setAbrechnenLaeuft(prev => { const next = new Set(prev); next.delete(schuldKey); return next })
     }
   }
 
@@ -454,7 +473,9 @@ function TripKosten() {
                                   datum: bearbeiteAusgabe.datum,
                                 })
                                 setBearbeiteAusgabe(null)
-                              }} className="btn-press" style={{ ...speichernButtonStyle, flex: 1 }}>{t('speichern')}</button>
+                              }} disabled={bearbeitenLaeuft.has(ausgabe.id)} className="btn-press" style={{ ...speichernButtonStyle, flex: 1, opacity: bearbeitenLaeuft.has(ausgabe.id) ? 0.6 : 1 }}>
+                                {bearbeitenLaeuft.has(ausgabe.id) ? t('wirdGespeichert') : t('speichern')}
+                              </button>
                               <button onClick={() => setBearbeiteAusgabe(null)} className="btn-press" style={{ ...abbrechenButtonStyle, flex: 1 }}>{t('abbrechen')}</button>
                             </div>
                           </div>
@@ -589,13 +610,14 @@ function TripKosten() {
                   <span style={{ color: 'var(--gold)', fontWeight: '800', marginLeft: 'auto' }}>{s.betrag}{waehrung}</span>
 
                   {abrechnenOffen && (
-                    <button onClick={() => schuldAbrechnen(s)} className="btn-press" style={{
+                    <button onClick={() => schuldAbrechnen(s)} disabled={abrechnenLaeuft.has(`${s.von}|${s.an}`)} className="btn-press" style={{
                       backgroundColor: 'rgba(76,175,80,0.15)', border: '1px solid rgba(76,175,80,0.3)',
                       color: '#4caf50', padding: '0 10px', minHeight: '44px', boxSizing: 'border-box', borderRadius: '8px',
                       cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px',
                       fontSize: '0.78rem', fontWeight: '700', width: '100%', justifyContent: 'center', marginTop: '4px',
+                      opacity: abrechnenLaeuft.has(`${s.von}|${s.an}`) ? 0.6 : 1,
                     }}>
-                      <Check size={13} /> {t('beglichenBtn')}
+                      <Check size={13} /> {abrechnenLaeuft.has(`${s.von}|${s.an}`) ? t('wirdGespeichert') : t('beglichenBtn')}
                     </button>
                   )}
                 </div>
