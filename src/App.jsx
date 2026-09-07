@@ -14,6 +14,7 @@ import TripPackliste from './screens/TripPackliste'
 import TripKosten from './screens/TripKosten'
 import TripOrte from './screens/TripOrte'
 import JoinScreen from './screens/JoinScreen'
+import OfflineBanner from './components/OfflineBanner'
 import { SettingsProvider } from './context/SettingsContext'
 
 // Key unter dem ein Einladungscode zwischengespeichert wird, wenn ein
@@ -111,6 +112,7 @@ function App() {
 
   return (
     <SettingsProvider>
+      <OfflineBanner />
       {!user ? (
         <LoginScreen emailNichtBestaetigt={emailNichtBestaetigt} />
       ) : onboardingNoetig ? (
