@@ -1,21 +1,26 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense, lazy } from 'react'
 import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom'
 import { supabase } from './supabase'
 import TripsOverview from './screens/TripsOverview'
-import MapScreen from './screens/MapScreen'
-import SettingsScreen from './screens/SettingsScreen'
 import LoginScreen from './screens/LoginScreen'
 import OnboardingScreen from './screens/OnboardingScreen'
 import BottomNav from './components/BottomNav'
-import TripHome from './screens/TripHome'
-import TripInfo from './screens/TripInfo'
-import TripPersonen from './screens/TripPersonen'
-import TripPackliste from './screens/TripPackliste'
-import TripKosten from './screens/TripKosten'
-import TripOrte from './screens/TripOrte'
-import JoinScreen from './screens/JoinScreen'
 import OfflineBanner from './components/OfflineBanner'
 import { SettingsProvider } from './context/SettingsContext'
+
+// Direkt beim Start benötigte Screens (Login/Onboarding/Übersicht) bleiben eager
+// importiert; alle anderen Screens erst per Code-Splitting laden, sobald die
+// jeweilige Route besucht wird – reduziert den initialen JS-Chunk deutlich,
+// v.a. wegen MapScreen (D3 + topojson)
+const MapScreen = lazy(() => import('./screens/MapScreen'))
+const SettingsScreen = lazy(() => import('./screens/SettingsScreen'))
+const TripHome = lazy(() => import('./screens/TripHome'))
+const TripInfo = lazy(() => import('./screens/TripInfo'))
+const TripPersonen = lazy(() => import('./screens/TripPersonen'))
+const TripPackliste = lazy(() => import('./screens/TripPackliste'))
+const TripKosten = lazy(() => import('./screens/TripKosten'))
+const TripOrte = lazy(() => import('./screens/TripOrte'))
+const JoinScreen = lazy(() => import('./screens/JoinScreen'))
 
 // Key unter dem ein Einladungscode zwischengespeichert wird, wenn ein
 // nicht eingeloggter Nutzer über einen /join/:code Link in die App kommt
@@ -120,18 +125,24 @@ function App() {
       ) : (
         <BrowserRouter>
           <PendingInviteRedirect />
-          <Routes>
-            <Route path="/" element={<><TripsOverview /><BottomNav /></>} />
-            <Route path="/map" element={<><MapScreen /><BottomNav /></>} />
-            <Route path="/settings" element={<><SettingsScreen /><BottomNav /></>} />
-            <Route path="/trip/:id" element={<TripHome />} />
-            <Route path="/trip/:id/info" element={<TripInfo />} />
-            <Route path="/trip/:id/personen" element={<TripPersonen />} />
-            <Route path="/trip/:id/packliste" element={<TripPackliste />} />
-            <Route path="/trip/:id/kosten" element={<TripKosten />} />
-            <Route path="/trip/:id/orte" element={<TripOrte />} />
-            <Route path="/join/:code" element={<JoinScreen />} />
-          </Routes>
+          <Suspense fallback={
+            <div style={{ minHeight: '100vh', padding: '24px', maxWidth: '600px', margin: '0 auto', boxSizing: 'border-box' }}>
+              <div className="skeleton" style={{ height: '200px', borderRadius: '24px' }} />
+            </div>
+          }>
+            <Routes>
+              <Route path="/" element={<><TripsOverview /><BottomNav /></>} />
+              <Route path="/map" element={<><MapScreen /><BottomNav /></>} />
+              <Route path="/settings" element={<><SettingsScreen /><BottomNav /></>} />
+              <Route path="/trip/:id" element={<TripHome />} />
+              <Route path="/trip/:id/info" element={<TripInfo />} />
+              <Route path="/trip/:id/personen" element={<TripPersonen />} />
+              <Route path="/trip/:id/packliste" element={<TripPackliste />} />
+              <Route path="/trip/:id/kosten" element={<TripKosten />} />
+              <Route path="/trip/:id/orte" element={<TripOrte />} />
+              <Route path="/join/:code" element={<JoinScreen />} />
+            </Routes>
+          </Suspense>
         </BrowserRouter>
       )}
     </SettingsProvider>
