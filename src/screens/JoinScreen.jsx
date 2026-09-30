@@ -5,7 +5,7 @@ import laender from '../data/laender'
 import { Compass } from 'lucide-react'
 import { useSettings } from '../context/SettingsContext'
 import useBodyScrollLock from '../hooks/useBodyScrollLock'
-import { PENDING_INVITE_KEY } from '../App'
+import { einladungLesen, einladungEntfernen } from '../utils/einladung'
 import { findeVorauswahl } from '../utils/teilnehmerVerknuepfung'
 
 export default function JoinScreen() {
@@ -90,11 +90,12 @@ export default function JoinScreen() {
 
       setLaden(false)
 
-      // Kommt der Aufruf aus dem "nicht eingeloggt"-Flow (Code lag in sessionStorage
-      // seit dem Redirect zum Login)? Dann direkt automatisch beitreten ohne Vorschau.
-      const pending = sessionStorage.getItem(PENDING_INVITE_KEY)
+      // Kommt der Aufruf aus dem "nicht eingeloggt"-Flow (Code lag in localStorage
+      // seit dem Redirect zum Login/zur Registrierung, überlebt K14)? Dann direkt
+      // automatisch beitreten ohne Vorschau.
+      const pending = einladungLesen()
       if (pending && pending.toUpperCase() === code.toUpperCase()) {
-        sessionStorage.removeItem(PENDING_INVITE_KEY)
+        einladungEntfernen()
         await beitreten(tripData, authData.user)
       }
     }

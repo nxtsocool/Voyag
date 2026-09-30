@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../supabase'
 import { Mail, Lock, Eye, EyeOff, ChevronLeft, User } from 'lucide-react'
 import { useSettings } from '../context/SettingsContext'
+import { einladungLesen } from '../utils/einladung'
 
 // Passwort-Stärke berechnen: schwach / mittel / stark
 const passwortStaerkeBerechnen = (pw) => {
@@ -27,6 +28,19 @@ function LoginScreen({ emailNichtBestaetigt }) {
   const [passwortVergessenOffen, setPasswortVergessenOffen] = useState(false)
   const [passwortResetLaeuft, setPasswortResetLaeuft] = useState(false)
   const [passwortResetGesendet, setPasswortResetGesendet] = useState(false)
+  // Einladung überlebt Registrierung (K14) – Hinweisbanner, wenn ein Code gemerkt ist.
+  // Reiner synchroner Storage-Read braucht keinen Effect, daher als lazy useState-Initializer
+  const [eingeladenerCode] = useState(() => einladungLesen())
+  const [eingeladenReiseName, setEingeladenReiseName] = useState(null)
+
+  useEffect(() => {
+    if (!eingeladenerCode) return
+    // Öffentliche Abfrage per invite_code – falls RLS das nicht erlaubt, bleibt
+    // eingeladenReiseName null und es wird nur der generische Hinweistext gezeigt
+    supabase.from('trips').select('name').eq('invite_code', eingeladenerCode.toUpperCase()).maybeSingle()
+      .then(({ data }) => { if (data?.name) setEingeladenReiseName(data.name) })
+      .catch(() => {})
+  }, [eingeladenerCode])
 
   const staerke = passwortStaerkeBerechnen(passwort)
 
@@ -46,10 +60,17 @@ function LoginScreen({ emailNichtBestaetigt }) {
       // Name in user_metadata speichern – kein aktiver Session nach signUp (Email-Bestätigung
       // ausstehend), daher kein direkter profiles-upsert möglich. App.jsx liest den Namen
       // nach dem ersten Login aus currentUser.user_metadata.name.
+      // Ist ein Einladungscode gemerkt (K14), landet der Bestätigungslink direkt auf
+      // /join/:code statt auf der Startseite, damit die Einladung nicht verloren geht.
       const { error } = await supabase.auth.signUp({
         email,
         password: passwort,
-        options: { data: { name: name.trim() } },
+        options: {
+          data: { name: name.trim() },
+          emailRedirectTo: eingeladenerCode
+            ? `${window.location.origin}/join/${eingeladenerCode}`
+            : window.location.origin,
+        },
       })
       if (error) {
         setFehler(error.message)
@@ -403,6 +424,19 @@ function LoginScreen({ emailNichtBestaetigt }) {
               {isRegistrieren ? t('erstelleAccountTagline') : t('travelTagline')}
             </p>
           </div>
+
+          {/* Einladungs-Hinweis (K14) – bleibt sichtbar, egal ob Login oder Registrierung */}
+          {eingeladenerCode && (
+            <div className="fade-in" style={{
+              backgroundColor: 'rgba(201,168,76,0.1)',
+              border: '1px solid rgba(201,168,76,0.25)',
+              borderRadius: '12px', padding: '12px 16px', marginBottom: '20px',
+            }}>
+              <p style={{ color: 'var(--gold)', margin: 0, fontSize: '0.85rem', fontWeight: '600', lineHeight: 1.4 }}>
+                {eingeladenReiseName ? t('eingeladenZuReiseText')(eingeladenReiseName) : t('eingeladenAllgemeinText')}
+              </p>
+            </div>
+          )}
 
           {/* Fehlermeldung */}
           {fehler && (

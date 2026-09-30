@@ -298,6 +298,8 @@ export const translations = {
     // LoginScreen
     travelTagline: 'Travel Together',
     erstelleAccountTagline: 'Erstelle deinen Account',
+    eingeladenZuReiseText: (name) => `Du wurdest zu "${name}" eingeladen – melde dich an oder registriere dich, um beizutreten.`,
+    eingeladenAllgemeinText: 'Du wurdest zu einer Reise eingeladen – melde dich an oder registriere dich, um beizutreten.',
     email: 'Email',
     passwort: 'Passwort',
     name: 'Name',
@@ -647,6 +649,8 @@ export const translations = {
     // LoginScreen
     travelTagline: 'Travel Together',
     erstelleAccountTagline: 'Create your account',
+    eingeladenZuReiseText: (name) => `You've been invited to "${name}" – sign in or create an account to join.`,
+    eingeladenAllgemeinText: "You've been invited to a trip – sign in or create an account to join.",
     email: 'Email',
     passwort: 'Password',
     name: 'Name',

@@ -10,6 +10,7 @@ import { SettingsProvider, useSettings } from './context/SettingsContext'
 import useToast from './hooks/useToast.jsx'
 import Toast from './components/Toast'
 import useBodyScrollLock from './hooks/useBodyScrollLock'
+import { einladungSpeichern, einladungLesen } from './utils/einladung'
 
 // Direkt beim Start benötigte Screens (Login/Onboarding/Übersicht) bleiben eager
 // importiert; alle anderen Screens erst per Code-Splitting laden, sobald die
@@ -25,15 +26,11 @@ const TripKosten = lazy(() => import('./screens/TripKosten'))
 const TripOrte = lazy(() => import('./screens/TripOrte'))
 const JoinScreen = lazy(() => import('./screens/JoinScreen'))
 
-// Key unter dem ein Einladungscode zwischengespeichert wird, wenn ein
-// nicht eingeloggter Nutzer über einen /join/:code Link in die App kommt
-export const PENDING_INVITE_KEY = 'voyag_pending_invite'
-
 // Leitet nach dem Login/Onboarding automatisch zu einem gemerkten Einladungslink weiter
 function PendingInviteRedirect() {
   const navigate = useNavigate()
   useEffect(() => {
-    const code = sessionStorage.getItem(PENDING_INVITE_KEY)
+    const code = einladungLesen()
     if (code) navigate(`/join/${code}`, { replace: true })
   }, [navigate])
   return null
@@ -210,7 +207,7 @@ function App() {
     if (laden || user) return
     const match = window.location.pathname.match(/^\/join\/([^/]+)/)
     if (match) {
-      sessionStorage.setItem(PENDING_INVITE_KEY, match[1])
+      einladungSpeichern(match[1])
       window.history.replaceState(null, '', '/')
     }
   }, [laden, user])

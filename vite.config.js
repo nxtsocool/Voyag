@@ -10,6 +10,17 @@ export default defineConfig(({ command }) => ({
         // Rolldown/Oxc statt esbuild zum Minifizieren) – im Dev-Server
         // (command === 'serve') bleiben sie für die lokale Fehlersuche erhalten
         minify: command === 'build' ? { compress: { dropConsole: true, dropDebugger: true } } : false,
+        // SettingsContext (inkl. der grossen translations.js) explizit in einen
+        // eigenen Chunk auslagern statt es dem automatischen Chunking zu
+        // überlassen – das haengt sonst empfindlich davon ab, ob irgendwo ein
+        // zufaelliger zirkulaerer Import zwischen App.jsx und einem lazy
+        // geladenen Screen besteht, und wuerde sonst in den Haupt-Chunk
+        // hineingezogen (siehe K14-Fix, der genau so einen Zirkelbezug entfernt hat)
+        manualChunks: (id) => {
+          if (id.includes('/src/context/SettingsContext') || id.includes('/src/data/translations')) {
+            return 'settings-context'
+          }
+        },
       },
     },
   },
