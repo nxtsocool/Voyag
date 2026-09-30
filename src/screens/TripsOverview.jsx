@@ -279,11 +279,9 @@ function TripsOverview() {
     await supabase.from('trip_orte').delete().eq('trip_id', tripId)
     await supabase.from('trip_photos').delete().eq('trip_id', tripId)
     const { error } = await supabase.from('trips').delete().eq('id', tripId)
-    if (error) console.error('Fehler:', error)
-    else {
-      setTrips(trips.filter(t => t.id !== tripId))
-      setLoescheTrip(null)
-    }
+    if (error) { console.error('Fehler:', error); toast(t('verbindungsfehler'), 'error'); return }
+    setTrips(trips.filter(t => t.id !== tripId))
+    setLoescheTrip(null)
   }
 
   const reiseVerlassen = async (tripId) => {

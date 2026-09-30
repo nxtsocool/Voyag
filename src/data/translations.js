@@ -292,6 +292,9 @@ export const translations = {
     accountLoeschenTextVor: 'Alle deine Reisen und Daten werden',
     unwiderruflich: 'unwiderruflich',
     accountLoeschenTextNach: 'gelöscht!',
+    accountLoeschenGeteilteReisenText: 'Reisen, die du mit anderen teilst, werden nicht gelöscht, sondern an ein verbleibendes Mitglied übertragen.',
+    loeschenBestaetigungAufforderung: (wort) => `Tippe "${wort}" ein, um zu bestätigen:`,
+    loeschenBestaetigungswort: 'LÖSCHEN',
     jaLoeschen: 'Ja, löschen',
     keinName: 'Kein Name',
 
@@ -643,6 +646,9 @@ export const translations = {
     accountLoeschenTextVor: 'All your trips and data will be',
     unwiderruflich: 'permanently',
     accountLoeschenTextNach: 'deleted!',
+    accountLoeschenGeteilteReisenText: "Trips you share with others won't be deleted – they'll be transferred to a remaining member.",
+    loeschenBestaetigungAufforderung: (wort) => `Type "${wort}" to confirm:`,
+    loeschenBestaetigungswort: 'DELETE',
     jaLoeschen: 'Yes, delete',
     keinName: 'No name',
 

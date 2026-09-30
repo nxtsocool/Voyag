@@ -113,7 +113,7 @@ export default function TripPersonen() {
         .from('teilnehmer')
         .insert([{ name: neuerTeilnehmer, trip_id: id }])
         .select()
-      if (error) console.error('Fehler:', error)
+      if (error) { console.error('Fehler:', error); toast(t('verbindungsfehler'), 'error') }
       else {
         setTeilnehmer([...teilnehmer, data[0]])
         setNeuerTeilnehmer('')
@@ -236,7 +236,7 @@ export default function TripPersonen() {
       .update({ user_id: null })
       .eq('id', teilnehmerId)
 
-    if (error) { console.error('Fehler:', error); return }
+    if (error) { console.error('Fehler:', error); toast(t('verbindungsfehler'), 'error'); return }
 
     setTeilnehmer(teilnehmer.map(t => t.id === teilnehmerId ? { ...t, user_id: null } : t))
     setLoeseVerknuepfungTeilnehmer(null)

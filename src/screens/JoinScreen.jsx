@@ -7,11 +7,14 @@ import { useSettings } from '../context/SettingsContext'
 import useBodyScrollLock from '../hooks/useBodyScrollLock'
 import { einladungLesen, einladungEntfernen } from '../utils/einladung'
 import { findeVorauswahl } from '../utils/teilnehmerVerknuepfung'
+import Toast from '../components/Toast'
+import useToast from '../hooks/useToast.jsx'
 
 export default function JoinScreen() {
   const { code } = useParams()
   const navigate = useNavigate()
   const { t } = useSettings()
+  const { toasts, setToasts, toast } = useToast()
 
   const [trip, setTrip] = useState(null)
   const [teilnehmerAnzahl, setTeilnehmerAnzahl] = useState(0)
@@ -44,7 +47,14 @@ export default function JoinScreen() {
       return
     }
 
-    await supabase.from('trip_members').insert([{ trip_id: tripData.id, user_id: user.id }])
+    const { error: beitrittError } = await supabase
+      .from('trip_members').insert([{ trip_id: tripData.id, user_id: user.id }])
+    if (beitrittError) {
+      console.error('Fehler:', beitrittError)
+      toast(t('verbindungsfehler'), 'error')
+      setBeitretenLaeuft(false)
+      return
+    }
 
     // Bereiste/geplante Länder werden aus den Reisen abgeleitet (K11/W16) –
     // hier keinen visited_countries-Eintrag mehr schreiben
@@ -103,7 +113,8 @@ export default function JoinScreen() {
   }, [code])
 
   const teilnehmerVerknuepfen = async (person) => {
-    await supabase.from('teilnehmer').update({ user_id: currentUser.id }).eq('id', person.id)
+    const { error } = await supabase.from('teilnehmer').update({ user_id: currentUser.id }).eq('id', person.id)
+    if (error) { console.error('Fehler:', error); toast(t('verbindungsfehler'), 'error'); return }
     navigate(`/trip/${joinedTripId}`)
   }
 
@@ -275,6 +286,7 @@ export default function JoinScreen() {
           </div>
         </div>
       )}
+      <Toast toasts={toasts} setToasts={setToasts} />
     </div>
   )
 }

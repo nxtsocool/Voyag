@@ -111,7 +111,7 @@ export default function TripOrte() {
           })
           .eq('id', bearbeiteOrt.id)
 
-        if (error) { console.error('Fehler beim Speichern:', error); return }
+        if (error) { console.error('Fehler beim Speichern:', error); toast(t('verbindungsfehler'), 'error'); return }
         setOrte(orte.map(o => o.id === bearbeiteOrt.id ? { ...o, ...formDaten } : o))
       } else {
         // Neuen Ort anlegen – trip_id als Integer übergeben
@@ -126,7 +126,7 @@ export default function TripOrte() {
           }])
           .select()
 
-        if (error) { console.error('Fehler beim Hinzufügen:', error); return }
+        if (error) { console.error('Fehler beim Hinzufügen:', error); toast(t('verbindungsfehler'), 'error'); return }
         setOrte([...orte, data[0]])
       }
 
@@ -139,7 +139,7 @@ export default function TripOrte() {
   // Ort löschen
   const ortLoeschen = async (ortId) => {
     const { error } = await supabase.from('trip_orte').delete().eq('id', ortId)
-    if (error) { console.error('Fehler beim Löschen:', error); return }
+    if (error) { console.error('Fehler beim Löschen:', error); toast(t('verbindungsfehler'), 'error'); return }
     setOrte(orte.filter(o => o.id !== ortId))
   }
 
@@ -158,6 +158,7 @@ export default function TripOrte() {
 
     if (error) {
       console.error('Fehler beim Besucht-Toggle:', error)
+      toast(t('verbindungsfehler'), 'error')
       // Rollback bei Fehler
       setOrte(prev => prev.map(o => o.id === ort.id ? { ...o, besucht: ort.besucht } : o))
     }

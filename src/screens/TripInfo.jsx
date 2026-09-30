@@ -133,7 +133,8 @@ function TripInfo() {
 
   // Flug löschen
   const flugLoeschen = async (flugId) => {
-    await supabase.from('trip_fluege').delete().eq('id', flugId)
+    const { error } = await supabase.from('trip_fluege').delete().eq('id', flugId)
+    if (error) { console.error('Fehler:', error); toast(t('verbindungsfehler'), 'error'); return }
     setFluege(fluege.filter(f => f.id !== flugId))
   }
 
@@ -188,7 +189,8 @@ function TripInfo() {
 
   // Unterkunft löschen
   const unterkunftLoeschen = async (unterkunftId) => {
-    await supabase.from('trip_unterkuenfte').delete().eq('id', unterkunftId)
+    const { error } = await supabase.from('trip_unterkuenfte').delete().eq('id', unterkunftId)
+    if (error) { console.error('Fehler:', error); toast(t('verbindungsfehler'), 'error'); return }
     setUnterkuenfte(unterkuenfte.filter(u => u.id !== unterkunftId))
   }
 
@@ -216,7 +218,8 @@ function TripInfo() {
 
   // Link löschen
   const linkLoeschen = async (linkId) => {
-    await supabase.from('trip_links').delete().eq('id', linkId)
+    const { error } = await supabase.from('trip_links').delete().eq('id', linkId)
+    if (error) { console.error('Fehler:', error); toast(t('verbindungsfehler'), 'error'); return }
     setLinks(links.filter(l => l.id !== linkId))
   }
 

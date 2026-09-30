@@ -8,6 +8,8 @@ import usePullToRefresh from '../hooks/usePullToRefresh'
 import PullToRefreshIndicator from '../components/PullToRefreshIndicator'
 import { useSettings } from '../context/SettingsContext'
 import { reiseStatus } from '../utils/datum'
+import Toast from '../components/Toast'
+import useToast from '../hooks/useToast.jsx'
 
 const countryIds = {
   // Europa
@@ -50,6 +52,7 @@ const countryIds = {
 
 function MapScreen() {
   const { t } = useSettings()
+  const { toasts, setToasts, toast } = useToast()
   // Bereiste Länder: eigene/beigetretene Reisen mit Status laufend/vergangen,
   // plus manuell erfasste Einträge (trip_id null). Geplante Länder: nur
   // Reisen mit Status kommend, in zweiter, blasserer Farbe (K11/W16).
@@ -78,6 +81,11 @@ function MapScreen() {
       supabase.from('trip_members').select('trip_id').eq('user_id', user.id),
       supabase.from('visited_countries').select('country_code').eq('user_id', user.id).is('trip_id', null),
     ])
+
+    if (eigeneTripsRes.error || membersRes.error || manuellRes.error) {
+      console.error('Fehler beim Laden der Karte:', eigeneTripsRes.error || membersRes.error || manuellRes.error)
+      toast(t('verbindungsfehler'), 'error')
+    }
 
     let beigetreteneTrips = []
     const tripIds = (membersRes.data || []).map(m => m.trip_id)
@@ -228,7 +236,7 @@ function MapScreen() {
     const { error } = await supabase.from('visited_countries').insert([{
       user_id: userId, country_code: code, trip_id: null,
     }])
-    if (error) { console.error('Fehler:', error); return }
+    if (error) { console.error('Fehler:', error); toast(t('verbindungsfehler'), 'error'); return }
     setBesucht([...besucht, { country_code: code, trip: null }])
     setSuche('')
     setPopup(null)
@@ -237,7 +245,7 @@ function MapScreen() {
   const landEntfernen = async (code) => {
     const { error } = await supabase.from('visited_countries').delete()
       .eq('user_id', userId).eq('country_code', code).is('trip_id', null)
-    if (error) { console.error('Fehler:', error); return }
+    if (error) { console.error('Fehler:', error); toast(t('verbindungsfehler'), 'error'); return }
     setBesucht(besucht.filter(b => b.country_code !== code))
     setPopup(null)
   }
@@ -620,6 +628,7 @@ function MapScreen() {
         </div>
       )}
 
+      <Toast toasts={toasts} setToasts={setToasts} />
     </div>
   )
 }

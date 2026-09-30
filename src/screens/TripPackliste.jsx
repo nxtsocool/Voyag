@@ -128,7 +128,7 @@ export default function TripPackliste() {
         .from('packliste')
         .insert([{ text: neuesItem, erledigt: false, trip_id: id }])
         .select()
-      if (error) console.error('Fehler:', error)
+      if (error) { console.error('Fehler:', error); toast(t('verbindungsfehler'), 'error') }
       else {
         setPackliste([...packliste, data[0]])
         setNeuesItem('')
@@ -141,14 +141,15 @@ export default function TripPackliste() {
   const toggleErledigt = async (item) => {
     const { error } = await supabase
       .from('packliste').update({ erledigt: !item.erledigt }).eq('id', item.id)
-    if (error) console.error('Fehler:', error)
-    else setPackliste(packliste.map(i =>
+    if (error) { console.error('Fehler:', error); toast(t('verbindungsfehler'), 'error'); return }
+    setPackliste(packliste.map(i =>
       i.id === item.id ? { ...i, erledigt: !i.erledigt } : i
     ))
   }
 
   const itemLoeschen = async (itemId) => {
-    await supabase.from('packliste').delete().eq('id', itemId)
+    const { error } = await supabase.from('packliste').delete().eq('id', itemId)
+    if (error) { console.error('Fehler:', error); toast(t('verbindungsfehler'), 'error'); return }
     setPackliste(packliste.filter(i => i.id !== itemId))
   }
 

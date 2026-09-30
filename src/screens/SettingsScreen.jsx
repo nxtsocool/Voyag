@@ -4,6 +4,8 @@ import { User, Lock, Trash2, LogOut, Mail, ChevronRight, Globe, Palette, DollarS
 import { useSettings } from '../context/SettingsContext'
 import useBodyScrollLock from '../hooks/useBodyScrollLock'
 import { WAEHRUNGEN } from '../data/waehrungen'
+import Toast from '../components/Toast'
+import useToast from '../hooks/useToast.jsx'
 
 export default function SettingsScreen() {
   const [user, setUser] = useState(null)
@@ -16,8 +18,10 @@ export default function SettingsScreen() {
   const [passwortDaten, setPasswortDaten] = useState({ neu: '', bestaetigung: '' })
   const [passwortOffen, setPasswortOffen] = useState(false)
   const [loeschenOffen, setLoeschenOffen] = useState(false)
-  const [nachricht, setNachricht] = useState('')
+  const [loeschenBestaetigungstext, setLoeschenBestaetigungstext] = useState('')
+  const [accountLoeschenLaeuft, setAccountLoeschenLaeuft] = useState(false)
   const [appInfoOffen, setAppInfoOffen] = useState(false)
+  const { toasts, setToasts, toast } = useToast()
   const {
     waehrungISO, setWaehrung: setGlobalWaehrung,
     sprache, setSprache: setGlobalSprache,
@@ -42,12 +46,9 @@ export default function SettingsScreen() {
     const { error } = await supabase.from('profiles')
       .update({ name: profile.name, bio: profile.bio })
       .eq('id', user.id)
-    if (error) console.error('Fehler:', error)
-    else {
-      setNachricht(t('profilGespeichert'))
-      setProfilBearbeiten(false)
-      setTimeout(() => setNachricht(''), 3000)
-    }
+    if (error) { console.error('Fehler:', error); toast(t('verbindungsfehler'), 'error'); return }
+    toast(t('profilGespeichert'), 'success')
+    setProfilBearbeiten(false)
   }
 
   // Einstellung direkt speichern ohne Formular – nur das geänderte Feld wird
@@ -57,71 +58,52 @@ export default function SettingsScreen() {
     if (key === 'sprache') setGlobalSprache(value)
     if (key === 'design') setGlobalDesign(value)
 
-    await supabase.from('profiles').update({ [key]: value }).eq('id', user.id)
-    setNachricht(t('gespeichertHaken'))
-    setTimeout(() => setNachricht(''), 2000)
+    const { error } = await supabase.from('profiles').update({ [key]: value }).eq('id', user.id)
+    if (error) { console.error('Fehler:', error); toast(t('verbindungsfehler'), 'error'); return }
+    toast(t('gespeichertHaken'), 'success')
   }
 
   const passwortZuruecksetzen = async () => {
     const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
       redirectTo: window.location.origin,
     })
-    if (error) console.error('Fehler:', error)
-    else {
-      setNachricht(t('emailZumZuruecksetzenGesendet'))
-      setPasswortOffen(false)
-      setTimeout(() => setNachricht(''), 3000)
-    }
+    if (error) { console.error('Fehler:', error); toast(t('verbindungsfehler'), 'error'); return }
+    toast(t('emailZumZuruecksetzenGesendet'), 'success')
+    setPasswortOffen(false)
   }
 
   const passwortAendern = async () => {
     if (!passwortDaten.neu || passwortDaten.neu !== passwortDaten.bestaetigung) {
-      setNachricht(t('passwoerterStimmenNichtUeberein'))
-      setTimeout(() => setNachricht(''), 3000)
+      toast(t('passwoerterStimmenNichtUeberein'), 'error')
       return
     }
     if (passwortDaten.neu.length < 6) {
-      setNachricht(t('passwortMindestens6Zeichen'))
-      setTimeout(() => setNachricht(''), 3000)
+      toast(t('passwortMindestens6Zeichen'), 'error')
       return
     }
     const { error } = await supabase.auth.updateUser({ password: passwortDaten.neu })
-    if (error) console.error('Fehler:', error)
-    else {
-      setNachricht(t('passwortGeaendert'))
-      setPasswortOffen(false)
-      setPasswortDaten({ neu: '', bestaetigung: '' })
-      setTimeout(() => setNachricht(''), 3000)
-    }
+    if (error) { console.error('Fehler:', error); toast(t('verbindungsfehler'), 'error'); return }
+    toast(t('passwortGeaendert'), 'success')
+    setPasswortOffen(false)
+    setPasswortDaten({ neu: '', bestaetigung: '' })
   }
 
+  // Konto löschen (W14) – Client ruft nur noch die eine SQL-Funktion auf
+  // (siehe Migration Phase 0), die Transaktion, Reise-Übertragung an ein
+  // verbleibendes Mitglied und das Löschen des Auth-Users übernimmt
   const accountLoeschen = async () => {
-  // Erst alle Daten löschen
-  await supabase.from('visited_countries').delete().eq('user_id', user.id)
-  await supabase.from('trip_members').delete().eq('user_id', user.id)
-  
-  const { data: trips } = await supabase.from('trips').select('id').eq('user_id', user.id)
-  if (trips) {
-    for (const trip of trips) {
-      await supabase.from('ausgaben').delete().eq('trip_id', trip.id)
-      await supabase.from('abrechnungen').delete().eq('trip_id', trip.id)
-      await supabase.from('teilnehmer').delete().eq('trip_id', trip.id)
-      await supabase.from('packliste').delete().eq('trip_id', trip.id)
-      await supabase.from('trip_links').delete().eq('trip_id', trip.id)
-      await supabase.from('trip_fluege').delete().eq('trip_id', trip.id)
-      await supabase.from('trip_unterkuenfte').delete().eq('trip_id', trip.id)
-      await supabase.from('trip_orte').delete().eq('trip_id', trip.id)
-      await supabase.from('trip_photos').delete().eq('trip_id', trip.id)
+    if (accountLoeschenLaeuft) return
+    if (loeschenBestaetigungstext.trim().toUpperCase() !== t('loeschenBestaetigungswort')) return
+
+    setAccountLoeschenLaeuft(true)
+    const { error } = await supabase.rpc('delete_own_account')
+    if (error) {
+      console.error('Fehler:', error)
+      toast(t('verbindungsfehler'), 'error')
+      setAccountLoeschenLaeuft(false)
+      return
     }
-  }
-  await supabase.from('trips').delete().eq('user_id', user.id)
-  await supabase.from('profiles').delete().eq('id', user.id)
-  
-  // Dann den Auth User selbst löschen via SQL Funktion
-  await supabase.rpc('delete_own_account')
-  
-  // Ausloggen
-  await supabase.auth.signOut()
+    await supabase.auth.signOut()
   }
 
   const ausloggen = async () => await supabase.auth.signOut()
@@ -161,20 +143,6 @@ export default function SettingsScreen() {
           <p style={{ color: 'var(--text-sub)', fontSize: '0.85rem', margin: 0 }}>{user.email}</p>
         </div>
       </div>
-
-      {/* Toast */}
-      {nachricht && (
-        <div className="fade-in" style={{
-          margin: '0 20px 16px',
-          backgroundColor: nachricht.includes('❌') ? 'rgba(233,69,96,0.1)' : 'rgba(201,168,76,0.1)',
-          borderRadius: '14px', padding: '12px 16px',
-          border: `1px solid ${nachricht.includes('❌') ? 'rgba(233,69,96,0.2)' : 'rgba(201,168,76,0.2)'}`,
-          color: nachricht.includes('❌') ? '#e94560' : 'var(--gold)',
-          fontWeight: '600', fontSize: '0.9rem',
-        }}>
-          {nachricht}
-        </div>
-      )}
 
       <div style={{ padding: '0 20px' }}>
 
@@ -409,7 +377,7 @@ export default function SettingsScreen() {
             <ChevronRight size={16} color="#e94560" />
           </button>
         ) : (
-          <div onClick={() => setLoeschenOffen(false)} style={{
+          <div onClick={() => { setLoeschenOffen(false); setLoeschenBestaetigungstext('') }} style={{
             position: 'fixed', inset: 0,
             backgroundColor: 'rgba(0,0,0,0.6)',
             display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
@@ -424,16 +392,36 @@ export default function SettingsScreen() {
             }}>
               <div style={{ width: '40px', height: '4px', backgroundColor: 'var(--sub)', borderRadius: '2px', margin: '0 auto 24px' }} />
               <h3 style={{ margin: '0 0 8px', fontWeight: '800', fontSize: '1.3rem' }}>{t('accountLoeschenTitel')}</h3>
-              <p style={{ color: 'var(--text-sub)', margin: '0 0 28px', fontSize: '0.95rem', lineHeight: 1.6 }}>
+              <p style={{ color: 'var(--text-sub)', margin: '0 0 12px', fontSize: '0.95rem', lineHeight: 1.6 }}>
                 {t('accountLoeschenTextVor')} <span style={{ color: 'var(--text)', fontWeight: '600' }}>{t('unwiderruflich')}</span> {t('accountLoeschenTextNach')}
               </p>
+              <p style={{ color: 'var(--text-sub)', margin: '0 0 20px', fontSize: '0.88rem', lineHeight: 1.5 }}>
+                {t('accountLoeschenGeteilteReisenText')}
+              </p>
+              <p style={{ color: 'var(--text-sub)', margin: '0 0 8px', fontSize: '0.85rem' }}>
+                {t('loeschenBestaetigungAufforderung')(t('loeschenBestaetigungswort'))}
+              </p>
+              <input
+                value={loeschenBestaetigungstext}
+                onChange={(e) => setLoeschenBestaetigungstext(e.target.value)}
+                placeholder={t('loeschenBestaetigungswort')}
+                style={{ ...inputStyle, marginBottom: '16px' }}
+              />
               <div style={{ display: 'flex', gap: '10px' }}>
-                <button onClick={accountLoeschen} className="btn-press" style={{
-                  backgroundColor: '#e94560', color: '#fff', border: 'none',
-                  padding: '14px', minHeight: '44px', boxSizing: 'border-box', borderRadius: '14px', cursor: 'pointer',
-                  flex: 1, fontWeight: '700', fontSize: '1rem',
-                }}>{t('jaLoeschen')}</button>
-                <button onClick={() => setLoeschenOffen(false)} className="btn-press" style={{
+                <button
+                  onClick={accountLoeschen}
+                  disabled={accountLoeschenLaeuft || loeschenBestaetigungstext.trim().toUpperCase() !== t('loeschenBestaetigungswort')}
+                  className="btn-press"
+                  style={{
+                    backgroundColor: '#e94560', color: '#fff', border: 'none',
+                    padding: '14px', minHeight: '44px', boxSizing: 'border-box', borderRadius: '14px', cursor: 'pointer',
+                    flex: 1, fontWeight: '700', fontSize: '1rem',
+                    opacity: accountLoeschenLaeuft || loeschenBestaetigungstext.trim().toUpperCase() !== t('loeschenBestaetigungswort') ? 0.5 : 1,
+                  }}
+                >
+                  {accountLoeschenLaeuft ? t('wirdGespeichert') : t('jaLoeschen')}
+                </button>
+                <button onClick={() => { setLoeschenOffen(false); setLoeschenBestaetigungstext('') }} className="btn-press" style={{
                   backgroundColor: 'var(--sub)', color: 'var(--text)', border: 'none',
                   padding: '14px', minHeight: '44px', boxSizing: 'border-box', borderRadius: '14px', cursor: 'pointer', flex: 1, fontWeight: '600',
                 }}>{t('abbrechen')}</button>
@@ -442,6 +430,8 @@ export default function SettingsScreen() {
           </div>
         )}
       </div>
+
+      <Toast toasts={toasts} setToasts={setToasts} />
     </div>
   )
 }
