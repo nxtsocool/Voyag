@@ -6,7 +6,10 @@ import LoginScreen from './screens/LoginScreen'
 import OnboardingScreen from './screens/OnboardingScreen'
 import BottomNav from './components/BottomNav'
 import OfflineBanner from './components/OfflineBanner'
-import { SettingsProvider } from './context/SettingsContext'
+import { SettingsProvider, useSettings } from './context/SettingsContext'
+import useToast from './hooks/useToast.jsx'
+import Toast from './components/Toast'
+import useBodyScrollLock from './hooks/useBodyScrollLock'
 
 // Direkt beim Start benötigte Screens (Login/Onboarding/Übersicht) bleiben eager
 // importiert; alle anderen Screens erst per Code-Splitting laden, sobald die
@@ -36,11 +39,113 @@ function PendingInviteRedirect() {
   return null
 }
 
+// Bottom-Sheet "Neues Passwort festlegen" – erscheint app-weit, wenn Supabase
+// nach einem Klick auf den Passwort-Reset-Link das Event PASSWORD_RECOVERY
+// feuert (K13). Rendert innerhalb von SettingsProvider, damit t()/Toast nutzbar sind.
+function PasswortRecoverySheet({ offen, onFertig }) {
+  const { t } = useSettings()
+  const { toasts, setToasts, toast } = useToast()
+  const [neuesPasswort, setNeuesPasswort] = useState('')
+  const [bestaetigung, setBestaetigung] = useState('')
+  const [laeuft, setLaeuft] = useState(false)
+  const [fehler, setFehler] = useState('')
+  useBodyScrollLock(offen)
+
+  if (!offen) return null
+
+  const speichern = async () => {
+    if (laeuft) return
+    setFehler('')
+    if (!neuesPasswort || neuesPasswort.length < 8) { setFehler(t('passwortMindestens8Zeichen')); return }
+    if (neuesPasswort !== bestaetigung) { setFehler(t('passwortNichtUebereinstimmend')); return }
+
+    setLaeuft(true)
+    const { error } = await supabase.auth.updateUser({ password: neuesPasswort })
+    setLaeuft(false)
+
+    if (error) { setFehler(error.message); return }
+    setNeuesPasswort('')
+    setBestaetigung('')
+    toast(t('passwortGeaendert'), 'success')
+    onFertig()
+  }
+
+  return (
+    <>
+      <div style={{
+        position: 'fixed', inset: 0,
+        backgroundColor: 'rgba(0,0,0,0.6)',
+        display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+        zIndex: 9998,
+      }}>
+        <div className="fade-in" style={{
+          backgroundColor: 'var(--card)', borderRadius: '24px 24px 0 0',
+          width: '100%', maxWidth: '600px',
+          maxHeight: 'calc(100dvh - env(safe-area-inset-top) - 24px)', overflowY: 'auto', overflowX: 'hidden',
+          boxSizing: 'border-box',
+          padding: '24px 20px calc(32px + env(safe-area-inset-bottom))',
+          zIndex: 9999,
+        }}>
+          <div style={{ width: '40px', height: '4px', backgroundColor: 'var(--sub)', borderRadius: '2px', margin: '0 auto 24px' }} />
+          <h3 style={{ margin: '0 0 8px', fontWeight: '700', fontSize: '1.2rem' }}>{t('neuesPasswortTitel')}</h3>
+          <p style={{ color: 'var(--text-sub)', margin: '0 0 20px', fontSize: '0.9rem', lineHeight: 1.5 }}>
+            {t('neuesPasswortText')}
+          </p>
+
+          {fehler && (
+            <div style={{
+              backgroundColor: 'rgba(233,69,96,0.12)', border: '1px solid rgba(233,69,96,0.3)',
+              borderRadius: '12px', padding: '10px 14px', marginBottom: '14px',
+            }}>
+              <p style={{ color: '#e94560', margin: 0, fontSize: '0.85rem' }}>{fehler}</p>
+            </div>
+          )}
+
+          <input
+            type="password" autoComplete="new-password"
+            placeholder={t('neuesPasswortPlatzhalter')}
+            value={neuesPasswort}
+            onChange={(e) => setNeuesPasswort(e.target.value)}
+            style={recoveryInputStyle}
+          />
+          <input
+            type="password" autoComplete="new-password"
+            placeholder={t('passwortBestaetigenPlatzhalter')}
+            value={bestaetigung}
+            onChange={(e) => setBestaetigung(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && speichern()}
+            style={recoveryInputStyle}
+          />
+
+          <button onClick={speichern} disabled={laeuft} className="btn-press" style={{
+            backgroundColor: 'var(--gold)', color: '#0a0f1e', border: 'none',
+            padding: '14px', minHeight: '48px', boxSizing: 'border-box', borderRadius: '14px',
+            cursor: 'pointer', width: '100%', fontWeight: '700', fontSize: '0.95rem',
+            opacity: laeuft ? 0.6 : 1, marginTop: '4px',
+          }}>
+            {laeuft ? t('wirdGespeichert') : t('speichern')}
+          </button>
+        </div>
+      </div>
+      <Toast toasts={toasts} setToasts={setToasts} />
+    </>
+  )
+}
+
+const recoveryInputStyle = {
+  width: '100%', padding: '13px 14px', backgroundColor: 'var(--input-bg)',
+  border: '1px solid var(--input-border)', borderRadius: '12px',
+  color: 'var(--text)', fontSize: '16px', marginBottom: '10px', boxSizing: 'border-box',
+}
+
 function App() {
   const [user, setUser] = useState(null)
   const [laden, setLaden] = useState(true)
   const [emailNichtBestaetigt, setEmailNichtBestaetigt] = useState(false)
   const [onboardingNoetig, setOnboardingNoetig] = useState(false)
+  // Passwort-Reset (K13): Supabase feuert PASSWORD_RECOVERY, wenn der Nutzer
+  // über den Link aus der Reset-Email in der App landet
+  const [passwortRecoveryOffen, setPasswortRecoveryOffen] = useState(false)
 
   useEffect(() => {
     const benutzerVerarbeiten = async (event, session) => {
@@ -92,6 +197,7 @@ function App() {
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') setPasswortRecoveryOffen(true)
       benutzerVerarbeiten(event, session)
     })
 
@@ -118,6 +224,7 @@ function App() {
   return (
     <SettingsProvider>
       <OfflineBanner />
+      <PasswortRecoverySheet offen={passwortRecoveryOffen} onFertig={() => setPasswortRecoveryOffen(false)} />
       {!user ? (
         <LoginScreen emailNichtBestaetigt={emailNichtBestaetigt} />
       ) : onboardingNoetig ? (

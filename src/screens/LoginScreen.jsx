@@ -23,6 +23,10 @@ function LoginScreen({ emailNichtBestaetigt }) {
   const [passwortSichtbar, setPasswortSichtbar] = useState(false)
   const [registrierungErfolgreich, setRegistrierungErfolgreich] = useState(false)
   const [registrierteEmail, setRegistrierteEmail] = useState('')
+  // Passwort vergessen (K13)
+  const [passwortVergessenOffen, setPasswortVergessenOffen] = useState(false)
+  const [passwortResetLaeuft, setPasswortResetLaeuft] = useState(false)
+  const [passwortResetGesendet, setPasswortResetGesendet] = useState(false)
 
   const staerke = passwortStaerkeBerechnen(passwort)
 
@@ -68,15 +72,74 @@ function LoginScreen({ emailNichtBestaetigt }) {
     }
   }
 
+  // Link zum Passwort-Reset per Email anfordern (K13)
+  const passwortVergessenSenden = async () => {
+    if (passwortResetLaeuft) return
+    if (!email) { setFehler(t('emailErforderlich')); return }
+    setFehler('')
+    setPasswortResetLaeuft(true)
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin,
+    })
+    setPasswortResetLaeuft(false)
+    if (error) setFehler(error.message)
+    else setPasswortResetGesendet(true)
+  }
+
   // Formular zurücksetzen und zum Login wechseln
   const zurueckZumLogin = () => {
     setRegistrierungErfolgreich(false)
+    setPasswortResetGesendet(false)
+    setPasswortVergessenOffen(false)
     setIsRegistrieren(false)
     setEmail('')
     setName('')
     setPasswort('')
     setPasswortBestaetigung('')
     setFehler('')
+  }
+
+  // ── Bestätigungsseite nach angefordertem Passwort-Reset (K13) ──
+  if (passwortResetGesendet) {
+    return (
+      <div style={{
+        minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        backgroundColor: 'var(--bg)',
+        backgroundImage: 'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(201,168,76,0.14) 0%, transparent 70%)',
+        padding: '20px', boxSizing: 'border-box',
+      }}>
+        <div className="fade-in" style={{ width: '100%', maxWidth: '400px', textAlign: 'center', boxSizing: 'border-box' }}>
+          <div style={{
+            width: '96px', height: '96px', borderRadius: '50%',
+            backgroundColor: 'rgba(201,168,76,0.12)',
+            border: '2px solid rgba(201,168,76,0.3)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            margin: '0 auto 28px',
+          }}>
+            <Mail size={40} color="var(--gold)" />
+          </div>
+
+          <h2 style={{ fontSize: '1.6rem', fontWeight: '800', margin: '0 0 16px', letterSpacing: '-0.5px' }}>
+            {t('passwortResetGesendetTitel')}
+          </h2>
+
+          <p style={{ color: 'var(--text-sub)', fontSize: '0.92rem', lineHeight: 1.6, margin: '0 0 36px' }}>
+            {t('passwortResetGesendetText')(email)}
+          </p>
+
+          <button onClick={zurueckZumLogin} className="btn-press" style={{
+            backgroundColor: 'var(--gold)', color: 'var(--bg)',
+            border: 'none', padding: '16px 32px', borderRadius: '16px',
+            fontSize: '1rem', fontWeight: '700', cursor: 'pointer',
+            display: 'inline-flex', alignItems: 'center', gap: '8px',
+            boxShadow: '0 6px 24px rgba(201,168,76,0.35)',
+          }}>
+            <ChevronLeft size={18} />
+            {t('zurueckZumLogin')}
+          </button>
+        </div>
+      </div>
+    )
   }
 
   // ── Bestätigungsseite nach erfolgreicher Registrierung ──
@@ -382,8 +445,9 @@ function LoginScreen({ emailNichtBestaetigt }) {
             </div>
           )}
 
-          {/* Passwort */}
-          <div className="input-animation-2" style={{ position: 'relative', marginBottom: isRegistrieren ? '8px' : '24px' }}>
+          {/* Passwort – beim Passwort-Reset-Anfordern ausgeblendet (K13) */}
+          {!passwortVergessenOffen && (
+          <div className="input-animation-2" style={{ position: 'relative', marginBottom: isRegistrieren ? '8px' : '10px' }}>
             <Lock size={16} color="var(--text-sub)" style={{
               position: 'absolute', left: '16px', top: '50%',
               transform: 'translateY(-50%)', pointerEvents: 'none',
@@ -394,6 +458,7 @@ function LoginScreen({ emailNichtBestaetigt }) {
               value={passwort}
               onChange={(e) => setPasswort(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+              autoComplete={isRegistrieren ? 'new-password' : 'current-password'}
               style={{ ...inputStyle, paddingLeft: '44px', paddingRight: '48px' }}
             />
             <button
@@ -410,6 +475,45 @@ function LoginScreen({ emailNichtBestaetigt }) {
               {passwortSichtbar ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>
+          )}
+
+          {/* Passwort vergessen – nur im Login-Modus (K13) */}
+          {!isRegistrieren && !passwortVergessenOffen && (
+            <p
+              onClick={() => { setPasswortVergessenOffen(true); setFehler('') }}
+              className="fade-in"
+              style={{
+                color: 'var(--gold)', textAlign: 'right', cursor: 'pointer',
+                fontSize: '0.82rem', fontWeight: '600', margin: '0 0 24px',
+              }}
+            >
+              {t('passwortVergessenLink')}
+            </p>
+          )}
+
+          {!isRegistrieren && passwortVergessenOffen && (
+            <div className="fade-in" style={{ marginBottom: '24px' }}>
+              <p style={{ color: 'var(--text-sub)', fontSize: '0.85rem', margin: '0 0 14px', lineHeight: 1.5 }}>
+                {t('passwortVergessenText')}
+              </p>
+              <button onClick={passwortVergessenSenden} disabled={passwortResetLaeuft} className="btn-press" style={{
+                backgroundColor: 'var(--gold)', color: 'var(--bg)',
+                border: 'none', padding: '16px', borderRadius: '16px',
+                fontSize: '1rem', fontWeight: '700',
+                cursor: passwortResetLaeuft ? 'not-allowed' : 'pointer',
+                width: '100%', marginBottom: '10px',
+                opacity: passwortResetLaeuft ? 0.7 : 1,
+              }}>
+                {passwortResetLaeuft ? t('laedt') : t('resetLinkSendenBtn')}
+              </button>
+              <p
+                onClick={() => { setPasswortVergessenOffen(false); setFehler('') }}
+                style={{ color: 'var(--text-sub)', textAlign: 'center', cursor: 'pointer', fontSize: '0.85rem', margin: 0 }}
+              >
+                {t('abbrechen')}
+              </p>
+            </div>
+          )}
 
           {/* Passwort-Stärke Balken – nur beim Registrieren und wenn Passwort eingegeben */}
           {isRegistrieren && passwort && (
@@ -463,7 +567,8 @@ function LoginScreen({ emailNichtBestaetigt }) {
             </div>
           )}
 
-          {/* Login Button */}
+          {/* Login Button – beim Passwort-Reset-Anfordern ausgeblendet (K13) */}
+          {!passwortVergessenOffen && (
           <div className="button-animation">
             <button onClick={handleSubmit} disabled={laden} className="btn-press" style={{
               backgroundColor: 'var(--gold)', color: 'var(--bg)',
@@ -478,8 +583,10 @@ function LoginScreen({ emailNichtBestaetigt }) {
               {laden ? t('laedt') : isRegistrieren ? t('accountErstellen') : t('einloggen')}
             </button>
           </div>
+          )}
 
           {/* Wechseln */}
+          {!passwortVergessenOffen && (
           <p
             className="switch-animation"
             onClick={() => { setIsRegistrieren(!isRegistrieren); setFehler('') }}
@@ -498,6 +605,7 @@ function LoginScreen({ emailNichtBestaetigt }) {
               </>
             )}
           </p>
+          )}
 
         </div>
       </div>
