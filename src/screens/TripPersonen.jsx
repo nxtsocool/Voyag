@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { supabase } from '../supabase'
 import TripNav from '../components/TripNav'
@@ -31,11 +31,13 @@ export default function TripPersonen() {
   // (weil er bereits Ausgaben bezahlt hat/ihm Ausgaben zugeordnet sind)
   const [entferneTeilnehmer, setEntferneTeilnehmer] = useState(null)
 
-  // State für User verknüpfen – Live-Suche in profiles statt reinem Email-Feld
+  // State für User verknüpfen – exakte Email-Suche per RPC statt Live-Suche,
+  // damit man nicht beliebig nach Name/Email anderer Nutzer stöbern kann (K5)
   const [verknuepfenId, setVerknuepfenId] = useState(null)
-  const [sucheText, setSucheText] = useState('')
-  const [sucheErgebnisse, setSucheErgebnisse] = useState([])
+  const [sucheEmail, setSucheEmail] = useState('')
+  const [sucheErgebnis, setSucheErgebnis] = useState(null)
   const [sucheLaedt, setSucheLaedt] = useState(false)
+  const [sucheOhneTreffer, setSucheOhneTreffer] = useState(false)
   // Bestätigungs-Bottom-Sheet zum Lösen einer Verknüpfung
   const [loeseVerknuepfungTeilnehmer, setLoeseVerknuepfungTeilnehmer] = useState(null)
   // Icon-Wechsel nach dem Kopieren des Einladungscodes (1.5s)
@@ -141,41 +143,34 @@ export default function TripPersonen() {
     else teilnehmerEntfernen(person.id)
   }
 
-  // Bereits mit dieser Reise verknüpfte User-IDs – aus den Suchergebnissen herausfiltern
+  // Bereits mit dieser Reise verknüpfte User-IDs
   const verknuepfteUserIds = teilnehmer.filter(p => p.user_id).map(p => p.user_id)
 
-  // Zählt die gestarteten Such-Requests hoch – verhindert, dass ein spät
-  // zurückkommendes Ergebnis einer älteren Eingabe die Ergebnisse einer
-  // neueren Eingabe überschreibt (Race Condition bei schnellem Tippen)
-  const sucheRequestId = useRef(0)
+  // Nutzer per exakter Email suchen (RPC find_user_by_email – gibt nur id+name
+  // zurück, nie die Email eines fremden Kontos, siehe K5/Migration Abschnitt 6)
+  const nutzerSuchen = async () => {
+    if (!sucheEmail.trim()) return
+    setSucheLaedt(true)
+    setSucheErgebnis(null)
+    setSucheOhneTreffer(false)
 
-  // Live-Suche in profiles – ab 3 Zeichen, debounced um 300ms
-  useEffect(() => {
-    if (!verknuepfenId) return
-    const timer = setTimeout(async () => {
-      const requestId = ++sucheRequestId.current
+    const { data, error } = await supabase.rpc('find_user_by_email', { p_email: sucheEmail.trim() })
 
-      if (sucheText.trim().length < 3) {
-        setSucheErgebnisse([])
-        return
-      }
-      setSucheLaedt(true)
-      const { data } = await supabase
-        .from('profiles')
-        .select('*')
-        .or(`name.ilike.%${sucheText}%,email.ilike.%${sucheText}%`)
-        .limit(10)
-
-      // Zwischenzeitlich ist bereits eine neuere Suche gestartet worden – dieses Ergebnis verwerfen
-      if (requestId !== sucheRequestId.current) return
-
-      const gefiltert = (data || []).filter(p => !verknuepfteUserIds.includes(p.id))
-      setSucheErgebnisse(gefiltert)
+    if (error) {
+      console.error('Fehler bei der Nutzersuche:', error)
+      toast(t('verbindungsfehler'), 'error')
       setSucheLaedt(false)
-      if (gefiltert.length === 0) toast(t('keinNutzerGefunden'), 'error')
-    }, 300)
-    return () => clearTimeout(timer)
-  }, [sucheText, verknuepfenId])
+      return
+    }
+
+    const treffer = data?.[0] || null
+    if (!treffer || verknuepfteUserIds.includes(treffer.id)) {
+      setSucheOhneTreffer(true)
+    } else {
+      setSucheErgebnis(treffer)
+    }
+    setSucheLaedt(false)
+  }
 
   // Voyag User mit Teilnehmer verknüpfen
   const userVerknuepfen = async (teilnehmerId, profileData) => {
@@ -189,7 +184,7 @@ export default function TripPersonen() {
       .update({ user_id: profileData.id })
       .eq('id', teilnehmerId)
 
-    if (updateError) { console.error('Fehler:', updateError); return }
+    if (updateError) { console.error('Fehler:', updateError); toast(t('verbindungsfehler'), 'error'); return }
 
     const neueTeilnehmer = teilnehmer.map(t =>
       t.id === teilnehmerId ? { ...t, user_id: profileData.id } : t
@@ -197,8 +192,9 @@ export default function TripPersonen() {
     setTeilnehmer([...neueTeilnehmer])
     setProfile(prev => ({ ...prev, [profileData.id]: profileData }))
     setVerknuepfenId(null)
-    setSucheText('')
-    setSucheErgebnisse([])
+    setSucheEmail('')
+    setSucheErgebnis(null)
+    setSucheOhneTreffer(false)
     toast(t('verknuepftErfolgreich'), 'success')
   }
 
@@ -355,8 +351,9 @@ export default function TripPersonen() {
                         className="btn-press"
                         onClick={() => {
                           setVerknuepfenId(person.id)
-                          setSucheText('')
-                          setSucheErgebnisse([])
+                          setSucheEmail('')
+                          setSucheErgebnis(null)
+                          setSucheOhneTreffer(false)
                         }}
                         style={{
                           backgroundColor: 'rgba(201,168,76,0.1)',
@@ -398,7 +395,7 @@ export default function TripPersonen() {
                   </div>
                 </div>
 
-                {/* Verknüpfen – Live-Suche nach Voyag-Nutzern */}
+                {/* Verknüpfen – exakte Email-Suche statt Live-Suche (K5) */}
                 {verknuepfenId === person.id && (
                   <div className="fade-in" style={{
                     marginTop: '14px', paddingTop: '14px',
@@ -407,59 +404,73 @@ export default function TripPersonen() {
                     <p style={{ color: 'var(--text-sub)', fontSize: '0.82rem', marginBottom: '10px' }}>
                       {t('voyagKontoVerknuepfenText')}
                     </p>
-                    <div style={{ position: 'relative', marginBottom: '10px' }}>
-                      <Search size={16} color="var(--text-sub)" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
-                      <input
-                        placeholder={t('nutzerSuchenPlatzhalter')}
-                        value={sucheText}
-                        onChange={(e) => setSucheText(e.target.value)}
-                        autoFocus
-                        style={{ ...inputStyle, paddingLeft: '40px', marginBottom: 0 }}
-                      />
+                    <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
+                      <div style={{ position: 'relative', flex: 1 }}>
+                        <Search size={16} color="var(--text-sub)" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                        <input
+                          type="email"
+                          inputMode="email"
+                          autoComplete="email"
+                          placeholder={t('exakteEmailPlatzhalter')}
+                          value={sucheEmail}
+                          onChange={(e) => { setSucheEmail(e.target.value); setSucheErgebnis(null); setSucheOhneTreffer(false) }}
+                          onKeyDown={(e) => e.key === 'Enter' && nutzerSuchen()}
+                          autoFocus
+                          style={{ ...inputStyle, paddingLeft: '40px', marginBottom: 0 }}
+                        />
+                      </div>
+                      <button
+                        onClick={nutzerSuchen}
+                        disabled={sucheLaedt || !sucheEmail.trim()}
+                        className="btn-press"
+                        style={{
+                          backgroundColor: 'var(--gold)', color: '#0a0f1e', border: 'none',
+                          padding: '0 18px', borderRadius: '12px', cursor: 'pointer',
+                          fontWeight: '700', fontSize: '0.85rem', flexShrink: 0,
+                          opacity: sucheLaedt || !sucheEmail.trim() ? 0.6 : 1,
+                        }}
+                      >
+                        {sucheLaedt ? t('wirdGespeichert') : t('suchenBtn')}
+                      </button>
                     </div>
 
-                    {/* Suchergebnisse als antippbare Karten */}
-                    {sucheLaedt ? (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '10px' }}>
-                        <div className="skeleton" style={{ height: '58px', borderRadius: '14px' }} />
-                      </div>
-                    ) : sucheErgebnisse.length > 0 && (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '10px' }}>
-                        {sucheErgebnisse.map(profilTreffer => {
-                          const treffInitiale = profilTreffer.name?.charAt(0)?.toUpperCase() || '?'
-                          return (
-                            <button
-                              key={profilTreffer.id}
-                              onClick={() => userVerknuepfen(person.id, profilTreffer)}
-                              className="btn-press"
-                              style={{
-                                display: 'flex', alignItems: 'center', gap: '12px',
-                                backgroundColor: 'var(--sub)', border: '1px solid var(--input-border)',
-                                borderRadius: '14px', padding: '10px 14px', cursor: 'pointer',
-                                textAlign: 'left', width: '100%', boxSizing: 'border-box', minHeight: '44px',
-                              }}
-                            >
-                              <div style={{
-                                width: '36px', height: '36px', borderRadius: '50%', flexShrink: 0,
-                                backgroundColor: 'var(--gold)', color: '#0a0f1e',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                fontWeight: '700', fontSize: '0.95rem',
-                              }}>
-                                {treffInitiale}
-                              </div>
-                              <div style={{ minWidth: 0 }}>
-                                <p style={{ margin: 0, fontWeight: '700', fontSize: '0.9rem', color: 'var(--text)', overflowWrap: 'break-word', wordBreak: 'break-word' }}>
-                                  {profilTreffer.name || t('voyagNutzerFallback')}
-                                </p>
-                                <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-sub)', overflowWrap: 'break-word', wordBreak: 'break-word' }}>
-                                  {profilTreffer.email}
-                                </p>
-                              </div>
-                            </button>
-                          )
-                        })}
-                      </div>
+                    {/* Treffer als antippbare Karte */}
+                    {sucheErgebnis && (
+                      <button
+                        onClick={() => userVerknuepfen(person.id, sucheErgebnis)}
+                        className="btn-press"
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: '12px',
+                          backgroundColor: 'var(--sub)', border: '1px solid var(--input-border)',
+                          borderRadius: '14px', padding: '10px 14px', cursor: 'pointer',
+                          textAlign: 'left', width: '100%', boxSizing: 'border-box', minHeight: '44px',
+                          marginBottom: '10px',
+                        }}
+                      >
+                        <div style={{
+                          width: '36px', height: '36px', borderRadius: '50%', flexShrink: 0,
+                          backgroundColor: 'var(--gold)', color: '#0a0f1e',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontWeight: '700', fontSize: '0.95rem',
+                        }}>
+                          {sucheErgebnis.name?.charAt(0)?.toUpperCase() || '?'}
+                        </div>
+                        <p style={{ margin: 0, fontWeight: '700', fontSize: '0.9rem', color: 'var(--text)', overflowWrap: 'break-word', wordBreak: 'break-word' }}>
+                          {sucheErgebnis.name || t('voyagNutzerFallback')}
+                        </p>
+                      </button>
                     )}
+
+                    {/* Kein Treffer – dezenter Hinweistext statt rotem Toast (W17) */}
+                    {sucheOhneTreffer && (
+                      <p style={{ color: 'var(--text-sub)', fontSize: '0.8rem', margin: '0 0 10px' }}>
+                        {t('keinNutzerGefunden')}
+                      </p>
+                    )}
+
+                    <p style={{ color: 'var(--text-sub)', fontSize: '0.76rem', margin: '0 0 10px', lineHeight: 1.4 }}>
+                      {t('einladungslinkHinweis')}
+                    </p>
 
                     <button onClick={() => setVerknuepfenId(null)} className="btn-press" style={{
                       backgroundColor: 'transparent', color: 'var(--text-sub)',
