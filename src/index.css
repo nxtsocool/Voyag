@@ -45,8 +45,6 @@
 }
 
 html, body {
-  /* Verhindert horizontales Scrollen auf kleinen Screens, falls ein Element doch mal überläuft */
-  overflow-x: hidden;
   width: 100%;
   background-color: var(--bg);
   color: var(--text);
@@ -78,19 +76,16 @@ html {
   display: none;
 }
 
-/* PWA Vollbild Fix für iOS */
-html, body {
-  height: 100%;
-  height: -webkit-fill-available;
-}
-
 #root {
   min-height: 100vh;
   min-height: -webkit-fill-available;
 }
 
+/* Horizontales Überlaufen wird hier statt auf html/body verhindert, damit
+   html/body ihre natürliche (mit dem Inhalt wachsende) Höhe behalten und das
+   Fenster selbst wieder normal vertikal scrollt (siehe K7 im Testbericht) */
 #root {
-  overflow-x: hidden;
+  overflow-x: clip;
   width: 100%;
 }
 
