@@ -100,6 +100,12 @@ function TripKosten() {
   const teilnehmerName = (teilnehmerId) =>
     teilnehmer.find(p => p.id === teilnehmerId)?.name || t('unbekannterTeilnehmer')
 
+  // Pflichtfeld-Hinweis (W3) – welches Feld fehlt noch fürs Speichern
+  const neueAusgabeFehlendesFeld = !neueAusgabe.beschreibung.trim() ? t('beschreibungPlatzhalter')
+    : !neueAusgabe.betrag ? t('betragPlatzhalter')
+    : !neueAusgabe.bezahlt_von ? t('bezahltVonOption')
+    : null
+
   // Neue Ausgabe speichern
   const ausgabeHinzufuegen = async () => {
     // Schnelles Doppel-Tippen auf den Speichern-Button würde sonst die Ausgabe doppelt anlegen
@@ -761,8 +767,13 @@ function TripKosten() {
               )
             })}
 
+            {neueAusgabeFehlendesFeld && (
+              <p style={{ color: 'var(--text-sub)', fontSize: '0.78rem', margin: '10px 0 0' }}>
+                {t('pflichtfeldFehlt')(neueAusgabeFehlendesFeld)}
+              </p>
+            )}
             <div style={{ display: 'flex', gap: '10px', marginTop: '18px' }}>
-              <button onClick={ausgabeHinzufuegen} disabled={speichernLaeuft} className="btn-press" style={{ ...speichernButtonStyle, flex: 1, opacity: speichernLaeuft ? 0.6 : 1 }}>
+              <button onClick={ausgabeHinzufuegen} disabled={speichernLaeuft || !!neueAusgabeFehlendesFeld} className="btn-press" style={{ ...speichernButtonStyle, flex: 1, opacity: speichernLaeuft || neueAusgabeFehlendesFeld ? 0.6 : 1 }}>
                 {speichernLaeuft ? t('wirdGespeichert') : t('speichern')}
               </button>
               <button onClick={() => setFormularOffen(false)} className="btn-press" style={{ ...abbrechenButtonStyle, flex: 1 }}>{t('abbrechen')}</button>

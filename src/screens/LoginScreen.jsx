@@ -44,6 +44,11 @@ function LoginScreen({ emailNichtBestaetigt }) {
 
   const staerke = passwortStaerkeBerechnen(passwort)
 
+  // Pflichtfeld-Hinweis (W3) – Button bleibt deaktiviert, bis alles ausgefüllt ist
+  const pflichtfelderFehlen = isRegistrieren
+    ? (!email.trim() || !name.trim() || !passwort || !passwortBestaetigung)
+    : (!email.trim() || !passwort)
+
   // Fehlermeldung anzeigen wenn App.jsx meldet dass Email nicht bestätigt ist
   useEffect(() => {
     if (emailNichtBestaetigt) setFehler(t('emailNichtBestaetigt'))
@@ -604,13 +609,13 @@ function LoginScreen({ emailNichtBestaetigt }) {
           {/* Login Button – beim Passwort-Reset-Anfordern ausgeblendet (K13) */}
           {!passwortVergessenOffen && (
           <div className="button-animation">
-            <button onClick={handleSubmit} disabled={laden} className="btn-press" style={{
+            <button onClick={handleSubmit} disabled={laden || pflichtfelderFehlen} className="btn-press" style={{
               backgroundColor: 'var(--gold)', color: 'var(--bg)',
               border: 'none', padding: '16px', borderRadius: '16px',
               fontSize: '1rem', fontWeight: '700',
-              cursor: laden ? 'not-allowed' : 'pointer',
+              cursor: laden || pflichtfelderFehlen ? 'not-allowed' : 'pointer',
               width: '100%', marginBottom: '20px',
-              opacity: laden ? 0.7 : 1,
+              opacity: laden || pflichtfelderFehlen ? 0.7 : 1,
               boxShadow: '0 6px 24px rgba(201,168,76,0.35)',
               letterSpacing: '0.02em',
             }}>

@@ -475,7 +475,7 @@ export default function TripOrte() {
 
             {/* Speichern / Abbrechen */}
             <div style={{ display: 'flex', gap: '10px', marginTop: '6px' }}>
-              <button onClick={formSpeichern} disabled={speichernLaeuft} className="btn-press" style={{ ...speichernButtonStyle, flex: 1, opacity: speichernLaeuft ? 0.6 : 1 }}>
+              <button onClick={formSpeichern} disabled={speichernLaeuft || !formDaten.name.trim()} className="btn-press" style={{ ...speichernButtonStyle, flex: 1, opacity: speichernLaeuft || !formDaten.name.trim() ? 0.6 : 1 }}>
                 {speichernLaeuft ? t('wirdGespeichert') : t('speichern')}
               </button>
               <button onClick={modalSchliessen} className="btn-press" style={{ ...abbrechenButtonStyle, flex: 1 }}>

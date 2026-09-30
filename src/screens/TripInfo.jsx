@@ -325,7 +325,7 @@ function TripInfo() {
                   onChange={(e) => setNeuerFlug({ ...neuerFlug, ankunft: e.target.value })}
                   style={{ ...inputStyle, marginBottom: 0 }} />
               </div>
-              <button onClick={flugHinzufuegen} disabled={flugSpeichernLaeuft} className="btn-press" style={{ ...speichernButtonStyle, marginTop: '12px', opacity: flugSpeichernLaeuft ? 0.6 : 1 }}>
+              <button onClick={flugHinzufuegen} disabled={flugSpeichernLaeuft || !neuerFlug.titel.trim()} className="btn-press" style={{ ...speichernButtonStyle, marginTop: '12px', opacity: flugSpeichernLaeuft || !neuerFlug.titel.trim() ? 0.6 : 1 }}>
                 {flugSpeichernLaeuft ? t('wirdGespeichert') : t('hinzufuegen')}
               </button>
             </div>
@@ -490,7 +490,7 @@ function TripInfo() {
                   onChange={(e) => setNeueUnterkunft({ ...neueUnterkunft, checkout: e.target.value })}
                   style={{ ...inputStyle, marginBottom: 0 }} />
               </div>
-              <button onClick={unterkunftHinzufuegen} disabled={unterkunftSpeichernLaeuft} className="btn-press" style={{ ...speichernButtonStyle, marginTop: '12px', opacity: unterkunftSpeichernLaeuft ? 0.6 : 1 }}>
+              <button onClick={unterkunftHinzufuegen} disabled={unterkunftSpeichernLaeuft || !neueUnterkunft.titel.trim()} className="btn-press" style={{ ...speichernButtonStyle, marginTop: '12px', opacity: unterkunftSpeichernLaeuft || !neueUnterkunft.titel.trim() ? 0.6 : 1 }}>
                 {unterkunftSpeichernLaeuft ? t('wirdGespeichert') : t('hinzufuegen')}
               </button>
             </div>
@@ -622,7 +622,12 @@ function TripInfo() {
               <input placeholder={t('urlPlatzhalter')} value={neuerLink.url}
                 onChange={(e) => setNeuerLink({ ...neuerLink, url: e.target.value })}
                 style={inputStyle} />
-              <button onClick={linkHinzufuegen} disabled={linkSpeichernLaeuft} className="btn-press" style={{ ...speichernButtonStyle, opacity: linkSpeichernLaeuft ? 0.6 : 1 }}>
+              {(!neuerLink.titel.trim() || !neuerLink.url.trim()) && (
+                <p style={{ color: 'var(--text-sub)', fontSize: '0.78rem', margin: '0 0 10px' }}>
+                  {t('pflichtfeldFehlt')(!neuerLink.titel.trim() ? t('titelHotelBookingPlatzhalter') : t('urlPlatzhalter'))}
+                </p>
+              )}
+              <button onClick={linkHinzufuegen} disabled={linkSpeichernLaeuft || !neuerLink.titel.trim() || !neuerLink.url.trim()} className="btn-press" style={{ ...speichernButtonStyle, opacity: linkSpeichernLaeuft || !neuerLink.titel.trim() || !neuerLink.url.trim() ? 0.6 : 1 }}>
                 {linkSpeichernLaeuft ? t('wirdGespeichert') : t('hinzufuegen')}
               </button>
             </div>

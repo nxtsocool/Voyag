@@ -564,12 +564,12 @@ export default function TripPersonen() {
               onKeyDown={(e) => e.key === 'Enter' && teilnehmerHinzufuegen()}
               style={{ ...inputStyle, flex: 1, marginBottom: 0 }}
             />
-            <button onClick={teilnehmerHinzufuegen} disabled={speichernLaeuft} className="btn-press" style={{
+            <button onClick={teilnehmerHinzufuegen} disabled={speichernLaeuft || !neuerTeilnehmer.trim()} className="btn-press" style={{
               backgroundColor: 'var(--gold)', color: '#0a0f1e', border: 'none',
               padding: '0 20px', minHeight: '48px', borderRadius: '14px',
               cursor: 'pointer', fontSize: '1.3rem', fontWeight: '600', flexShrink: 0,
               boxShadow: '0 4px 14px rgba(201,168,76,0.3)',
-              opacity: speichernLaeuft ? 0.6 : 1,
+              opacity: speichernLaeuft || !neuerTeilnehmer.trim() ? 0.6 : 1,
             }}>+</button>
           </div>
         </div>

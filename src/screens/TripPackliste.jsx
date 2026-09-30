@@ -360,13 +360,13 @@ export default function TripPackliste() {
               onKeyDown={(e) => e.key === 'Enter' && itemHinzufuegen()}
               style={{ ...inputStyle, flex: 1, minWidth: 0, marginBottom: 0 }}
             />
-            <button onClick={itemHinzufuegen} disabled={speichernLaeuft} className="btn-press" style={{
+            <button onClick={itemHinzufuegen} disabled={speichernLaeuft || !neuesItem.trim()} className="btn-press" style={{
               backgroundColor: 'var(--gold)', color: '#0a0f1e', border: 'none',
               padding: '0 20px', minHeight: '48px', borderRadius: '14px',
               cursor: 'pointer', fontSize: '1.3rem', fontWeight: '600',
               flexShrink: 0, boxSizing: 'border-box',
               boxShadow: '0 4px 14px rgba(201,168,76,0.3)',
-              opacity: speichernLaeuft ? 0.6 : 1,
+              opacity: speichernLaeuft || !neuesItem.trim() ? 0.6 : 1,
             }}>+</button>
           </div>
         </div>

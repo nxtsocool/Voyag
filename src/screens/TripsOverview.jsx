@@ -363,6 +363,16 @@ function TripsOverview() {
     await tripsLaden()
   }
 
+  // Pflichtfeld-Hinweis (W3) – welches Feld fehlt noch fürs Speichern/Erstellen
+  const neueReiseFehlendesFeld = !neueReise.name.trim() ? t('name')
+    : !neueReise.land_code ? t('landAuswaehlen')
+    : !neueReise.startDatum ? t('startdatumPlatzhalter')
+    : !neueReise.endDatum ? t('enddatumPlatzhalter')
+    : null
+  const bearbeiteReiseFehlendesFeld = !bearbeiteDaten.name.trim() ? t('name')
+    : !bearbeiteDaten.land_code ? t('landAuswaehlen')
+    : null
+
   // Aktive/kommende Reisen oben, abgeschlossene Reisen unten im Archiv
   const aktiveTrips = trips.filter(trip => !istAbgeschlossen(trip))
   const archivierteTrips = trips.filter(trip => istAbgeschlossen(trip))
@@ -681,8 +691,13 @@ function TripsOverview() {
               selectsEnd startDate={neueReise.startDatum} endDate={neueReise.endDatum}
               minDate={neueReise.startDatum} placeholderText={t('enddatumPlatzhalter')} locale={de}
               dateFormat="dd.MM.yyyy" customInput={<input style={inputStyle} />} />
+            {neueReiseFehlendesFeld && (
+              <p style={{ color: 'var(--text-sub)', fontSize: '0.78rem', margin: '0 0 10px' }}>
+                {t('pflichtfeldFehlt')(neueReiseFehlendesFeld)}
+              </p>
+            )}
             <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
-              <button onClick={reiseHinzufuegen} disabled={speichernLaeuft} className="btn-press" style={{ ...speichernButtonStyle, opacity: speichernLaeuft ? 0.6 : 1 }}>
+              <button onClick={reiseHinzufuegen} disabled={speichernLaeuft || !!neueReiseFehlendesFeld} className="btn-press" style={{ ...speichernButtonStyle, opacity: speichernLaeuft || neueReiseFehlendesFeld ? 0.6 : 1 }}>
                 {speichernLaeuft ? t('wirdGespeichert') : t('erstellen')}
               </button>
               <button onClick={() => setFormularOffen(false)} className="btn-press" style={abbrechenButtonStyle}>{t('abbrechen')}</button>
@@ -728,8 +743,13 @@ function TripsOverview() {
               selectsEnd startDate={bearbeiteDaten.startDatum} endDate={bearbeiteDaten.endDatum}
               minDate={bearbeiteDaten.startDatum} placeholderText={t('neuesEnddatum')} locale={de}
               dateFormat="dd.MM.yyyy" customInput={<input style={inputStyle} />} />
+            {bearbeiteReiseFehlendesFeld && (
+              <p style={{ color: 'var(--text-sub)', fontSize: '0.78rem', margin: '0 0 10px' }}>
+                {t('pflichtfeldFehlt')(bearbeiteReiseFehlendesFeld)}
+              </p>
+            )}
             <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
-              <button onClick={reiseSpeichernAnfragen} disabled={speichernLaeuft} className="btn-press" style={{ ...speichernButtonStyle, opacity: speichernLaeuft ? 0.6 : 1 }}>
+              <button onClick={reiseSpeichernAnfragen} disabled={speichernLaeuft || !!bearbeiteReiseFehlendesFeld} className="btn-press" style={{ ...speichernButtonStyle, opacity: speichernLaeuft || bearbeiteReiseFehlendesFeld ? 0.6 : 1 }}>
                 {speichernLaeuft ? t('wirdGespeichert') : t('speichern')}
               </button>
               <button onClick={() => setBearbeiteTrip(null)} className="btn-press" style={abbrechenButtonStyle}>{t('abbrechen')}</button>
