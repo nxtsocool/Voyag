@@ -634,7 +634,7 @@ function TripInfo() {
             </div>
           ) : (
             <p style={{
-              color: notizen ? '#ffffff' : 'var(--text-sub)',
+              color: notizen ? 'var(--text)' : 'var(--text-sub)',
               fontSize: '0.9rem', margin: 0,
               whiteSpace: 'pre-wrap', lineHeight: '1.7',
             }}>
