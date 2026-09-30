@@ -16,13 +16,16 @@ function BottomNav() {
   return (
     <div style={{
       position: 'fixed',
-      bottom: '14px',
+      // Safe-Area-Inset nur hier einmal berücksichtigt (nicht zusätzlich im
+      // Container- oder Button-Padding, siehe W1) – hob den Nav-Balken vorher
+      // doppelt so weit an wie nötig
+      bottom: 'calc(14px + env(safe-area-inset-bottom))',
       left: 0, right: 0, marginLeft: 'auto', marginRight: 'auto',
       width: 'calc(100% - 28px)',
       maxWidth: '560px',
       backgroundColor: 'var(--card)',
       borderRadius: '26px',
-      padding: '6px 8px calc(6px + env(safe-area-inset-bottom))',
+      padding: '6px 8px',
       display: 'flex',
       zIndex: 100,
       boxSizing: 'border-box',
@@ -45,7 +48,7 @@ function BottomNav() {
               flexDirection: 'column',
               alignItems: 'center',
               gap: '4px',
-              padding: 'calc(6px + env(safe-area-inset-bottom)) 8px 6px',
+              padding: '6px 8px',
               minHeight: '56px',
               borderRadius: '20px',
               transition: 'background-color 0.2s ease',
