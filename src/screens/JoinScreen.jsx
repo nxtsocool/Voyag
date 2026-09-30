@@ -46,18 +46,8 @@ export default function JoinScreen() {
 
     await supabase.from('trip_members').insert([{ trip_id: tripData.id, user_id: user.id }])
 
-    const { data: vorhanden } = await supabase
-      .from('visited_countries')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('country_code', tripData.land_code)
-      .single()
-
-    if (!vorhanden) {
-      await supabase.from('visited_countries').insert([{
-        user_id: user.id, country_code: tripData.land_code, trip_id: tripData.id,
-      }])
-    }
+    // Bereiste/geplante Länder werden aus den Reisen abgeleitet (K11/W16) –
+    // hier keinen visited_countries-Eintrag mehr schreiben
 
     // Unverknüpfte Teilnehmer prüfen – ggf. Verknüpfungs-Modal zeigen
     const { data: unverknuepfte } = await supabase

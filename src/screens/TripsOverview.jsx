@@ -178,20 +178,8 @@ function TripsOverview() {
         user_id: user.id,
       }])
 
-      // NEU – erst prüfen ob Land schon vorhanden:
-      const { data: vorhanden } = await supabase
-        .from('visited_countries')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('country_code', neueReise.land_code)
-        .single()
-
-      // Nur hinzufügen wenn noch nicht vorhanden
-      if (!vorhanden) {
-        await supabase.from('visited_countries').insert([{
-          user_id: user.id, country_code: neueReise.land_code, trip_id: tripData[0].id
-        }])
-      }
+      // Bereiste/geplante Länder werden jetzt aus den Reisen selbst abgeleitet
+      // (K11/W16) – hier keine visited_countries-Einträge mehr schreiben
       setNeueReise({ name: '', land_code: '', startDatum: null, endDatum: null, waehrung: 'EUR' })
       setFormularOffen(false)
     } finally {
@@ -278,10 +266,11 @@ function TripsOverview() {
   }
 
   const reiseEntfernen = async (tripId) => {
+    // Bereiste/geplante Länder werden aus den Reisen abgeleitet (K11/W16) –
+    // visited_countries muss hier nicht mehr angefasst werden
     await supabase.from('teilnehmer').delete().eq('trip_id', tripId)
     await supabase.from('ausgaben').delete().eq('trip_id', tripId)
     await supabase.from('abrechnungen').delete().eq('trip_id', tripId)
-    await supabase.from('visited_countries').delete().eq('trip_id', tripId)
     await supabase.from('trip_members').delete().eq('trip_id', tripId)
     await supabase.from('packliste').delete().eq('trip_id', tripId)
     await supabase.from('trip_links').delete().eq('trip_id', tripId)
@@ -302,7 +291,6 @@ function TripsOverview() {
     const user = authData.user
     const { error } = await supabase.from('trip_members').delete().eq('trip_id', tripId).eq('user_id', user.id)
     if (error) { console.error('Fehler:', error); toast(t('verbindungsfehler'), 'error'); return }
-    await supabase.from('visited_countries').delete().eq('trip_id', tripId).eq('user_id', user.id)
     setTrips(trips.filter(t => t.id !== tripId))
     setVerlasseTrip(null)
   }
@@ -327,21 +315,9 @@ function TripsOverview() {
       if (bereitsVorhanden) { toast(t('bereitsMitglied'), 'error'); return }
 
       await supabase.from('trip_members').insert([{ trip_id: trip.id, user_id: user.id }])
-      const { data: vorhandenBeitreten } = await supabase
-        .from('visited_countries')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('country_code', trip.land_code)
-        .single()
 
-      if (!vorhandenBeitreten) {
-        await supabase.from('visited_countries').insert([{
-          user_id: user.id,
-          country_code: trip.land_code,
-          trip_id: trip.id
-        }])
-      }
-
+      // Bereiste/geplante Länder werden aus den Reisen abgeleitet (K11/W16) –
+      // hier keinen visited_countries-Eintrag mehr schreiben
       setEinladungsCode('')
       setBeitretenOffen(false)
 

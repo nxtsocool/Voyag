@@ -7,6 +7,7 @@ import { Search, X, Plus } from 'lucide-react'
 import usePullToRefresh from '../hooks/usePullToRefresh'
 import PullToRefreshIndicator from '../components/PullToRefreshIndicator'
 import { useSettings } from '../context/SettingsContext'
+import { reiseStatus } from '../utils/datum'
 
 const countryIds = {
   // Europa
@@ -49,7 +50,11 @@ const countryIds = {
 
 function MapScreen() {
   const { t } = useSettings()
+  // Bereiste Länder: eigene/beigetretene Reisen mit Status laufend/vergangen,
+  // plus manuell erfasste Einträge (trip_id null). Geplante Länder: nur
+  // Reisen mit Status kommend, in zweiter, blasserer Farbe (K11/W16).
   const [besucht, setBesucht] = useState([])
+  const [geplant, setGeplant] = useState([])
   const [userId, setUserId] = useState(null)
   const [suche, setSuche] = useState('')
   const [popup, setPopup] = useState(null)
@@ -67,11 +72,41 @@ function MapScreen() {
   async function laden() {
     const { data: { user } } = await supabase.auth.getUser()
     setUserId(user.id)
-    const { data } = await supabase
-      .from('visited_countries')
-      .select('country_code, trip_id')
-      .eq('user_id', user.id)
-    setBesucht(data || [])
+
+    const [eigeneTripsRes, membersRes, manuellRes] = await Promise.all([
+      supabase.from('trips').select('id, name, land_code, start_datum, end_datum, datum').eq('user_id', user.id),
+      supabase.from('trip_members').select('trip_id').eq('user_id', user.id),
+      supabase.from('visited_countries').select('country_code').eq('user_id', user.id).is('trip_id', null),
+    ])
+
+    let beigetreteneTrips = []
+    const tripIds = (membersRes.data || []).map(m => m.trip_id)
+    if (tripIds.length > 0) {
+      const { data } = await supabase
+        .from('trips').select('id, name, land_code, start_datum, end_datum, datum').in('id', tripIds)
+      beigetreteneTrips = data || []
+    }
+
+    const alleTrips = [...(eigeneTripsRes.data || []), ...beigetreteneTrips]
+
+    // Pro Land den ersten Treffer behalten (bereist hat Vorrang vor geplant,
+    // falls für dasselbe Land beides existiert)
+    const bereisteMap = {}
+    const geplanteMap = {}
+    alleTrips.forEach(trip => {
+      if (!trip.land_code) return
+      if (reiseStatus(trip) === 'kommend') {
+        if (!geplanteMap[trip.land_code]) geplanteMap[trip.land_code] = trip
+      } else {
+        if (!bereisteMap[trip.land_code]) bereisteMap[trip.land_code] = trip
+      }
+    })
+    ;(manuellRes.data || []).forEach(m => {
+      if (!bereisteMap[m.country_code]) bereisteMap[m.country_code] = null // null = manuell, kein Trip
+    })
+
+    setBesucht(Object.entries(bereisteMap).map(([country_code, trip]) => ({ country_code, trip })))
+    setGeplant(Object.keys(geplanteMap).filter(code => !bereisteMap[code]).map(code => ({ country_code: code, trip: geplanteMap[code] })))
   }
 
   // Fortschrittsbalken animiert einblenden
@@ -82,12 +117,18 @@ function MapScreen() {
     return () => clearTimeout(timer)
   }, [besucht])
 
-  // Karte zeichnen wenn besucht sich ändert
+  // Karte zeichnen wenn besucht/geplant sich ändert
   useEffect(() => {
     if (!svgRef.current || !mapContainerRef.current) return
     let abgebrochen = false
 
     const besuchteCodesListe = besucht.map(b => b.country_code)
+    const geplanteCodesListe = geplant.map(g => g.country_code)
+    const farbeFuer = (code, hover) => {
+      if (besuchteCodesListe.includes(code)) return hover ? '#e0b84a' : '#c9a84c'
+      if (geplanteCodesListe.includes(code)) return hover ? 'rgba(201,168,76,0.55)' : 'rgba(201,168,76,0.35)'
+      return hover ? '#2a3a55' : '#1a2235'
+    }
     const width = mapContainerRef.current.clientWidth
     const height = Math.round(width * 0.55)
 
@@ -135,22 +176,19 @@ function MapScreen() {
           .enter()
           .append('path')
           .attr('d', path)
-          .attr('fill', d => {
-            const code = countryIds[String(d.id).padStart(3, '0')]
-            return besuchteCodesListe.includes(code) ? '#c9a84c' : '#1a2235'
-          })
+          .attr('fill', d => farbeFuer(countryIds[String(d.id).padStart(3, '0')], false))
           .attr('stroke', '#0a0f1e')
           .attr('stroke-width', 0.3)
           .style('cursor', 'pointer')
           .on('mouseover', function(event, d) {
             const code = countryIds[String(d.id).padStart(3, '0')]
             if (!code) return
-            d3.select(this).attr('fill', besuchteCodesListe.includes(code) ? '#e0b84a' : '#2a3a55')
+            d3.select(this).attr('fill', farbeFuer(code, true))
           })
           .on('mouseout', function(event, d) {
             const code = countryIds[String(d.id).padStart(3, '0')]
             if (!code) return
-            d3.select(this).attr('fill', besuchteCodesListe.includes(code) ? '#c9a84c' : '#1a2235')
+            d3.select(this).attr('fill', farbeFuer(code, false))
           })
           .on('click', function(event, d) {
             event.stopPropagation()
@@ -166,12 +204,15 @@ function MapScreen() {
             const containerBreite = mapContainerRef.current.clientWidth
             const x = Math.min(Math.max(rawX - popupBreite / 2, 8), containerBreite - popupBreite - 8)
             const y = rawY < 90 ? rawY + 12 : rawY - 82
-            const eintrag = besucht.find(b => b.country_code === code)
+            const eintragBesucht = besucht.find(b => b.country_code === code)
+            const eintragGeplant = geplant.find(g => g.country_code === code)
             setPopup({
               code,
               name: land.name,
               isBesucht: besuchteCodesListe.includes(code),
-              manuelHinzugefuegt: eintrag ? !eintrag.trip_id : false,
+              isGeplant: geplanteCodesListe.includes(code),
+              trip: eintragBesucht?.trip || eintragGeplant?.trip || null,
+              manuelHinzugefuegt: eintragBesucht ? !eintragBesucht.trip : false,
               x,
               y,
             })
@@ -179,22 +220,24 @@ function MapScreen() {
       })
 
     return () => { abgebrochen = true }
-  }, [besucht])
+  }, [besucht, geplant])
 
   const landHinzufuegen = async (code) => {
     const codes = besucht.map(b => b.country_code)
     if (!code || codes.includes(code)) return
-    await supabase.from('visited_countries').insert([{
+    const { error } = await supabase.from('visited_countries').insert([{
       user_id: userId, country_code: code, trip_id: null,
     }])
-    setBesucht([...besucht, { country_code: code, trip_id: null }])
+    if (error) { console.error('Fehler:', error); return }
+    setBesucht([...besucht, { country_code: code, trip: null }])
     setSuche('')
     setPopup(null)
   }
 
   const landEntfernen = async (code) => {
-    await supabase.from('visited_countries').delete()
-      .eq('user_id', userId).eq('country_code', code)
+    const { error } = await supabase.from('visited_countries').delete()
+      .eq('user_id', userId).eq('country_code', code).is('trip_id', null)
+    if (error) { console.error('Fehler:', error); return }
     setBesucht(besucht.filter(b => b.country_code !== code))
     setPopup(null)
   }
@@ -353,9 +396,29 @@ function MapScreen() {
                   color: '#4caf50', fontSize: '0.82rem', fontWeight: '600',
                   textAlign: 'center',
                 }}>
-                  ✓ {t('viaTripBesucht')}
+                  {popup.trip ? t('kommtAusReise')(popup.trip.name) : `✓ ${t('viaTripBesucht')}`}
                 </div>
               )
+            ) : popup.isGeplant ? (
+              <>
+                <div style={{
+                  padding: '8px 10px', borderRadius: '10px', marginBottom: '8px',
+                  backgroundColor: 'rgba(201,168,76,0.12)',
+                  color: 'var(--gold)', fontSize: '0.82rem', fontWeight: '600',
+                  textAlign: 'center',
+                }}>
+                  {t('geplantViaReise')(popup.trip?.name)}
+                </div>
+                <button onClick={() => landHinzufuegen(popup.code)} className="btn-press" style={{
+                  width: '100%', padding: '8px 10px', minHeight: '44px', boxSizing: 'border-box', borderRadius: '10px',
+                  border: 'none', backgroundColor: 'var(--border)',
+                  color: 'var(--gold)', cursor: 'pointer',
+                  fontSize: '0.82rem', fontWeight: '600',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px',
+                }}>
+                  <Plus size={14} /> {t('alsBesuchtMarkieren')}
+                </button>
+              </>
             ) : (
               <button onClick={() => landHinzufuegen(popup.code)} className="btn-press" style={{
                 width: '100%', padding: '8px 10px', minHeight: '44px', boxSizing: 'border-box', borderRadius: '10px',
@@ -369,6 +432,22 @@ function MapScreen() {
             )}
           </div>
         )}
+      </div>
+
+      {/* Legende unter der Karte (K11/W16) */}
+      <div className="fade-in" style={{ display: 'flex', gap: '18px', flexWrap: 'wrap', marginBottom: '14px', padding: '0 4px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span style={{ width: '12px', height: '12px', borderRadius: '3px', backgroundColor: '#c9a84c', flexShrink: 0 }} />
+          <span style={{ fontSize: '0.78rem', color: 'var(--text-sub)' }}>{t('legendeBereist')}</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span style={{ width: '12px', height: '12px', borderRadius: '3px', backgroundColor: 'rgba(201,168,76,0.35)', flexShrink: 0 }} />
+          <span style={{ fontSize: '0.78rem', color: 'var(--text-sub)' }}>{t('legendeGeplant')}</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span style={{ width: '12px', height: '12px', borderRadius: '3px', backgroundColor: '#1a2235', flexShrink: 0, border: '1px solid var(--border)' }} />
+          <span style={{ fontSize: '0.78rem', color: 'var(--text-sub)' }}>{t('legendeUnbekannt')}</span>
+        </div>
       </div>
 
       {/* Land hinzufügen über Suchleiste */}
@@ -476,7 +555,7 @@ function MapScreen() {
                     {land?.name || eintrag.country_code}
                   </span>
                   {/* Nur manuell hinzugefügte Länder können entfernt werden */}
-                  {!eintrag.trip_id && (
+                  {!eintrag.trip && (
                     <button onClick={() => landEntfernen(eintrag.country_code)} className="btn-press" style={{
                       background: 'none', border: 'none', color: '#e94560',
                       cursor: 'pointer', width: '34px', height: '34px', margin: '-6px',
@@ -490,6 +569,49 @@ function MapScreen() {
                       }}>×</span>
                     </button>
                   )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Geplante Länder – nur aus kommenden Reisen, nicht manuell entfernbar */}
+      {geplant.length > 0 && (
+        <div className="fade-in" style={karteStyle}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
+            <h3 style={{ margin: 0, fontWeight: '700', fontSize: '1rem' }}>{t('geplanteLaender')}</h3>
+            <span style={{
+              backgroundColor: 'rgba(201,168,76,0.15)',
+              color: 'var(--gold)',
+              fontSize: '0.75rem',
+              fontWeight: '700',
+              padding: '3px 9px',
+              borderRadius: '50px',
+            }}>
+              {geplant.length}
+            </span>
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            {geplant.map((eintrag, index) => {
+              const land = laender.find(l => l.code === eintrag.country_code)
+              return (
+                <div key={eintrag.country_code} className={`fade-in-${Math.min(index + 1, 5)}`} style={{
+                  backgroundColor: 'rgba(201,168,76,0.08)',
+                  borderRadius: '50px',
+                  padding: '7px 10px 7px 8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '7px',
+                }}>
+                  <img
+                    src={`https://flagcdn.com/w20/${eintrag.country_code.toLowerCase()}.png`}
+                    alt=""
+                    style={{ width: '18px', borderRadius: '2px', flexShrink: 0, opacity: 0.85 }}
+                  />
+                  <span style={{ fontSize: '0.85rem', fontWeight: '500', color: 'var(--text-sub)', overflowWrap: 'break-word', wordBreak: 'break-word' }}>
+                    {land?.name || eintrag.country_code}
+                  </span>
                 </div>
               )
             })}
