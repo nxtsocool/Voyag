@@ -6,7 +6,10 @@ import useBodyScrollLock from '../hooks/useBodyScrollLock'
 
 export default function SettingsScreen() {
   const [user, setUser] = useState(null)
-  const [profile, setProfile] = useState({ name: '', bio: '', waehrung: '€', sprache: 'de', design: 'dark' })
+  // Nur Profilfelder ohne eigenes Context-Gegenstück – Währung/Sprache/Design
+  // kommen direkt aus useSettings(), damit hier keine veraltete Kopie mehr
+  // existiert, die beim Speichern versehentlich das aktuelle Design überschreibt
+  const [profile, setProfile] = useState({ name: '', bio: '' })
   const [laden, setLaden] = useState(true)
   const [profilBearbeiten, setProfilBearbeiten] = useState(false)
   const [passwortDaten, setPasswortDaten] = useState({ neu: '', bestaetigung: '' })
@@ -14,7 +17,12 @@ export default function SettingsScreen() {
   const [loeschenOffen, setLoeschenOffen] = useState(false)
   const [nachricht, setNachricht] = useState('')
   const [appInfoOffen, setAppInfoOffen] = useState(false)
-  const { setWaehrung: setGlobalWaehrung, setSprache: setGlobalSprache, setDesign: setGlobalDesign, t } = useSettings()
+  const {
+    waehrung, setWaehrung: setGlobalWaehrung,
+    sprache, setSprache: setGlobalSprache,
+    design, setDesign: setGlobalDesign,
+    t,
+  } = useSettings()
   useBodyScrollLock(loeschenOffen)
 
   useEffect(() => {
@@ -22,25 +30,17 @@ export default function SettingsScreen() {
       const { data: { user } } = await supabase.auth.getUser()
       setUser(user)
       const { data } = await supabase
-        .from('profiles').select('*').eq('id', user.id).single()
-      if (data) setProfile({
-        name: data.name || '',
-        bio: data.bio || '',
-        waehrung: data.waehrung || '€',
-        sprache: data.sprache || 'de',
-        design: data.design || 'dark',
-      })
+        .from('profiles').select('name, bio').eq('id', user.id).single()
+      if (data) setProfile({ name: data.name || '', bio: data.bio || '' })
       setLaden(false)
     }
     laden()
   }, [])
 
   const profilSpeichern = async () => {
-    const { error } = await supabase.from('profiles').upsert({
-      id: user.id, name: profile.name, bio: profile.bio,
-      email: user.email, waehrung: profile.waehrung,
-      sprache: profile.sprache, design: profile.design,
-    })
+    const { error } = await supabase.from('profiles')
+      .update({ name: profile.name, bio: profile.bio })
+      .eq('id', user.id)
     if (error) console.error('Fehler:', error)
     else {
       setNachricht(t('profilGespeichert'))
@@ -49,22 +49,14 @@ export default function SettingsScreen() {
     }
   }
 
-  // Einstellung direkt speichern ohne Formular
+  // Einstellung direkt speichern ohne Formular – nur das geänderte Feld wird
+  // in der DB aktualisiert, nicht der komplette Datensatz
   const einstellungSpeichern = async (key, value) => {
-    setProfile(p => ({ ...p, [key]: value }))
-
-    // Auch globalen Context updaten falls Währung geändert wird
     if (key === 'waehrung') setGlobalWaehrung(value)
     if (key === 'sprache') setGlobalSprache(value)
     if (key === 'design') setGlobalDesign(value)
 
-    await supabase.from('profiles').upsert({
-      id: user.id, email: user.email,
-      name: profile.name, bio: profile.bio,
-      waehrung: key === 'waehrung' ? value : profile.waehrung,
-      sprache: key === 'sprache' ? value : profile.sprache,
-      design: key === 'design' ? value : profile.design,
-    })
+    await supabase.from('profiles').update({ [key]: value }).eq('id', user.id)
     setNachricht(t('gespeichertHaken'))
     setTimeout(() => setNachricht(''), 2000)
   }
@@ -290,8 +282,8 @@ export default function SettingsScreen() {
                   className="btn-press" style={{
                     padding: '0 16px', minHeight: '44px', display: 'flex', alignItems: 'center', borderRadius: '12px', cursor: 'pointer',
                     fontWeight: '600', fontSize: '0.9rem', border: 'none',
-                    backgroundColor: profile.waehrung === w ? 'var(--gold)' : 'var(--sub)',
-                    color: profile.waehrung === w ? '#0a0f1e' : 'var(--text-sub)',
+                    backgroundColor: waehrung === w ? 'var(--gold)' : 'var(--sub)',
+                    color: waehrung === w ? '#0a0f1e' : 'var(--text-sub)',
                   }}>
                   {w}
                 </button>
@@ -311,8 +303,8 @@ export default function SettingsScreen() {
                   className="btn-press" style={{
                     padding: '0 16px', minHeight: '44px', display: 'flex', alignItems: 'center', borderRadius: '12px', cursor: 'pointer',
                     fontWeight: '600', fontSize: '0.9rem', border: 'none',
-                    backgroundColor: profile.sprache === s.code ? 'var(--gold)' : 'var(--sub)',
-                    color: profile.sprache === s.code ? '#0a0f1e' : 'var(--text-sub)',
+                    backgroundColor: sprache === s.code ? 'var(--gold)' : 'var(--sub)',
+                    color: sprache === s.code ? '#0a0f1e' : 'var(--text-sub)',
                   }}>
                   {s.label}
                 </button>
@@ -332,8 +324,8 @@ export default function SettingsScreen() {
                   className="btn-press" style={{
                     padding: '0 16px', minHeight: '44px', display: 'flex', alignItems: 'center', borderRadius: '12px', cursor: 'pointer',
                     fontWeight: '600', fontSize: '0.9rem', border: 'none',
-                    backgroundColor: profile.design === d.code ? 'var(--gold)' : 'var(--sub)',
-                    color: profile.design === d.code ? '#0a0f1e' : 'var(--text-sub)',
+                    backgroundColor: design === d.code ? 'var(--gold)' : 'var(--sub)',
+                    color: design === d.code ? '#0a0f1e' : 'var(--text-sub)',
                   }}>
                   {t(d.labelKey)}
                 </button>
