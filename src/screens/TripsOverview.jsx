@@ -155,6 +155,17 @@ function TripsOverview() {
     if (error) console.error('Fehler:', error)
     else {
       setTrips([...trips, tripData[0]])
+
+      // Ersteller automatisch als verknüpften Teilnehmer anlegen (U2) – so ist
+      // "Bezahlt von" im Kosten-Sheet direkt vorbelegbar und die "Dein Anteil"/
+      // Saldo-Zeile funktioniert sofort ab der ersten Ausgabe
+      const { data: eigenesProfil } = await supabase.from('profiles').select('name').eq('id', user.id).single()
+      await supabase.from('teilnehmer').insert([{
+        trip_id: tripData[0].id,
+        name: eigenesProfil?.name?.trim() || user.email.split('@')[0],
+        user_id: user.id,
+      }])
+
       // NEU – erst prüfen ob Land schon vorhanden:
       const { data: vorhanden } = await supabase
         .from('visited_countries')

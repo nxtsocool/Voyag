@@ -2,20 +2,12 @@ import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { supabase } from '../supabase'
 import TripNav from '../components/TripNav'
-import { UserPlus, BadgeCheck, Search, Link2Off, Copy, Check, Share2 } from 'lucide-react'
+import { UserPlus, BadgeCheck, Search, Link2Off, Copy, Check, Share2, SquarePen, X } from 'lucide-react'
 import { useSettings } from '../context/SettingsContext'
 import Toast from '../components/Toast'
 import useToast from '../hooks/useToast.jsx'
 import useBodyScrollLock from '../hooks/useBodyScrollLock'
 import TripNichtGefunden from '../components/TripNichtGefunden'
-
-// Wandelt das fuer-Feld sicher in ein Array um – Supabase liefert es mal als
-// JSON-String, mal als echtes Array zurück (gleiche Logik wie in TripKosten.jsx)
-const fuerAlsArray = (fuer) => {
-  if (!fuer) return []
-  if (Array.isArray(fuer)) return fuer
-  try { return JSON.parse(fuer) } catch { return [] }
-}
 
 export default function TripPersonen() {
   const { id } = useParams()
@@ -24,12 +16,16 @@ export default function TripPersonen() {
   const [trip, setTrip] = useState(null)
   const [teilnehmer, setTeilnehmer] = useState([])
   const [ausgaben, setAusgaben] = useState([])
+  const [abrechnungen, setAbrechnungen] = useState([])
   const [profile, setProfile] = useState({})
   const [neuerTeilnehmer, setNeuerTeilnehmer] = useState('')
   const [laden, setLaden] = useState(true)
-  // Teilnehmer der entfernt werden soll, aber erst noch bestätigt werden muss
-  // (weil er bereits Ausgaben bezahlt hat/ihm Ausgaben zugeordnet sind)
+  // Teilnehmer, der entfernt werden soll – wird nur angezeigt, wenn er bereits
+  // in Ausgaben/Abrechnungen vorkommt (dann erklärendes Sheet ohne Löschoption)
   const [entferneTeilnehmer, setEntferneTeilnehmer] = useState(null)
+  // Teilnehmer, der gerade umbenannt wird (K6)
+  const [umbenenneTeilnehmer, setUmbenenneTeilnehmer] = useState(null)
+  const [umbenennenText, setUmbenennenText] = useState('')
 
   // State für User verknüpfen – exakte Email-Suche per RPC statt Live-Suche,
   // damit man nicht beliebig nach Name/Email anderer Nutzer stöbern kann (K5)
@@ -51,12 +47,13 @@ export default function TripPersonen() {
       // Trip, Teilnehmer und Ausgaben hängen nur von der Trip-ID ab, nicht
       // voneinander – parallel laden. Profile hängen von den Teilnehmern ab
       // und werden erst danach geladen.
-      const [tripRes, teilnehmerRes, ausgabenRes] = await Promise.all([
+      const [tripRes, teilnehmerRes, ausgabenRes, abrechnungenRes] = await Promise.all([
         supabase.from('trips').select('*').eq('id', id).single(),
         supabase.from('teilnehmer').select('*').eq('trip_id', id),
-        // Ausgaben werden geladen um vor dem Entfernen eines Teilnehmers zu prüfen,
-        // ob er bereits etwas bezahlt hat oder ihm eine Ausgabe zugeordnet ist
+        // Ausgaben/Abrechnungen werden geladen um vor dem Entfernen eines
+        // Teilnehmers zu prüfen, ob er darin noch vorkommt (K6)
         supabase.from('ausgaben').select('*').eq('trip_id', id),
+        supabase.from('abrechnungen').select('*').eq('trip_id', id),
       ])
 
       if (tripRes.error) console.error('Fehler beim Laden des Trips:', tripRes.error)
@@ -64,14 +61,15 @@ export default function TripPersonen() {
 
       if (!tripRes.data) { setLaden(false); return }
 
-      if (teilnehmerRes.error || ausgabenRes.error) {
-        console.error('Fehler beim Laden der Trip-Daten:', teilnehmerRes.error || ausgabenRes.error)
+      if (teilnehmerRes.error || ausgabenRes.error || abrechnungenRes.error) {
+        console.error('Fehler beim Laden der Trip-Daten:', teilnehmerRes.error || ausgabenRes.error || abrechnungenRes.error)
         toast(t('verbindungsfehler'), 'error')
       }
 
       const teilnehmerData = teilnehmerRes.data || []
       setTeilnehmer(teilnehmerData)
       setAusgaben(ausgabenRes.data || [])
+      setAbrechnungen(abrechnungenRes.data || [])
 
       // Profile der verknüpften User laden
       const userIds = teilnehmerData
@@ -97,9 +95,8 @@ export default function TripPersonen() {
     if (speichernLaeuft) return
     if (!neuerTeilnehmer) return
 
-    // Namensdopplung verhindern – ausgaben.bezahlt_von/fuer speichern den Namen als
-    // String, nicht die teilnehmer.id, daher würden zwei gleichnamige Teilnehmer
-    // zu falschen Saldo-Berechnungen führen
+    // Namensdopplung verhindern – rein für die Übersichtlichkeit (die
+    // Kostenaufteilung selbst ist ID-basiert und damit robust gegen gleiche Namen)
     const nameNormalisiert = neuerTeilnehmer.trim().toLowerCase()
     if (teilnehmer.some(p => p.name.trim().toLowerCase() === nameNormalisiert)) {
       toast(t('teilnehmerNameVorhanden'), 'error')
@@ -122,25 +119,48 @@ export default function TripPersonen() {
     }
   }
 
-  // Summe der von diesem Teilnehmer bezahlten Ausgaben (für die Lösch-Warnung)
-  const teilnehmerBezahltBetrag = (name) =>
-    ausgaben.filter(a => a.bezahlt_von === name).reduce((sum, a) => sum + a.betrag, 0)
+  // Ausgaben, an denen dieser Teilnehmer beteiligt ist (bezahlt oder im "für wen") –
+  // ID-basiert, damit Umbenennungen/Namensgleichheit keine Rolle spielen (K6)
+  const teilnehmerAusgaben = (teilnehmerId) =>
+    ausgaben.filter(a => a.bezahlt_von_id === teilnehmerId || (a.fuer_ids || []).includes(teilnehmerId))
 
-  // Prüft ob der Teilnehmer in irgendeiner Ausgabe vorkommt (bezahlt_von oder fuer)
-  const teilnehmerWirdVerwendet = (name) =>
-    ausgaben.some(a => a.bezahlt_von === name || fuerAlsArray(a.fuer).includes(name))
+  // Prüft ob der Teilnehmer in irgendeiner Ausgabe oder Abrechnung vorkommt
+  const teilnehmerWirdVerwendet = (teilnehmerId) =>
+    teilnehmerAusgaben(teilnehmerId).length > 0 ||
+    abrechnungen.some(ab => ab.von_id === teilnehmerId || ab.an_id === teilnehmerId)
 
-  // Teilnehmer entfernen
+  // Teilnehmer entfernen – nur möglich, wenn er nirgends mehr verwendet wird
   const teilnehmerEntfernen = async (teilnehmerId) => {
     const { error } = await supabase.from('teilnehmer').delete().eq('id', teilnehmerId)
-    if (error) console.error('Fehler:', error)
-    else setTeilnehmer(teilnehmer.filter(t => t.id !== teilnehmerId))
+    if (error) { console.error('Fehler:', error); toast(t('verbindungsfehler'), 'error'); return }
+    setTeilnehmer(teilnehmer.filter(t => t.id !== teilnehmerId))
   }
 
-  // Löschen anstoßen – zeigt bei Verwendung in Ausgaben erst eine Warnung an
+  // Löschen anstoßen – bei Verwendung in Ausgaben/Abrechnungen wird nur eine
+  // Erklärung mit der Liste der betroffenen Ausgaben gezeigt, keine Löschung (K6)
   const teilnehmerEntfernenAnfragen = (person) => {
-    if (teilnehmerWirdVerwendet(person.name)) setEntferneTeilnehmer(person)
+    if (teilnehmerWirdVerwendet(person.id)) setEntferneTeilnehmer(person)
     else teilnehmerEntfernen(person.id)
+  }
+
+  // Teilnehmer umbenennen (K6) – gleiche Dublettenprüfung wie beim Anlegen
+  const teilnehmerUmbenennen = async (person) => {
+    const neuerName = umbenennenText.trim()
+    if (!neuerName) { setUmbenenneTeilnehmer(null); return }
+    if (neuerName === person.name) { setUmbenenneTeilnehmer(null); return }
+
+    const nameNormalisiert = neuerName.toLowerCase()
+    if (teilnehmer.some(p => p.id !== person.id && p.name.trim().toLowerCase() === nameNormalisiert)) {
+      toast(t('teilnehmerNameVorhanden'), 'error')
+      return
+    }
+
+    const { error } = await supabase.from('teilnehmer').update({ name: neuerName }).eq('id', person.id)
+    if (error) { console.error('Fehler:', error); toast(t('verbindungsfehler'), 'error'); return }
+
+    setTeilnehmer(teilnehmer.map(p => p.id === person.id ? { ...p, name: neuerName } : p))
+    setUmbenenneTeilnehmer(null)
+    toast(t('teilnehmerUmbenennenGespeichert'), 'success')
   }
 
   // Bereits mit dieser Reise verknüpfte User-IDs
@@ -327,10 +347,36 @@ export default function TripPersonen() {
                     </div>
 
                     {/* Name + Status */}
-                    <div style={{ minWidth: 0 }}>
-                      <p style={{ fontWeight: '700', margin: '0 0 3px', fontSize: '1rem', overflowWrap: 'break-word', wordBreak: 'break-word' }}>
-                        {person.name}
-                      </p>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      {umbenenneTeilnehmer === person.id ? (
+                        <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '3px' }} onClick={(e) => e.stopPropagation()}>
+                          <input
+                            value={umbenennenText}
+                            onChange={(e) => setUmbenennenText(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') teilnehmerUmbenennen(person)
+                              if (e.key === 'Escape') setUmbenenneTeilnehmer(null)
+                            }}
+                            autoFocus
+                            style={{ ...inputStyle, marginBottom: 0, padding: '6px 10px', fontSize: '0.9rem', flex: 1, minWidth: 0 }}
+                          />
+                          <button onClick={() => teilnehmerUmbenennen(person)} className="btn-press" style={{ ...ikonButtonMiniStyle, color: 'var(--gold)' }}>
+                            <Check size={14} />
+                          </button>
+                          <button onClick={() => setUmbenenneTeilnehmer(null)} className="btn-press" style={ikonButtonMiniStyle}>
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ) : (
+                        <p
+                          onClick={() => { setUmbenenneTeilnehmer(person.id); setUmbenennenText(person.name) }}
+                          className="btn-press"
+                          style={{ fontWeight: '700', margin: '0 0 3px', fontSize: '1rem', overflowWrap: 'break-word', wordBreak: 'break-word', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                        >
+                          {person.name}
+                          <SquarePen size={12} color="var(--text-sub)" />
+                        </p>
+                      )}
                       {verknuepftProfil ? (
                         <p style={{ color: 'var(--gold)', fontSize: '0.78rem', margin: 0, fontWeight: '600', overflowWrap: 'break-word', wordBreak: 'break-word' }}>
                           @{verknuepftProfil.name || t('voyagNutzerFallback')}
@@ -608,7 +654,8 @@ export default function TripPersonen() {
         </div>
       )}
 
-      {/* Bestätigungs-Bottom-Sheet zum Entfernen eines Teilnehmers mit bereits bezahlten Ausgaben */}
+      {/* Erklärungs-Bottom-Sheet: Entfernen nicht möglich, solange der Teilnehmer noch
+          in Ausgaben/Abrechnungen vorkommt – keine Löschoption (K6) */}
       {entferneTeilnehmer && (
         <div
           onClick={() => setEntferneTeilnehmer(null)}
@@ -633,21 +680,31 @@ export default function TripPersonen() {
           >
             <div style={{ width: '40px', height: '4px', backgroundColor: 'var(--sub)', borderRadius: '2px', margin: '0 auto 24px' }} />
             <h3 style={{ margin: '0 0 8px', fontWeight: '700', fontSize: '1.2rem' }}>
-              {t('teilnehmerEntfernenTitel')}
+              {t('teilnehmerEntfernenNichtMoeglichTitel')}
             </h3>
-            <p style={{ color: 'var(--text-sub)', margin: '0 0 24px', fontSize: '0.92rem', lineHeight: 1.5 }}>
-              {t('teilnehmerEntfernenWarnung')(entferneTeilnehmer.name, `${teilnehmerBezahltBetrag(entferneTeilnehmer.name).toFixed(2)}${waehrung}`)}
+            <p style={{ color: 'var(--text-sub)', margin: '0 0 18px', fontSize: '0.92rem', lineHeight: 1.5 }}>
+              {t('teilnehmerEntfernenNichtMoeglichText')(entferneTeilnehmer.name)}
             </p>
+            <div style={{ marginBottom: '20px' }}>
+              {teilnehmerAusgaben(entferneTeilnehmer.id).map(ausgabe => (
+                <div key={ausgabe.id} style={{
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  padding: '10px 0', borderBottom: '1px solid var(--border)', gap: '10px',
+                }}>
+                  <span style={{ fontSize: '0.88rem', overflowWrap: 'break-word', wordBreak: 'break-word', minWidth: 0 }}>
+                    {ausgabe.beschreibung}
+                  </span>
+                  <span style={{ fontSize: '0.88rem', fontWeight: '700', color: 'var(--gold)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                    {Number(ausgabe.betrag).toFixed(2)}{waehrung}
+                  </span>
+                </div>
+              ))}
+            </div>
             <div style={{ display: 'flex', gap: '10px' }}>
-              <button onClick={() => { teilnehmerEntfernen(entferneTeilnehmer.id); setEntferneTeilnehmer(null) }} className="btn-press" style={{
-                backgroundColor: '#e94560', color: '#fff', border: 'none',
-                padding: '14px', minHeight: '48px', boxSizing: 'border-box', borderRadius: '14px', cursor: 'pointer',
-                flex: 1, fontWeight: '700', fontSize: '0.95rem',
-              }}>{t('loeschen')}</button>
               <button onClick={() => setEntferneTeilnehmer(null)} className="btn-press" style={{
-                backgroundColor: 'var(--sub)', color: 'var(--text)', border: 'none',
-                padding: '14px', minHeight: '48px', boxSizing: 'border-box', borderRadius: '14px', cursor: 'pointer', flex: 1, fontWeight: '600',
-              }}>{t('abbrechen')}</button>
+                backgroundColor: 'var(--gold)', color: '#0a0f1e', border: 'none',
+                padding: '14px', minHeight: '48px', boxSizing: 'border-box', borderRadius: '14px', cursor: 'pointer', flex: 1, fontWeight: '700',
+              }}>{t('verstandenBtn')}</button>
             </div>
           </div>
         </div>
@@ -675,4 +732,12 @@ const inputStyle = {
   // min. 16px verhindert Auto-Zoom bei Fokus auf iOS Safari
   color: 'var(--text)', fontSize: '16px',
   boxSizing: 'border-box', marginBottom: '10px',
+}
+
+// Kleine runde Icon-Buttons neben dem Umbenennen-Eingabefeld
+const ikonButtonMiniStyle = {
+  backgroundColor: 'var(--sub)', border: 'none',
+  width: '32px', height: '32px', borderRadius: '50%', flexShrink: 0,
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+  cursor: 'pointer', color: 'var(--text-sub)',
 }

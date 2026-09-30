@@ -3,7 +3,7 @@
 // damit Umbenennungen und Namensgleichheit die Kostenaufteilung nicht verfälschen.
 
 // Anteil eines Teilnehmers an einer Ausgabe – leeres/fehlendes fuer_ids heißt "für alle"
-function anteilBerechnen(ausgabe, teilnehmerId, alleIds) {
+export function anteilBerechnen(ausgabe, teilnehmerId, alleIds) {
   const betroffene = ausgabe.fuer_ids && ausgabe.fuer_ids.length > 0 ? ausgabe.fuer_ids : alleIds
   if (!betroffene.includes(teilnehmerId)) return 0
   return ausgabe.betrag / betroffene.length

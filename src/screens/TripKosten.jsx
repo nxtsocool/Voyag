@@ -12,14 +12,8 @@ import TripNichtGefunden from '../components/TripNichtGefunden'
 import { useSettings } from '../context/SettingsContext'
 import useWechselkurse from '../hooks/useWechselkurse'
 import { WAEHRUNGEN } from '../data/waehrungen'
-
-// Wandelt das fuer-Feld sicher in ein Array um – Supabase liefert es mal als
-// JSON-String, mal als echtes Array zurück
-const fuerAlsArray = (fuer) => {
-  if (!fuer) return []
-  if (Array.isArray(fuer)) return fuer
-  try { return JSON.parse(fuer) } catch { return [] }
-}
+import { saldenBerechnen, schuldenBerechnen, anteilBerechnen } from '../utils/kosten'
+import { heuteISO } from '../utils/datum'
 
 function TripKosten() {
   const { id } = useParams()
@@ -32,6 +26,7 @@ function TripKosten() {
   const [ausgaben, setAusgaben] = useState([])
   const [teilnehmer, setTeilnehmer] = useState([])
   const [abrechnungen, setAbrechnungen] = useState([]) // bereits beglichene Schulden
+  const [currentUserId, setCurrentUserId] = useState(null)
   const [laden, setLaden] = useState(true)
   const [formularOffen, setFormularOffen] = useState(false) // Bottom Sheet für neue Ausgabe
   const [bearbeiteAusgabe, setBearbeiteAusgabe] = useState(null)
@@ -48,7 +43,7 @@ function TripKosten() {
 
   const [neueAusgabe, setNeueAusgabe] = useState({
     beschreibung: '', betrag: '', bezahlt_von: '', fuer: [],
-    datum: new Date().toISOString().split('T')[0],
+    datum: heuteISO(),
     waehrung: { symbol: '€', iso: 'EUR' },
   })
 
@@ -63,12 +58,14 @@ function TripKosten() {
   const { ziehen, fortschritt, schwellenwert } = usePullToRefresh(datenLaden)
 
   async function datenLaden() {
-    // Alle Queries hängen nur von der Trip-ID ab, nicht voneinander – parallel laden
-    const [tripRes, ausgabenRes, teilnehmerRes, abrechnungenRes] = await Promise.all([
+    // Alle Queries hängen nur von der Trip-ID (bzw. dem eingeloggten User) ab,
+    // nicht voneinander – parallel laden
+    const [tripRes, ausgabenRes, teilnehmerRes, abrechnungenRes, authRes] = await Promise.all([
       supabase.from('trips').select('*').eq('id', id).single(),
       supabase.from('ausgaben').select('*').eq('trip_id', id).order('datum', { ascending: false }),
       supabase.from('teilnehmer').select('*').eq('trip_id', id),
       supabase.from('abrechnungen').select('*').eq('trip_id', id),
+      supabase.auth.getUser(),
     ])
 
     if (tripRes.error) console.error('Fehler beim Laden des Trips:', tripRes.error)
@@ -84,11 +81,20 @@ function TripKosten() {
     setAusgaben(ausgabenRes.data || [])
     setTeilnehmer(teilnehmerRes.data || [])
     setAbrechnungen(abrechnungenRes.data || [])
+    setCurrentUserId(authRes.data?.user?.id || null)
 
     setLaden(false)
   }
 
   const gesamt = ausgaben.reduce((sum, a) => sum + a.betrag, 0)
+
+  // Der mit dem eingeloggten User verknüpfte Teilnehmer dieser Reise (U2) –
+  // dient als Vorbelegung für "Bezahlt von" und für die "Dein Anteil"/Saldo-Zeile
+  const eigenerTeilnehmer = teilnehmer.find(p => p.user_id === currentUserId) || null
+
+  // Namen eines Teilnehmers anhand seiner ID auflösen (Anzeige in der Ausgaben-Liste)
+  const teilnehmerName = (teilnehmerId) =>
+    teilnehmer.find(p => p.id === teilnehmerId)?.name || t('unbekannterTeilnehmer')
 
   // Neue Ausgabe speichern
   const ausgabeHinzufuegen = async () => {
@@ -116,10 +122,10 @@ function TripKosten() {
           betrag: parseFloat(betragInHeim.toFixed(2)),
           betrag_original: parseFloat(neueAusgabe.betrag),
           waehrung_original: neueAusgabe.waehrung.symbol,
-          bezahlt_von: neueAusgabe.bezahlt_von,
+          bezahlt_von_id: Number(neueAusgabe.bezahlt_von),
           trip_id: id,
           datum: neueAusgabe.datum,
-          fuer: neueAusgabe.fuer.length > 0 ? neueAusgabe.fuer : null,
+          fuer_ids: neueAusgabe.fuer.length > 0 ? neueAusgabe.fuer : null,
         }])
         .select()
 
@@ -129,8 +135,8 @@ function TripKosten() {
       } else {
         setAusgaben([data[0], ...ausgaben])
         setNeueAusgabe({
-          beschreibung: '', betrag: '', bezahlt_von: '', fuer: [],
-          datum: new Date().toISOString().split('T')[0],
+          beschreibung: '', betrag: '', bezahlt_von: eigenerTeilnehmer ? String(eigenerTeilnehmer.id) : '', fuer: [],
+          datum: heuteISO(),
           waehrung: { symbol: '€', iso: 'EUR' },
         })
         setFormularOffen(false)
@@ -183,76 +189,19 @@ function TripKosten() {
     }
   }
 
-  // Anteil einer Person an einer Ausgabe berechnen
-  function anteilBerechnen(ausgabe, personName) {
-    const fuerArray = fuerAlsArray(ausgabe.fuer)
-    const betroffene = fuerArray.length > 0 ? fuerArray : teilnehmer.map(p => p.name)
-    if (betroffene.includes(personName)) return ausgabe.betrag / betroffene.length
-    return 0
-  }
-
-  // Wer schuldet wem was – abzüglich bereits Abgerechnetem
-  const schuldenBerechnen = () => {
-  if (teilnehmer.length === 0 || gesamt === 0) return []
-  const schulden = []
-
-  // Saldo für jeden berechnen
-  const salden = teilnehmer.map(person => {
-    const bezahlt = ausgaben
-      .filter(a => a.bezahlt_von === person.name)
-      .reduce((sum, a) => sum + a.betrag, 0)
-    const anteil = ausgaben.reduce((sum, a) => sum + anteilBerechnen(a, person.name), 0)
-    const bereitsAbgerechnetAls = abrechnungen
-      .filter(ab => ab.von === person.name)
-      .reduce((sum, ab) => sum + ab.betrag, 0)
-    const bereitsErhaltenAls = abrechnungen
-      .filter(ab => ab.an === person.name)
-      .reduce((sum, ab) => sum + ab.betrag, 0)
-
-    return {
-      name: person.name,
-      saldo: (bezahlt - anteil) + bereitsAbgerechnetAls - bereitsErhaltenAls
-    }
-  })
-
-  // Schuldner (negativ) und Gläubiger (positiv) trennen
-  const schuldner = salden.filter(s => s.saldo < -0.01).map(s => ({ ...s, offen: Math.abs(s.saldo) }))
-  const glaeubiger = salden.filter(s => s.saldo > 0.01).map(s => ({ ...s, offen: s.saldo }))
-
-  // Jeden Schuldner gegen alle Gläubiger aufteilen
-  for (const schuldnerPerson of schuldner) {
-    let nochOffen = schuldnerPerson.offen
-
-    for (const glaeubigerPerson of glaeubiger) {
-      if (nochOffen <= 0.01) break
-      if (glaeubigerPerson.offen <= 0.01) continue
-
-      // Wie viel kann dieser Gläubiger bekommen?
-      const betrag = Math.min(nochOffen, glaeubigerPerson.offen)
-
-      schulden.push({
-        von: schuldnerPerson.name,
-        an: glaeubigerPerson.name,
-        betrag: betrag.toFixed(2),
-      })
-
-      nochOffen -= betrag
-      glaeubigerPerson.offen -= betrag
-    }
-  }
-
-  return schulden
-  }
-
-  const schulden = schuldenBerechnen()
+  // Salden/Schulden werden ID-basiert in utils/kosten.js berechnet (K6) –
+  // Namensgleichheit oder Umbenennungen können die Kostenaufteilung damit
+  // nicht mehr verfälschen
+  const salden = saldenBerechnen(teilnehmer, ausgaben, abrechnungen)
+  const schulden = schuldenBerechnen(teilnehmer, ausgaben, abrechnungen)
 
   // Schuld als bezahlt markieren – mit optimistic update gegen Doppelklicks
   const schuldAbrechnen = async (schuld) => {
-    const schuldKey = `${schuld.von}|${schuld.an}`
+    const schuldKey = `${schuld.vonId}|${schuld.anId}`
     if (abrechnenLaeuft.has(schuldKey)) return
     setAbrechnenLaeuft(prev => new Set(prev).add(schuldKey))
 
-    const neueAbrechnung = { trip_id: id, von: schuld.von, an: schuld.an, betrag: parseFloat(schuld.betrag) }
+    const neueAbrechnung = { trip_id: id, von_id: schuld.vonId, an_id: schuld.anId, betrag: parseFloat(schuld.betrag) }
 
     // Sofort lokal hinzufügen – Schuld verschwindet sofort aus der Liste,
     // verhindert dass durch Doppelklick zweimal abgerechnet wird
@@ -294,16 +243,21 @@ function TripKosten() {
     return datum.toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' })
   }
 
-  // Saldo inkl. Abrechnungen berechnen
-  const saldoBerechnen = (person) => {
-    const bezahlt = ausgaben.filter(a => a.bezahlt_von === person.name).reduce((sum, a) => sum + a.betrag, 0)
-    const anteil = ausgaben.reduce((sum, a) => sum + anteilBerechnen(a, person.name), 0)
-    const beglichenAlsSchuldner = abrechnungen.filter(ab => ab.von === person.name).reduce((sum, ab) => sum + ab.betrag, 0)
-    const beglichenAlsGlaeubiger = abrechnungen.filter(ab => ab.an === person.name).reduce((sum, ab) => sum + ab.betrag, 0)
-    return (bezahlt - anteil) + beglichenAlsSchuldner - beglichenAlsGlaeubiger
-  }
+  const maxSaldo = Math.max(...salden.map(s => Math.abs(s.saldo)), 0.01)
 
-  const maxSaldo = Math.max(...teilnehmer.map(person => Math.abs(saldoBerechnen(person))), 0.01)
+  // Eigener Saldo-Text für die Kopfzeile (U2) – zeigt bei genau einem Gläubiger
+  // dessen Namen, sonst die Gesamtsumme
+  const eigenerSaldoText = () => {
+    if (!eigenerTeilnehmer) return null
+    const eigenerSaldo = salden.find(s => s.id === eigenerTeilnehmer.id)?.saldo || 0
+    if (Math.abs(eigenerSaldo) < 0.01) return t('duBistQuitt')
+    if (eigenerSaldo > 0) return t('duBekommst')(`${eigenerSaldo.toFixed(2)}${waehrung}`)
+    const eigeneSchulden = schulden.filter(s => s.vonId === eigenerTeilnehmer.id)
+    if (eigeneSchulden.length === 1) {
+      return t('duSchuldest')(eigeneSchulden[0].an, `${eigeneSchulden[0].betrag}${waehrung}`)
+    }
+    return t('duSchuldestMehreren')(`${Math.abs(eigenerSaldo).toFixed(2)}${waehrung}`)
+  }
 
   if (laden) return (
     <div style={{ paddingBottom: '40px' }}>
@@ -362,16 +316,35 @@ function TripKosten() {
                 <p style={{ color: '#ffffff', fontWeight: '700', margin: 0, fontSize: '0.95rem' }}>{teilnehmer.length}</p>
               </div>
               <div style={{ width: '1px', backgroundColor: 'rgba(255,255,255,0.1)' }} />
-              <div>
-                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.65rem', margin: '0 0 3px', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: '600' }}>{t('proPerson')}</p>
-                <p style={{ color: '#ffffff', fontWeight: '700', margin: 0, fontSize: '0.95rem' }}>{(gesamt / teilnehmer.length).toFixed(2)}{waehrung}</p>
-              </div>
+              {eigenerTeilnehmer ? (
+                <div>
+                  <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.65rem', margin: '0 0 3px', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: '600' }}>{t('deinAnteil')}</p>
+                  <p style={{ color: '#ffffff', fontWeight: '700', margin: 0, fontSize: '0.95rem' }}>
+                    {ausgaben.reduce((sum, a) => sum + anteilBerechnen(a, eigenerTeilnehmer.id, teilnehmer.map(p => p.id)), 0).toFixed(2)}{waehrung}
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.65rem', margin: '0 0 3px', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: '600' }}>{t('proPerson')}</p>
+                  <p style={{ color: '#ffffff', fontWeight: '700', margin: 0, fontSize: '0.95rem' }}>{(gesamt / teilnehmer.length).toFixed(2)}{waehrung}</p>
+                </div>
+              )}
               <div style={{ width: '1px', backgroundColor: 'rgba(255,255,255,0.1)' }} />
               <div>
                 <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.65rem', margin: '0 0 3px', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: '600' }}>{t('ausgabenLabel')}</p>
                 <p style={{ color: '#ffffff', fontWeight: '700', margin: 0, fontSize: '0.95rem' }}>{ausgaben.length}</p>
               </div>
             </div>
+          )}
+
+          {/* Eigener Saldo (U2) */}
+          {eigenerTeilnehmer && eigenerSaldoText() && (
+            <p style={{
+              color: design === 'light' ? 'rgba(255,255,255,0.9)' : 'var(--gold)',
+              fontWeight: '700', fontSize: '0.88rem', margin: '16px 0 0',
+            }}>
+              {eigenerSaldoText()}
+            </p>
           )}
         </div>
 
@@ -452,10 +425,10 @@ function TripKosten() {
                             <input type="date" value={bearbeiteAusgabe.datum}
                               onChange={(e) => setBearbeiteAusgabe({ ...bearbeiteAusgabe, datum: e.target.value })}
                               style={dateInputStyle} />
-                            <select value={bearbeiteAusgabe.bezahlt_von}
-                              onChange={(e) => setBearbeiteAusgabe({ ...bearbeiteAusgabe, bezahlt_von: e.target.value })}
+                            <select value={bearbeiteAusgabe.bezahlt_von_id}
+                              onChange={(e) => setBearbeiteAusgabe({ ...bearbeiteAusgabe, bezahlt_von_id: e.target.value })}
                               style={{ ...inputStyle, appearance: 'none' }}>
-                              {teilnehmer.map(person => <option key={person.id} value={person.name}>{person.name}</option>)}
+                              {teilnehmer.map(person => <option key={person.id} value={person.id}>{person.name}</option>)}
                             </select>
                             <div style={{ display: 'flex', gap: '8px' }}>
                               <button onClick={async () => {
@@ -469,7 +442,7 @@ function TripKosten() {
                                   betrag: parseFloat(betragInHeim.toFixed(2)),
                                   betrag_original: parseFloat(bearbeiteAusgabe.betrag),
                                   waehrung_original: bearbeiteAusgabe.waehrung.symbol,
-                                  bezahlt_von: bearbeiteAusgabe.bezahlt_von,
+                                  bezahlt_von_id: Number(bearbeiteAusgabe.bezahlt_von_id),
                                   datum: bearbeiteAusgabe.datum,
                                 })
                                 setBearbeiteAusgabe(null)
@@ -501,12 +474,12 @@ function TripKosten() {
                                 </span>
                               </div>
                               <p style={{ color: 'var(--text-sub)', fontSize: '0.78rem', margin: 0, overflowWrap: 'break-word', wordBreak: 'break-word' }}>
-                                {t('bezahltVonText')(ausgabe.bezahlt_von)}
+                                {t('bezahltVonText')(teilnehmerName(ausgabe.bezahlt_von_id))}
                                 {(() => {
-                                  const fuerArr = fuerAlsArray(ausgabe.fuer)
+                                  const fuerArr = ausgabe.fuer_ids || []
                                   const alleBetroffen = fuerArr.length === 0 || fuerArr.length === teilnehmer.length
                                   return (
-                                    <span> · {alleBetroffen ? t('fuerAlleText') : t('fuerWenText')(fuerArr.join(', '))}</span>
+                                    <span> · {alleBetroffen ? t('fuerAlleText') : t('fuerWenText')(fuerArr.map(teilnehmerName).join(', '))}</span>
                                   )
                                 })()}
                               </p>
@@ -515,7 +488,7 @@ function TripKosten() {
                             <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
                               <button onClick={() => setBearbeiteAusgabe({
                                 ...ausgabe,
-                                datum: ausgabe.datum || new Date().toISOString().split('T')[0],
+                                datum: ausgabe.datum || heuteISO(),
                                 betrag: ausgabe.betrag_original != null ? ausgabe.betrag_original : ausgabe.betrag,
                                 waehrung: WAEHRUNGEN.find(w => w.symbol === ausgabe.waehrung_original) || WAEHRUNGEN.find(w => w.iso === heimISO) || WAEHRUNGEN[0],
                               })} className="btn-press" style={ikonButtonStyle}>
@@ -547,7 +520,7 @@ function TripKosten() {
           <div className="fade-in-3" style={karteStyle}>
             <h3 style={{ margin: '0 0 18px', fontWeight: '700', fontSize: '1rem' }}>{t('saldoTitel')}</h3>
             {teilnehmer.map(person => {
-              const saldo = saldoBerechnen(person)
+              const saldo = salden.find(s => s.id === person.id)?.saldo || 0
               const balkenBreite = Math.min((Math.abs(saldo) / maxSaldo) * 100, 100)
               const positiv = saldo >= 0
 
@@ -630,7 +603,12 @@ function TripKosten() {
 
       {/* Floating Action Button – wie bei Splid – bottom berücksichtigt Safe-Area, damit er nicht mit der BottomNav kollidiert */}
       <button
-        onClick={() => setFormularOffen(true)}
+        onClick={() => {
+          if (eigenerTeilnehmer && !neueAusgabe.bezahlt_von) {
+            setNeueAusgabe({ ...neueAusgabe, bezahlt_von: String(eigenerTeilnehmer.id) })
+          }
+          setFormularOffen(true)
+        }}
         className="btn-press"
         style={{
           position: 'fixed', bottom: 'calc(90px + env(safe-area-inset-bottom))', right: '20px',
@@ -723,21 +701,21 @@ function TripKosten() {
               onChange={(e) => setNeueAusgabe({ ...neueAusgabe, bezahlt_von: e.target.value })}
               style={{ ...inputStyle, appearance: 'none' }}>
               <option value="">{t('bezahltVonOption')}</option>
-              {teilnehmer.map(person => <option key={person.id} value={person.name}>{person.name}</option>)}
+              {teilnehmer.map(person => <option key={person.id} value={person.id}>{person.name}</option>)}
             </select>
 
             <p style={{ color: 'var(--text-sub)', marginBottom: '10px', fontSize: '0.82rem' }}>
               {t('fuerWenLeerAlle')}
             </p>
             {teilnehmer.map(person => {
-              const istGewaehlt = neueAusgabe.fuer.includes(person.name)
+              const istGewaehlt = neueAusgabe.fuer.includes(person.id)
               return (
                 <div key={person.id}
                   onClick={() => {
                     const aktuell = neueAusgabe.fuer
-                    const neu = aktuell.includes(person.name)
-                      ? aktuell.filter(p => p !== person.name)
-                      : [...aktuell, person.name]
+                    const neu = aktuell.includes(person.id)
+                      ? aktuell.filter(p => p !== person.id)
+                      : [...aktuell, person.id]
                     setNeueAusgabe({ ...neueAusgabe, fuer: neu })
                   }}
                   className="btn-press"
