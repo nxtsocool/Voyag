@@ -77,6 +77,7 @@ function TripsOverview() {
   const [einladungsCode, setEinladungsCode] = useState('')
   const [beitretenLaeuft, setBeitretenLaeuft] = useState(false)
   const [loescheTrip, setLoescheTrip] = useState(null)
+  const [verlasseTrip, setVerlasseTrip] = useState(null)
   const [bearbeiteTrip, setBearbeiteTrip] = useState(null)
   const [bearbeiteDaten, setBearbeiteDaten] = useState({
     name: '', land_code: '', startDatum: null, endDatum: null, waehrung: 'EUR'
@@ -102,7 +103,7 @@ function TripsOverview() {
   )
 
   useEffect(() => { tripsLaden() }, [])
-  useBodyScrollLock(!!loescheTrip || verknuepfungsModal || waehrungAenderungBestaetigen)
+  useBodyScrollLock(!!loescheTrip || !!verlasseTrip || verknuepfungsModal || waehrungAenderungBestaetigen)
 
   useEffect(() => {
     localStorage.setItem('voyag_ansicht', ansicht)
@@ -299,9 +300,11 @@ function TripsOverview() {
   const reiseVerlassen = async (tripId) => {
     const { data: authData } = await supabase.auth.getUser()
     const user = authData.user
-    await supabase.from('trip_members').delete().eq('trip_id', tripId).eq('user_id', user.id)
+    const { error } = await supabase.from('trip_members').delete().eq('trip_id', tripId).eq('user_id', user.id)
+    if (error) { console.error('Fehler:', error); toast(t('verbindungsfehler'), 'error'); return }
     await supabase.from('visited_countries').delete().eq('trip_id', tripId).eq('user_id', user.id)
     setTrips(trips.filter(t => t.id !== tripId))
+    setVerlasseTrip(null)
   }
 
   const reiseBeitreten = async () => {
@@ -479,7 +482,7 @@ function TripsOverview() {
                   </button>
                 </>
               ) : (
-                <button onClick={(e) => { e.stopPropagation(); reiseVerlassen(trip.id) }}
+                <button onClick={(e) => { e.stopPropagation(); setVerlasseTrip(trip) }}
                   className="btn-press" style={{
                     backgroundColor: design === 'light' ? 'var(--sub)' : 'rgba(255,255,255,0.08)',
                     border: 'none',
@@ -899,6 +902,47 @@ function TripsOverview() {
           </div>
         </div>
       )}
+      {/* Bestätigungsdialog Verlassen (K10) */}
+      {verlasseTrip && (
+        <div onClick={() => setVerlasseTrip(null)} style={{
+          position: 'fixed', inset: 0,
+          backgroundColor: 'rgba(0,0,0,0.6)',
+          display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+          zIndex: 9998,
+        }}>
+          <div onClick={(e) => e.stopPropagation()} className="fade-in" style={{
+            backgroundColor: 'var(--card)', borderRadius: '24px 24px 0 0',
+            width: '100%', maxWidth: '600px',
+            maxHeight: '88vh', overflowY: 'auto', overflowX: 'hidden', boxSizing: 'border-box',
+            padding: '24px 20px calc(32px + env(safe-area-inset-bottom))',
+            zIndex: 9999,
+          }}>
+            <div style={{
+              width: '40px', height: '4px', backgroundColor: 'var(--sub)',
+              borderRadius: '2px', margin: '0 auto 24px',
+            }} />
+            <h3 style={{ margin: '0 0 8px', fontWeight: '700', fontSize: '1.2rem' }}>
+              {t('reiseVerlassenTitel')}
+            </h3>
+            <p style={{ color: 'var(--text-sub)', margin: '0 0 28px', fontSize: '0.95rem', lineHeight: 1.5 }}>
+              {t('reiseVerlassenText')(verlasseTrip.name)}
+            </p>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button onClick={() => reiseVerlassen(verlasseTrip.id)} className="btn-press" style={{
+                backgroundColor: '#e94560', color: '#fff', border: 'none',
+                padding: '14px', borderRadius: '14px', cursor: 'pointer',
+                flex: 1, fontWeight: '700', fontSize: '1rem',
+              }}>
+                {t('verlassen')}
+              </button>
+              <button onClick={() => setVerlasseTrip(null)} className="btn-press" style={abbrechenButtonStyle}>
+                {t('abbrechen')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Verknüpfungs-Modal – Bottom Sheet von unten */}
       {verknuepfungsModal && (
         <div onClick={verknuepfungUeberspringen} style={{
