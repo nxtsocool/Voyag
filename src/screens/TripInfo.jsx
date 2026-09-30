@@ -47,6 +47,13 @@ function TripInfo() {
   const [notizen, setNotizen] = useState('')
   const [notizenBearbeiten, setNotizenBearbeiten] = useState(false)
 
+  // Schützt gegen doppeltes Anlegen/Speichern durch schnelles Doppel-Tippen (K9) –
+  // je Bereich eigener Guard, da theoretisch mehrere Formulare gleichzeitig offen sein können
+  const [flugSpeichernLaeuft, setFlugSpeichernLaeuft] = useState(false)
+  const [unterkunftSpeichernLaeuft, setUnterkunftSpeichernLaeuft] = useState(false)
+  const [linkSpeichernLaeuft, setLinkSpeichernLaeuft] = useState(false)
+  const [notizenSpeichernLaeuft, setNotizenSpeichernLaeuft] = useState(false)
+
   useEffect(() => {
     const datenLaden = async () => {
       // Alle Queries hängen nur von der Trip-ID ab, nicht voneinander – parallel laden
@@ -79,36 +86,48 @@ function TripInfo() {
 
   // Flug hinzufügen
   const flugHinzufuegen = async () => {
+    if (flugSpeichernLaeuft) return
     if (!neuerFlug.titel) return
-    const { data, error } = await supabase
-      .from('trip_fluege')
-      .insert([{ ...neuerFlug, datum: neuerFlug.datum || null, trip_id: id }])
-      .select()
-    if (error) console.error('Fehler:', error)
-    else {
-      setFluege([...fluege, data[0]])
-      setNeuerFlug({ titel: '', flugnummer: '', abflug: '', ankunft: '', datum: '' })
-      setFlugFormularOffen(false)
+    setFlugSpeichernLaeuft(true)
+    try {
+      const { data, error } = await supabase
+        .from('trip_fluege')
+        .insert([{ ...neuerFlug, datum: neuerFlug.datum || null, trip_id: id }])
+        .select()
+      if (error) { console.error('Fehler:', error); toast(t('verbindungsfehler'), 'error') }
+      else {
+        setFluege([...fluege, data[0]])
+        setNeuerFlug({ titel: '', flugnummer: '', abflug: '', ankunft: '', datum: '' })
+        setFlugFormularOffen(false)
+      }
+    } finally {
+      setFlugSpeichernLaeuft(false)
     }
   }
 
   // Flug speichern
   const flugSpeichern = async () => {
+    if (flugSpeichernLaeuft) return
     if (!bearbeiteFlug) return
-    const { error } = await supabase
-      .from('trip_fluege')
-      .update({
-        titel: bearbeiteFlug.titel,
-        flugnummer: bearbeiteFlug.flugnummer,
-        abflug: bearbeiteFlug.abflug,
-        ankunft: bearbeiteFlug.ankunft,
-        datum: bearbeiteFlug.datum || null,
-      })
-      .eq('id', bearbeiteFlug.id)
-    if (error) console.error('Fehler:', error)
-    else {
-      setFluege(fluege.map(f => f.id === bearbeiteFlug.id ? bearbeiteFlug : f))
-      setBearbeiteFlug(null)
+    setFlugSpeichernLaeuft(true)
+    try {
+      const { error } = await supabase
+        .from('trip_fluege')
+        .update({
+          titel: bearbeiteFlug.titel,
+          flugnummer: bearbeiteFlug.flugnummer,
+          abflug: bearbeiteFlug.abflug,
+          ankunft: bearbeiteFlug.ankunft,
+          datum: bearbeiteFlug.datum || null,
+        })
+        .eq('id', bearbeiteFlug.id)
+      if (error) { console.error('Fehler:', error); toast(t('verbindungsfehler'), 'error') }
+      else {
+        setFluege(fluege.map(f => f.id === bearbeiteFlug.id ? bearbeiteFlug : f))
+        setBearbeiteFlug(null)
+      }
+    } finally {
+      setFlugSpeichernLaeuft(false)
     }
   }
 
@@ -120,38 +139,50 @@ function TripInfo() {
 
   // Unterkunft hinzufügen
   const unterkunftHinzufuegen = async () => {
+    if (unterkunftSpeichernLaeuft) return
     if (!neueUnterkunft.titel) return
-    const { data, error } = await supabase
-      .from('trip_unterkuenfte')
-      .insert([{ ...neueUnterkunft, von_datum: neueUnterkunft.von_datum || null, bis_datum: neueUnterkunft.bis_datum || null, trip_id: id }])
-      .select()
-    if (error) console.error('Fehler:', error)
-    else {
-      setUnterkuenfte([...unterkuenfte, data[0]])
-      setNeueUnterkunft({ titel: '', name: '', adresse: '', checkin: '', checkout: '', von_datum: '', bis_datum: '' })
-      setUnterkunftFormularOffen(false)
+    setUnterkunftSpeichernLaeuft(true)
+    try {
+      const { data, error } = await supabase
+        .from('trip_unterkuenfte')
+        .insert([{ ...neueUnterkunft, von_datum: neueUnterkunft.von_datum || null, bis_datum: neueUnterkunft.bis_datum || null, trip_id: id }])
+        .select()
+      if (error) { console.error('Fehler:', error); toast(t('verbindungsfehler'), 'error') }
+      else {
+        setUnterkuenfte([...unterkuenfte, data[0]])
+        setNeueUnterkunft({ titel: '', name: '', adresse: '', checkin: '', checkout: '', von_datum: '', bis_datum: '' })
+        setUnterkunftFormularOffen(false)
+      }
+    } finally {
+      setUnterkunftSpeichernLaeuft(false)
     }
   }
 
   // Unterkunft speichern
   const unterkunftSpeichern = async () => {
+    if (unterkunftSpeichernLaeuft) return
     if (!bearbeiteUnterkunft) return
-    const { error } = await supabase
-      .from('trip_unterkuenfte')
-      .update({
-        titel: bearbeiteUnterkunft.titel,
-        name: bearbeiteUnterkunft.name,
-        adresse: bearbeiteUnterkunft.adresse,
-        checkin: bearbeiteUnterkunft.checkin,
-        checkout: bearbeiteUnterkunft.checkout,
-        von_datum: bearbeiteUnterkunft.von_datum || null,
-        bis_datum: bearbeiteUnterkunft.bis_datum || null,
-      })
-      .eq('id', bearbeiteUnterkunft.id)
-    if (error) console.error('Fehler:', error)
-    else {
-      setUnterkuenfte(unterkuenfte.map(u => u.id === bearbeiteUnterkunft.id ? bearbeiteUnterkunft : u))
-      setBearbeiteUnterkunft(null)
+    setUnterkunftSpeichernLaeuft(true)
+    try {
+      const { error } = await supabase
+        .from('trip_unterkuenfte')
+        .update({
+          titel: bearbeiteUnterkunft.titel,
+          name: bearbeiteUnterkunft.name,
+          adresse: bearbeiteUnterkunft.adresse,
+          checkin: bearbeiteUnterkunft.checkin,
+          checkout: bearbeiteUnterkunft.checkout,
+          von_datum: bearbeiteUnterkunft.von_datum || null,
+          bis_datum: bearbeiteUnterkunft.bis_datum || null,
+        })
+        .eq('id', bearbeiteUnterkunft.id)
+      if (error) { console.error('Fehler:', error); toast(t('verbindungsfehler'), 'error') }
+      else {
+        setUnterkuenfte(unterkuenfte.map(u => u.id === bearbeiteUnterkunft.id ? bearbeiteUnterkunft : u))
+        setBearbeiteUnterkunft(null)
+      }
+    } finally {
+      setUnterkunftSpeichernLaeuft(false)
     }
   }
 
@@ -163,17 +194,23 @@ function TripInfo() {
 
   // Link hinzufügen
   const linkHinzufuegen = async () => {
+    if (linkSpeichernLaeuft) return
     if (!neuerLink.titel || !neuerLink.url) return
-    const url = neuerLink.url.startsWith('http') ? neuerLink.url : `https://${neuerLink.url}`
-    const { data, error } = await supabase
-      .from('trip_links')
-      .insert([{ trip_id: id, titel: neuerLink.titel, url }])
-      .select()
-    if (error) console.error('Fehler:', error)
-    else {
-      setLinks([...links, data[0]])
-      setNeuerLink({ titel: '', url: '' })
-      setLinkFormularOffen(false)
+    setLinkSpeichernLaeuft(true)
+    try {
+      const url = neuerLink.url.startsWith('http') ? neuerLink.url : `https://${neuerLink.url}`
+      const { data, error } = await supabase
+        .from('trip_links')
+        .insert([{ trip_id: id, titel: neuerLink.titel, url }])
+        .select()
+      if (error) { console.error('Fehler:', error); toast(t('verbindungsfehler'), 'error') }
+      else {
+        setLinks([...links, data[0]])
+        setNeuerLink({ titel: '', url: '' })
+        setLinkFormularOffen(false)
+      }
+    } finally {
+      setLinkSpeichernLaeuft(false)
     }
   }
 
@@ -185,8 +222,15 @@ function TripInfo() {
 
   // Notizen speichern
   const notizenSpeichern = async () => {
-    await supabase.from('trips').update({ notizen: notizen || null }).eq('id', id)
-    setNotizenBearbeiten(false)
+    if (notizenSpeichernLaeuft) return
+    setNotizenSpeichernLaeuft(true)
+    try {
+      const { error } = await supabase.from('trips').update({ notizen: notizen || null }).eq('id', id)
+      if (error) { console.error('Fehler:', error); toast(t('verbindungsfehler'), 'error'); return }
+      setNotizenBearbeiten(false)
+    } finally {
+      setNotizenSpeichernLaeuft(false)
+    }
   }
 
   // Fluginfo parsen: "06:30 MUC" → { zeit: "06:30", ort: "MUC" }
@@ -278,8 +322,8 @@ function TripInfo() {
                   onChange={(e) => setNeuerFlug({ ...neuerFlug, ankunft: e.target.value })}
                   style={{ ...inputStyle, marginBottom: 0 }} />
               </div>
-              <button onClick={flugHinzufuegen} className="btn-press" style={{ ...speichernButtonStyle, marginTop: '12px' }}>
-                {t('hinzufuegen')}
+              <button onClick={flugHinzufuegen} disabled={flugSpeichernLaeuft} className="btn-press" style={{ ...speichernButtonStyle, marginTop: '12px', opacity: flugSpeichernLaeuft ? 0.6 : 1 }}>
+                {flugSpeichernLaeuft ? t('wirdGespeichert') : t('hinzufuegen')}
               </button>
             </div>
           )}
@@ -316,7 +360,9 @@ function TripInfo() {
                         style={{ ...inputStyle, marginBottom: 0 }} />
                     </div>
                     <div style={{ display: 'flex', gap: '10px', marginTop: '12px' }}>
-                      <button onClick={flugSpeichern} className="btn-press" style={{ ...speichernButtonStyle, flex: 1 }}>{t('speichern')}</button>
+                      <button onClick={flugSpeichern} disabled={flugSpeichernLaeuft} className="btn-press" style={{ ...speichernButtonStyle, flex: 1, opacity: flugSpeichernLaeuft ? 0.6 : 1 }}>
+                        {flugSpeichernLaeuft ? t('wirdGespeichert') : t('speichern')}
+                      </button>
                       <button onClick={() => setBearbeiteFlug(null)} className="btn-press" style={{ ...abbrechenButtonStyle, flex: 1 }}>{t('abbrechen')}</button>
                     </div>
                   </div>
@@ -441,8 +487,8 @@ function TripInfo() {
                   onChange={(e) => setNeueUnterkunft({ ...neueUnterkunft, checkout: e.target.value })}
                   style={{ ...inputStyle, marginBottom: 0 }} />
               </div>
-              <button onClick={unterkunftHinzufuegen} className="btn-press" style={{ ...speichernButtonStyle, marginTop: '12px' }}>
-                {t('hinzufuegen')}
+              <button onClick={unterkunftHinzufuegen} disabled={unterkunftSpeichernLaeuft} className="btn-press" style={{ ...speichernButtonStyle, marginTop: '12px', opacity: unterkunftSpeichernLaeuft ? 0.6 : 1 }}>
+                {unterkunftSpeichernLaeuft ? t('wirdGespeichert') : t('hinzufuegen')}
               </button>
             </div>
           )}
@@ -493,7 +539,9 @@ function TripInfo() {
                         style={{ ...inputStyle, marginBottom: 0 }} />
                     </div>
                     <div style={{ display: 'flex', gap: '10px', marginTop: '12px' }}>
-                      <button onClick={unterkunftSpeichern} className="btn-press" style={{ ...speichernButtonStyle, flex: 1 }}>{t('speichern')}</button>
+                      <button onClick={unterkunftSpeichern} disabled={unterkunftSpeichernLaeuft} className="btn-press" style={{ ...speichernButtonStyle, flex: 1, opacity: unterkunftSpeichernLaeuft ? 0.6 : 1 }}>
+                        {unterkunftSpeichernLaeuft ? t('wirdGespeichert') : t('speichern')}
+                      </button>
                       <button onClick={() => setBearbeiteUnterkunft(null)} className="btn-press" style={{ ...abbrechenButtonStyle, flex: 1 }}>{t('abbrechen')}</button>
                     </div>
                   </div>
@@ -571,7 +619,9 @@ function TripInfo() {
               <input placeholder={t('urlPlatzhalter')} value={neuerLink.url}
                 onChange={(e) => setNeuerLink({ ...neuerLink, url: e.target.value })}
                 style={inputStyle} />
-              <button onClick={linkHinzufuegen} className="btn-press" style={speichernButtonStyle}>{t('hinzufuegen')}</button>
+              <button onClick={linkHinzufuegen} disabled={linkSpeichernLaeuft} className="btn-press" style={{ ...speichernButtonStyle, opacity: linkSpeichernLaeuft ? 0.6 : 1 }}>
+                {linkSpeichernLaeuft ? t('wirdGespeichert') : t('hinzufuegen')}
+              </button>
             </div>
           )}
 
@@ -630,7 +680,9 @@ function TripInfo() {
                 rows={6}
                 style={{ ...inputStyle, resize: 'vertical', fontFamily: 'inherit', lineHeight: '1.6' }}
               />
-              <button onClick={notizenSpeichern} className="btn-press" style={speichernButtonStyle}>{t('speichern')}</button>
+              <button onClick={notizenSpeichern} disabled={notizenSpeichernLaeuft} className="btn-press" style={{ ...speichernButtonStyle, opacity: notizenSpeichernLaeuft ? 0.6 : 1 }}>
+                {notizenSpeichernLaeuft ? t('wirdGespeichert') : t('speichern')}
+              </button>
             </div>
           ) : (
             <p style={{

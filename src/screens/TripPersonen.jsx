@@ -27,6 +27,7 @@ export default function TripPersonen() {
   // Teilnehmer, der gerade umbenannt wird (K6)
   const [umbenenneTeilnehmer, setUmbenenneTeilnehmer] = useState(null)
   const [umbenennenText, setUmbenennenText] = useState('')
+  const [umbenennenLaeuft, setUmbenennenLaeuft] = useState(false)
 
   // State für User verknüpfen – exakte Email-Suche per RPC statt Live-Suche,
   // damit man nicht beliebig nach Name/Email anderer Nutzer stöbern kann (K5)
@@ -146,8 +147,10 @@ export default function TripPersonen() {
     else teilnehmerEntfernen(person.id)
   }
 
-  // Teilnehmer umbenennen (K6) – gleiche Dublettenprüfung wie beim Anlegen
+  // Teilnehmer umbenennen (K6) – gleiche Dublettenprüfung wie beim Anlegen.
+  // Schützt gegen doppeltes Speichern durch schnelles Doppel-Tippen (K9)
   const teilnehmerUmbenennen = async (person) => {
+    if (umbenennenLaeuft) return
     const neuerName = umbenennenText.trim()
     if (!neuerName) { setUmbenenneTeilnehmer(null); return }
     if (neuerName === person.name) { setUmbenenneTeilnehmer(null); return }
@@ -158,12 +161,17 @@ export default function TripPersonen() {
       return
     }
 
-    const { error } = await supabase.from('teilnehmer').update({ name: neuerName }).eq('id', person.id)
-    if (error) { console.error('Fehler:', error); toast(t('verbindungsfehler'), 'error'); return }
+    setUmbenennenLaeuft(true)
+    try {
+      const { error } = await supabase.from('teilnehmer').update({ name: neuerName }).eq('id', person.id)
+      if (error) { console.error('Fehler:', error); toast(t('verbindungsfehler'), 'error'); return }
 
-    setTeilnehmer(teilnehmer.map(p => p.id === person.id ? { ...p, name: neuerName } : p))
-    setUmbenenneTeilnehmer(null)
-    toast(t('teilnehmerUmbenennenGespeichert'), 'success')
+      setTeilnehmer(teilnehmer.map(p => p.id === person.id ? { ...p, name: neuerName } : p))
+      setUmbenenneTeilnehmer(null)
+      toast(t('teilnehmerUmbenennenGespeichert'), 'success')
+    } finally {
+      setUmbenennenLaeuft(false)
+    }
   }
 
   // Bereits mit dieser Reise verknüpfte User-IDs
@@ -361,12 +369,13 @@ export default function TripPersonen() {
                               if (e.key === 'Escape') setUmbenenneTeilnehmer(null)
                             }}
                             autoFocus
-                            style={{ ...inputStyle, marginBottom: 0, padding: '6px 10px', fontSize: '0.9rem', flex: 1, minWidth: 0 }}
+                            disabled={umbenennenLaeuft}
+                            style={{ ...inputStyle, marginBottom: 0, padding: '6px 10px', fontSize: '0.9rem', flex: 1, minWidth: 0, opacity: umbenennenLaeuft ? 0.6 : 1 }}
                           />
-                          <button onClick={() => teilnehmerUmbenennen(person)} className="btn-press" style={{ ...ikonButtonMiniStyle, color: 'var(--gold)' }}>
+                          <button onClick={() => teilnehmerUmbenennen(person)} disabled={umbenennenLaeuft} className="btn-press" style={{ ...ikonButtonMiniStyle, color: 'var(--gold)', opacity: umbenennenLaeuft ? 0.6 : 1 }}>
                             <Check size={14} />
                           </button>
-                          <button onClick={() => setUmbenenneTeilnehmer(null)} className="btn-press" style={ikonButtonMiniStyle}>
+                          <button onClick={() => setUmbenenneTeilnehmer(null)} disabled={umbenennenLaeuft} className="btn-press" style={{ ...ikonButtonMiniStyle, opacity: umbenennenLaeuft ? 0.6 : 1 }}>
                             <X size={14} />
                           </button>
                         </div>

@@ -87,6 +87,8 @@ function TripsOverview() {
   // Bestätigungs-Sheet beim Ändern der Reisewährung im Bearbeiten-Formular (K1)
   const [waehrungAenderungBestaetigen, setWaehrungAenderungBestaetigen] = useState(false)
   const [waehrungUmrechnenLaeuft, setWaehrungUmrechnenLaeuft] = useState(false)
+  // Schützt gegen doppeltes Anlegen/Speichern einer Reise durch schnelles Doppel-Tippen (K9)
+  const [speichernLaeuft, setSpeichernLaeuft] = useState(false)
   const { umrechnen } = useWechselkurse()
   // Verknüpfungs-Modal State
   const [verknuepfungsModal, setVerknuepfungsModal] = useState(false)
@@ -137,29 +139,32 @@ function TripsOverview() {
   }
 
   const reiseHinzufuegen = async () => {
+    if (speichernLaeuft) return
     if (!neueReise.name || !neueReise.land_code || !neueReise.startDatum || !neueReise.endDatum) return
 
-    const formatDatum = (date) =>
-      `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`
-    const datumText = `${formatDatum(neueReise.startDatum)} - ${formatDatum(neueReise.endDatum)}`
+    setSpeichernLaeuft(true)
+    try {
+      const formatDatum = (date) =>
+        `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`
+      const datumText = `${formatDatum(neueReise.startDatum)} - ${formatDatum(neueReise.endDatum)}`
 
-    const { data: authData } = await supabase.auth.getUser()
-    const user = authData.user
+      const { data: authData } = await supabase.auth.getUser()
+      const user = authData.user
 
-    const code = (() => {
-      const zeichen = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-      let result = ''
-      for (let i = 0; i < 6; i++) result += zeichen.charAt(Math.floor(Math.random() * zeichen.length))
-      return result
-    })()
+      const code = (() => {
+        const zeichen = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+        let result = ''
+        for (let i = 0; i < 6; i++) result += zeichen.charAt(Math.floor(Math.random() * zeichen.length))
+        return result
+      })()
 
-    const { data: tripData, error } = await supabase
-      .from('trips')
-      .insert([{ name: neueReise.name, land_code: neueReise.land_code, datum: datumText, waehrung: neueReise.waehrung || 'EUR', user_id: user.id, invite_code: code }])
-      .select()
+      const { data: tripData, error } = await supabase
+        .from('trips')
+        .insert([{ name: neueReise.name, land_code: neueReise.land_code, datum: datumText, waehrung: neueReise.waehrung || 'EUR', user_id: user.id, invite_code: code }])
+        .select()
 
-    if (error) console.error('Fehler:', error)
-    else {
+      if (error) { console.error('Fehler:', error); toast(t('verbindungsfehler'), 'error'); return }
+
       setTrips([...trips, tripData[0]])
 
       // Ersteller automatisch als verknüpften Teilnehmer anlegen (U2) – so ist
@@ -188,6 +193,8 @@ function TripsOverview() {
       }
       setNeueReise({ name: '', land_code: '', startDatum: null, endDatum: null, waehrung: 'EUR' })
       setFormularOffen(false)
+    } finally {
+      setSpeichernLaeuft(false)
     }
   }
 
@@ -208,25 +215,31 @@ function TripsOverview() {
   }
 
   const reiseSpeichern = async () => {
-    let datumText = bearbeiteTrip.datum
-    if (bearbeiteDaten.startDatum && bearbeiteDaten.endDatum) {
-      const formatDatum = (date) =>
-        `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`
-      datumText = `${formatDatum(bearbeiteDaten.startDatum)} - ${formatDatum(bearbeiteDaten.endDatum)}`
+    if (speichernLaeuft) return
+    setSpeichernLaeuft(true)
+    try {
+      let datumText = bearbeiteTrip.datum
+      if (bearbeiteDaten.startDatum && bearbeiteDaten.endDatum) {
+        const formatDatum = (date) =>
+          `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`
+        datumText = `${formatDatum(bearbeiteDaten.startDatum)} - ${formatDatum(bearbeiteDaten.endDatum)}`
+      }
+
+      const { error } = await supabase
+        .from('trips')
+        .update({ name: bearbeiteDaten.name, land_code: bearbeiteDaten.land_code, datum: datumText, waehrung: bearbeiteDaten.waehrung || 'EUR' })
+        .eq('id', bearbeiteTrip.id)
+
+      if (error) { console.error('Fehler:', error); toast(t('verbindungsfehler'), 'error'); return }
+
+      setTrips(trips.map(t => t.id === bearbeiteTrip.id
+        ? { ...t, name: bearbeiteDaten.name, land_code: bearbeiteDaten.land_code, datum: datumText, waehrung: bearbeiteDaten.waehrung || 'EUR' }
+        : t
+      ))
+      setBearbeiteTrip(null)
+    } finally {
+      setSpeichernLaeuft(false)
     }
-
-    const { error } = await supabase
-      .from('trips')
-      .update({ name: bearbeiteDaten.name, land_code: bearbeiteDaten.land_code, datum: datumText, waehrung: bearbeiteDaten.waehrung || 'EUR' })
-      .eq('id', bearbeiteTrip.id)
-
-    if (error) { console.error('Fehler:', error); toast(t('verbindungsfehler'), 'error'); return }
-
-    setTrips(trips.map(t => t.id === bearbeiteTrip.id
-      ? { ...t, name: bearbeiteDaten.name, land_code: bearbeiteDaten.land_code, datum: datumText, waehrung: bearbeiteDaten.waehrung || 'EUR' }
-      : t
-    ))
-    setBearbeiteTrip(null)
   }
 
   // Reisewährung ändern UND bestehende Ausgaben/Abrechnungen umrechnen (K1) –
@@ -692,7 +705,9 @@ function TripsOverview() {
               minDate={neueReise.startDatum} placeholderText={t('enddatumPlatzhalter')} locale={de}
               dateFormat="dd.MM.yyyy" customInput={<input style={inputStyle} />} />
             <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
-              <button onClick={reiseHinzufuegen} className="btn-press" style={speichernButtonStyle}>{t('erstellen')}</button>
+              <button onClick={reiseHinzufuegen} disabled={speichernLaeuft} className="btn-press" style={{ ...speichernButtonStyle, opacity: speichernLaeuft ? 0.6 : 1 }}>
+                {speichernLaeuft ? t('wirdGespeichert') : t('erstellen')}
+              </button>
               <button onClick={() => setFormularOffen(false)} className="btn-press" style={abbrechenButtonStyle}>{t('abbrechen')}</button>
             </div>
           </div>
@@ -737,7 +752,9 @@ function TripsOverview() {
               minDate={bearbeiteDaten.startDatum} placeholderText={t('neuesEnddatum')} locale={de}
               dateFormat="dd.MM.yyyy" customInput={<input style={inputStyle} />} />
             <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
-              <button onClick={reiseSpeichernAnfragen} className="btn-press" style={speichernButtonStyle}>{t('speichern')}</button>
+              <button onClick={reiseSpeichernAnfragen} disabled={speichernLaeuft} className="btn-press" style={{ ...speichernButtonStyle, opacity: speichernLaeuft ? 0.6 : 1 }}>
+                {speichernLaeuft ? t('wirdGespeichert') : t('speichern')}
+              </button>
               <button onClick={() => setBearbeiteTrip(null)} className="btn-press" style={abbrechenButtonStyle}>{t('abbrechen')}</button>
             </div>
           </div>

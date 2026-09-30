@@ -154,15 +154,21 @@ export default function TripPackliste() {
 
   // Item Text in Supabase speichern
   const itemSpeichern = async () => {
+    if (speichernLaeuft) return
     if (!bearbeiteItem?.text) return
-    const { error } = await supabase
-      .from('packliste').update({ text: bearbeiteItem.text }).eq('id', bearbeiteItem.id)
-    if (error) console.error('Fehler:', error)
-    else {
-      setPackliste(packliste.map(i =>
-        i.id === bearbeiteItem.id ? { ...i, text: bearbeiteItem.text } : i
-      ))
-      setBearbeiteItem(null)
+    setSpeichernLaeuft(true)
+    try {
+      const { error } = await supabase
+        .from('packliste').update({ text: bearbeiteItem.text }).eq('id', bearbeiteItem.id)
+      if (error) { console.error('Fehler:', error); toast(t('verbindungsfehler'), 'error') }
+      else {
+        setPackliste(packliste.map(i =>
+          i.id === bearbeiteItem.id ? { ...i, text: bearbeiteItem.text } : i
+        ))
+        setBearbeiteItem(null)
+      }
+    } finally {
+      setSpeichernLaeuft(false)
     }
   }
 
@@ -268,12 +274,12 @@ export default function TripPackliste() {
                       style={inputStyle}
                     />
                     <div style={{ display: 'flex', gap: '8px' }}>
-                      <button onClick={itemSpeichern} className="btn-press" style={{
+                      <button onClick={itemSpeichern} disabled={speichernLaeuft} className="btn-press" style={{
                         backgroundColor: 'var(--gold)', color: '#0a0f1e', border: 'none',
                         padding: '12px', minHeight: '44px', borderRadius: '12px',
                         cursor: 'pointer', flex: 1, fontWeight: '700', boxSizing: 'border-box',
-                        boxShadow: '0 4px 12px rgba(201,168,76,0.3)',
-                      }}>{t('speichern')}</button>
+                        boxShadow: '0 4px 12px rgba(201,168,76,0.3)', opacity: speichernLaeuft ? 0.6 : 1,
+                      }}>{speichernLaeuft ? t('wirdGespeichert') : t('speichern')}</button>
                       <button onClick={() => setBearbeiteItem(null)} className="btn-press" style={{
                         backgroundColor: 'transparent', color: 'var(--text-sub)',
                         border: '1px solid var(--border)',
