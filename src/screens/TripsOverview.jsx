@@ -14,6 +14,7 @@ import PullToRefreshIndicator from '../components/PullToRefreshIndicator'
 import useBodyScrollLock from '../hooks/useBodyScrollLock'
 import { useSettings } from '../context/SettingsContext'
 import { findeVorauswahl } from '../utils/teilnehmerVerknuepfung'
+import { reiseZeitraum, reiseStatus, tageBis } from '../utils/datum'
 
 
 // Farbe anhand Trip-ID auswählen
@@ -39,16 +40,14 @@ const getRegionFarbe = (code) => {
   if (ozeanien.includes(code)) return { bg: '#0a2028', accent: '#0f3038' }
   return { bg: '#1a1a1a', accent: '#252525' }
 }
-// Countdown berechnen
-const getCountdown = (datum, t) => {
-  if (!datum) return null
-  const startTeil = datum.split(' - ')[0]
-  const teile = startTeil.split('.')
-  if (teile.length < 3) return null
-  const start = new Date(`${teile[2]}-${teile[1]}-${teile[0]}`)
-  const heute = new Date()
-  const tage = Math.ceil((start - heute) / (1000 * 60 * 60 * 24))
-  if (tage < 0) return t('reiseAbgeschlossenStatus')
+// Countdown/Status-Text für die Trip-Karte
+const getCountdown = (trip, t) => {
+  const status = reiseStatus(trip)
+  if (status === 'vergangen') return t('reiseAbgeschlossenStatus')
+  if (status === 'laufend') return t('timelineLaeuftGerade')
+  const { start } = reiseZeitraum(trip)
+  const tage = tageBis(start)
+  if (tage === null) return null
   if (tage === 0) return t('heuteGehtsLosLang')
   if (tage === 1) return t('nochEinTag') // ← Singular
   return t('nochXTage')(tage)
@@ -59,17 +58,8 @@ const getFlaggeUrl = (code) => {
   return `https://flagcdn.com/w40/${code.toLowerCase()}.png`
 }
 
-// Prüft ob eine Reise abgeschlossen ist (Enddatum liegt in der Vergangenheit)
-const istAbgeschlossen = (datum) => {
-  if (!datum) return false
-  const endTeil = datum.split(' - ')[1]
-  if (!endTeil) return false
-  const [tag, monat, jahr] = endTeil.split('.')
-  if (!jahr) return false
-  const ende = new Date(`${jahr}-${monat}-${tag}`)
-  ende.setHours(23, 59, 59)
-  return ende < new Date()
-}
+// Prüft ob eine Reise abgeschlossen ist (letzter Reisetag zählt noch als laufend)
+const istAbgeschlossen = (trip) => reiseStatus(trip) === 'vergangen'
 
 function TripsOverview() {
   const { t, design } = useSettings()
@@ -325,14 +315,14 @@ function TripsOverview() {
   }
 
   // Aktive/kommende Reisen oben, abgeschlossene Reisen unten im Archiv
-  const aktiveTrips = trips.filter(trip => !istAbgeschlossen(trip.datum))
-  const archivierteTrips = trips.filter(trip => istAbgeschlossen(trip.datum))
+  const aktiveTrips = trips.filter(trip => !istAbgeschlossen(trip))
+  const archivierteTrips = trips.filter(trip => istAbgeschlossen(trip))
 
   // Eine Reisekarte rendern – identisch für aktive und archivierte Reisen,
   // archivierte Karten nur gedämpft und mit "Abgeschlossen" statt Countdown
   const renderTripCard = (trip, index, archiviert) => {
     const farbe = getRegionFarbe(trip.land_code)
-    const countdown = archiviert ? t('archivAbgeschlossenLabel') : getCountdown(trip.datum, t)
+    const countdown = archiviert ? t('archivAbgeschlossenLabel') : getCountdown(trip, t)
     const landName = laender.find(l => l.code === trip.land_code)?.name || ''
     const eigenTrip = trip.user_id === currentUser?.id
 

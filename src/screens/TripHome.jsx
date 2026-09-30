@@ -9,6 +9,7 @@ import TripNichtGefunden from '../components/TripNichtGefunden'
 import Toast from '../components/Toast'
 import useToast from '../hooks/useToast.jsx'
 import { useSettings } from '../context/SettingsContext'
+import { reiseZeitraum, reiseStatus, tageBis } from '../utils/datum'
 
 function TripHome() {
   const { id } = useParams()
@@ -55,18 +56,10 @@ function TripHome() {
     setLaden(false)
   }
 
-  // Countdown in Tagen berechnen
-  const getCountdownTage = () => {
-    if (!trip?.datum) return null
-    const startTeil = trip.datum.split(' - ')[0]
-    const teile = startTeil.split('.')
-    if (teile.length < 3) return null
-    const start = new Date(`${teile[2]}-${teile[1]}-${teile[0]}`)
-    const heute = new Date()
-    return Math.ceil((start - heute) / (1000 * 60 * 60 * 24))
-  }
-
-  const tage = getCountdownTage()
+  // Reise-Status und Tage bis zur Abreise zentral über utils/datum berechnen
+  const tripStatus = trip ? reiseStatus(trip) : null
+  const { start: tripStart } = reiseZeitraum(trip)
+  const tage = tripStatus === 'kommend' ? tageBis(tripStart) : null
 
   // Gesamtkosten berechnen
   const gesamt = ausgaben.reduce((sum, a) => sum + a.betrag, 0)
@@ -90,8 +83,17 @@ function TripHome() {
     ? `https://flagcdn.com/w320/${trip.land_code.toLowerCase()}.png`
     : null
 
-  // Countdown Anzeige je nach Status
+  // Countdown-Anzeige je nach Reise-Status
   const renderCountdown = () => {
+    if (tripStatus === 'laufend' || tripStatus === 'vergangen') {
+      return (
+        <span style={{ color: 'var(--gold)', fontWeight: '700', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          {tripStatus === 'laufend' ? t('reiseLaeuft') : t('reiseAbgeschlossenAusruf')} <PartyPopper size={18} />
+        </span>
+      )
+    }
+
+    // Reise steht noch bevor (tripStatus === 'kommend')
     if (tage === null) return (
       <span style={{ color: 'var(--gold)', fontWeight: '600', fontSize: '0.95rem' }}>{trip.datum}</span>
     )
@@ -100,30 +102,11 @@ function TripHome() {
         {t('heuteGehtsLos')} <Rocket size={18} />
       </span>
     )
-
-      if (tage < 0) {
-        const endTeil = trip.datum?.split(' - ')[1]
-        const endTeile = endTeil?.split('.')
-        const enddatum = endTeile?.length >= 3
-          ? new Date(`${endTeile[2]}-${endTeile[1]}-${endTeile[0]}`)
-          : null
-        const nochAktiv = enddatum && enddatum >= new Date()
-
-        return (
-          <span style={{ color: 'var(--gold)', fontWeight: '700', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            {nochAktiv ? t('reiseLaeuft') : t('reiseAbgeschlossenAusruf')} <PartyPopper size={18} />
-          </span>
-        )
-    }
-
-    // Reise steht noch bevor (tage > 0)
-    if (tage > 0) {
-      return (
-        <span style={{ color: 'var(--gold)', fontWeight: '700', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          {t('nochTageBisAbreise')(tage)}
-        </span>
-      )
-    }
+    return (
+      <span style={{ color: 'var(--gold)', fontWeight: '700', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+        {t('nochTageBisAbreise')(tage)}
+      </span>
+    )
   }
 
   return (

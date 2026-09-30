@@ -1,21 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import laender from '../data/laender'
-
-// Start-/Enddatum aus dem "DD.MM.YYYY - DD.MM.YYYY" Format parsen
-const parseZeitraum = (datum) => {
-  if (!datum) return { start: null, ende: null }
-  const [startTeil, endTeil] = datum.split(' - ')
-  const parseDatum = (teil) => {
-    if (!teil) return null
-    const [tag, monat, jahr] = teil.split('.')
-    if (!jahr) return null
-    return new Date(`${jahr}-${monat}-${tag}`)
-  }
-  const start = parseDatum(startTeil)
-  const ende = parseDatum(endTeil)
-  if (ende) ende.setHours(23, 59, 59)
-  return { start, ende }
-}
+import { reiseZeitraum, reiseStatus, tageBis } from '../utils/datum'
 
 // Zeitleisten-Ansicht der Reisen – wird in TripsOverview als Alternative zur Karten-Ansicht eingebettet
 function TripsTimeline({ trips, currentUser, t }) {
@@ -23,17 +8,10 @@ function TripsTimeline({ trips, currentUser, t }) {
 
   const getFlaggeUrl = (code) => code ? `https://flagcdn.com/w40/${code.toLowerCase()}.png` : null
 
-  const heute = new Date()
-
   // Reisen mit Status anreichern
   const angereichert = trips.map(trip => {
-    const { start, ende } = parseZeitraum(trip.datum)
-    let status = 'kommend'
-    if (start && ende) {
-      if (heute > ende) status = 'vergangen'
-      else if (heute >= start && heute <= ende) status = 'laufend'
-    }
-    return { trip, start, ende, status }
+    const { start, ende } = reiseZeitraum(trip)
+    return { trip, start, ende, status: reiseStatus(trip) }
   })
 
   const nichtVergangen = angereichert
@@ -49,12 +27,10 @@ function TripsTimeline({ trips, currentUser, t }) {
     if (eintrag.status === 'laufend') return t('timelineLaeuftGerade')
     if (eintrag.status === 'vergangen') {
       if (!eintrag.ende) return ''
-      const tage = Math.ceil((heute - eintrag.ende) / (1000 * 60 * 60 * 24))
-      return t('timelineVorTagen')(Math.max(tage, 0))
+      return t('timelineVorTagen')(Math.max(-tageBis(eintrag.ende), 0))
     }
     if (!eintrag.start) return ''
-    const tage = Math.ceil((eintrag.start - heute) / (1000 * 60 * 60 * 24))
-    return t('timelineNochTage')(Math.max(tage, 0))
+    return t('timelineNochTage')(Math.max(tageBis(eintrag.start), 0))
   }
 
   const dotFarbe = (status) => {
