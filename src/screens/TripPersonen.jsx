@@ -8,10 +8,11 @@ import Toast from '../components/Toast'
 import useToast from '../hooks/useToast.jsx'
 import useBodyScrollLock from '../hooks/useBodyScrollLock'
 import TripNichtGefunden from '../components/TripNichtGefunden'
+import { WAEHRUNGEN } from '../data/waehrungen'
 
 export default function TripPersonen() {
   const { id } = useParams()
-  const { t, waehrung } = useSettings()
+  const { t } = useSettings()
   const { toasts, setToasts, toast } = useToast()
   const [trip, setTrip] = useState(null)
   const [teilnehmer, setTeilnehmer] = useState([])
@@ -40,6 +41,8 @@ export default function TripPersonen() {
   const [codeKopiert, setCodeKopiert] = useState(false)
   // Schützt gegen doppeltes Anlegen eines Teilnehmers durch schnelles Doppel-Tippen
   const [speichernLaeuft, setSpeichernLaeuft] = useState(false)
+  // Ausgaben-Beträge sind immer in Trip-Währung (K1)
+  const tripSymbol = WAEHRUNGEN.find(w => w.iso === (trip?.waehrung || 'EUR'))?.symbol || '€'
   useBodyScrollLock(!!loeseVerknuepfungTeilnehmer || !!entferneTeilnehmer)
 
   useEffect(() => {
@@ -695,7 +698,7 @@ export default function TripPersonen() {
                     {ausgabe.beschreibung}
                   </span>
                   <span style={{ fontSize: '0.88rem', fontWeight: '700', color: 'var(--gold)', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                    {Number(ausgabe.betrag).toFixed(2)}{waehrung}
+                    {Number(ausgabe.betrag).toFixed(2)}{tripSymbol}
                   </span>
                 </div>
               ))}

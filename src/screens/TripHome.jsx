@@ -10,6 +10,7 @@ import Toast from '../components/Toast'
 import useToast from '../hooks/useToast.jsx'
 import { useSettings } from '../context/SettingsContext'
 import { reiseZeitraum, reiseStatus, tageBis } from '../utils/datum'
+import { WAEHRUNGEN } from '../data/waehrungen'
 
 function TripHome() {
   const { id } = useParams()
@@ -246,7 +247,7 @@ function TripHome() {
           <div style={{ ...iconWrapStyle, marginBottom: 0 }}><Wallet size={20} color="var(--gold)" /></div>
           <div style={{ minWidth: 0 }}>
             <p style={kachelTitelStyle}>{t('navKosten')}</p>
-            <p style={kachelSubStyle}>{t('kostenAusgegeben')(gesamt.toFixed(0))}</p>
+            <p style={kachelSubStyle}>{t('kostenAusgegeben')(gesamt.toFixed(0), WAEHRUNGEN.find(w => w.iso === (trip.waehrung || 'EUR'))?.symbol || '€')}</p>
           </div>
         </div>
 

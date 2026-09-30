@@ -3,6 +3,7 @@ import { supabase } from '../supabase'
 import { User, Lock, Trash2, LogOut, Mail, ChevronRight, Globe, Palette, DollarSign, Info } from 'lucide-react'
 import { useSettings } from '../context/SettingsContext'
 import useBodyScrollLock from '../hooks/useBodyScrollLock'
+import { WAEHRUNGEN } from '../data/waehrungen'
 
 export default function SettingsScreen() {
   const [user, setUser] = useState(null)
@@ -18,7 +19,7 @@ export default function SettingsScreen() {
   const [nachricht, setNachricht] = useState('')
   const [appInfoOffen, setAppInfoOffen] = useState(false)
   const {
-    waehrung, setWaehrung: setGlobalWaehrung,
+    waehrungISO, setWaehrung: setGlobalWaehrung,
     sprache, setSprache: setGlobalSprache,
     design, setDesign: setGlobalDesign,
     t,
@@ -277,15 +278,15 @@ export default function SettingsScreen() {
               <span style={{ fontWeight: '600', fontSize: '0.95rem' }}>{t('waehrungLabel')}</span>
             </div>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              {['€', '$', '£', '¥', '₺', 'CHF', 'Ft'].map(w => (
-                <button key={w} onClick={() => einstellungSpeichern('waehrung', w)}
+              {WAEHRUNGEN.map(w => (
+                <button key={w.iso} onClick={() => einstellungSpeichern('waehrung', w.iso)}
                   className="btn-press" style={{
-                    padding: '0 16px', minHeight: '44px', display: 'flex', alignItems: 'center', borderRadius: '12px', cursor: 'pointer',
-                    fontWeight: '600', fontSize: '0.9rem', border: 'none',
-                    backgroundColor: waehrung === w ? 'var(--gold)' : 'var(--sub)',
-                    color: waehrung === w ? '#0a0f1e' : 'var(--text-sub)',
+                    padding: '0 14px', minHeight: '44px', display: 'flex', alignItems: 'center', gap: '6px', borderRadius: '12px', cursor: 'pointer',
+                    fontWeight: '600', fontSize: '0.85rem', border: 'none',
+                    backgroundColor: waehrungISO === w.iso ? 'var(--gold)' : 'var(--sub)',
+                    color: waehrungISO === w.iso ? '#0a0f1e' : 'var(--text-sub)',
                   }}>
-                  {w}
+                  {w.symbol} <span style={{ fontSize: '0.72rem', opacity: 0.85 }}>{w.iso}</span>
                 </button>
               ))}
             </div>

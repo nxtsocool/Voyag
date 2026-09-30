@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import { supabase } from '../supabase'
 import { translations } from '../data/translations'
+import { WAEHRUNGEN, symbolOderIsoZuIso } from '../data/waehrungen'
 
 const SettingsContext = createContext()
 
@@ -9,10 +10,17 @@ export function useSettings() {
 }
 
 export function SettingsProvider({ children }) {
-  const [waehrung, setWaehrung] = useState('€')
+  // waehrungISO ist der kanonische, gespeicherte Wert (K1); waehrung bleibt das
+  // daraus abgeleitete Symbol, damit bestehende Anzeige-Stellen (`${betrag}${waehrung}`)
+  // unveraendert weiterfunktionieren
+  const [waehrungISO, setWaehrungISO] = useState('EUR')
+  const waehrung = WAEHRUNGEN.find(w => w.iso === waehrungISO)?.symbol || '€'
   const [sprache, setSprache] = useState('de')
   const [design, setDesign] = useState('light')
   const [geladen, setGeladen] = useState(false)
+
+  // setWaehrung erwartet ab jetzt einen ISO-Code
+  const setWaehrung = (iso) => setWaehrungISO(symbolOderIsoZuIso(iso))
 
   // Profil-Einstellungen (inkl. Sprache) aus Supabase laden
   const profilLaden = async (userId) => {
@@ -20,7 +28,8 @@ export function SettingsProvider({ children }) {
       .from('profiles').select('waehrung, sprache, design').eq('id', userId).single()
 
     if (data) {
-      setWaehrung(data.waehrung || '€')
+      // Alte Bestandsdaten hatten ein Symbol statt eines ISO-Codes gespeichert
+      setWaehrungISO(symbolOderIsoZuIso(data.waehrung))
       setSprache(data.sprache || 'de')
       setDesign(data.design || 'light')
     }
@@ -55,7 +64,7 @@ export function SettingsProvider({ children }) {
   }
 
   return (
-    <SettingsContext.Provider value={{ waehrung, setWaehrung, sprache, setSprache, design, setDesign, geladen, t }}>
+    <SettingsContext.Provider value={{ waehrung, waehrungISO, setWaehrung, sprache, setSprache, design, setDesign, geladen, t }}>
       {children}
     </SettingsContext.Provider>
   )

@@ -15,6 +15,8 @@ import useBodyScrollLock from '../hooks/useBodyScrollLock'
 import { useSettings } from '../context/SettingsContext'
 import { findeVorauswahl } from '../utils/teilnehmerVerknuepfung'
 import { reiseZeitraum, reiseStatus, tageBis } from '../utils/datum'
+import { WAEHRUNGEN, waehrungFuerLand } from '../data/waehrungen'
+import useWechselkurse from '../hooks/useWechselkurse'
 
 
 // Farbe anhand Trip-ID auswählen
@@ -77,11 +79,15 @@ function TripsOverview() {
   const [loescheTrip, setLoescheTrip] = useState(null)
   const [bearbeiteTrip, setBearbeiteTrip] = useState(null)
   const [bearbeiteDaten, setBearbeiteDaten] = useState({
-    name: '', land_code: '', startDatum: null, endDatum: null
+    name: '', land_code: '', startDatum: null, endDatum: null, waehrung: 'EUR'
   })
   const [neueReise, setNeueReise] = useState({
-    name: '', land_code: '', startDatum: null, endDatum: null
+    name: '', land_code: '', startDatum: null, endDatum: null, waehrung: 'EUR'
   })
+  // Bestätigungs-Sheet beim Ändern der Reisewährung im Bearbeiten-Formular (K1)
+  const [waehrungAenderungBestaetigen, setWaehrungAenderungBestaetigen] = useState(false)
+  const [waehrungUmrechnenLaeuft, setWaehrungUmrechnenLaeuft] = useState(false)
+  const { umrechnen } = useWechselkurse()
   // Verknüpfungs-Modal State
   const [verknuepfungsModal, setVerknuepfungsModal] = useState(false)
   const [unverknuepfteTeilnehmer, setUnverknuepfteTeilnehmer] = useState([])
@@ -94,7 +100,7 @@ function TripsOverview() {
   )
 
   useEffect(() => { tripsLaden() }, [])
-  useBodyScrollLock(!!loescheTrip || verknuepfungsModal)
+  useBodyScrollLock(!!loescheTrip || verknuepfungsModal || waehrungAenderungBestaetigen)
 
   useEffect(() => {
     localStorage.setItem('voyag_ansicht', ansicht)
@@ -149,7 +155,7 @@ function TripsOverview() {
 
     const { data: tripData, error } = await supabase
       .from('trips')
-      .insert([{ name: neueReise.name, land_code: neueReise.land_code, datum: datumText, user_id: user.id, invite_code: code }])
+      .insert([{ name: neueReise.name, land_code: neueReise.land_code, datum: datumText, waehrung: neueReise.waehrung || 'EUR', user_id: user.id, invite_code: code }])
       .select()
 
     if (error) console.error('Fehler:', error)
@@ -180,19 +186,28 @@ function TripsOverview() {
           user_id: user.id, country_code: neueReise.land_code, trip_id: tripData[0].id
         }])
       }
-      setNeueReise({ name: '', land_code: '', startDatum: null, endDatum: null })
+      setNeueReise({ name: '', land_code: '', startDatum: null, endDatum: null, waehrung: 'EUR' })
       setFormularOffen(false)
     }
   }
 
   const bearbeitenOeffnen = (trip) => {
     setBearbeiteTrip(trip)
-    setBearbeiteDaten({ name: trip.name, land_code: trip.land_code || '', startDatum: null, endDatum: null })
+    setBearbeiteDaten({ name: trip.name, land_code: trip.land_code || '', startDatum: null, endDatum: null, waehrung: trip.waehrung || 'EUR' })
+  }
+
+  // Speichern anstossen – bei geänderter Reisewährung erst Bestätigungs-Sheet
+  // zeigen (bestehende Beträge werden umgerechnet, siehe K1)
+  const reiseSpeichernAnfragen = () => {
+    if (!bearbeiteDaten.name || !bearbeiteDaten.land_code) return
+    if (bearbeiteDaten.waehrung !== (bearbeiteTrip.waehrung || 'EUR')) {
+      setWaehrungAenderungBestaetigen(true)
+    } else {
+      reiseSpeichern()
+    }
   }
 
   const reiseSpeichern = async () => {
-    if (!bearbeiteDaten.name || !bearbeiteDaten.land_code) return
-
     let datumText = bearbeiteTrip.datum
     if (bearbeiteDaten.startDatum && bearbeiteDaten.endDatum) {
       const formatDatum = (date) =>
@@ -202,16 +217,49 @@ function TripsOverview() {
 
     const { error } = await supabase
       .from('trips')
-      .update({ name: bearbeiteDaten.name, land_code: bearbeiteDaten.land_code, datum: datumText })
+      .update({ name: bearbeiteDaten.name, land_code: bearbeiteDaten.land_code, datum: datumText, waehrung: bearbeiteDaten.waehrung || 'EUR' })
       .eq('id', bearbeiteTrip.id)
 
-    if (error) console.error('Fehler:', error)
-    else {
-      setTrips(trips.map(t => t.id === bearbeiteTrip.id
-        ? { ...t, name: bearbeiteDaten.name, land_code: bearbeiteDaten.land_code, datum: datumText }
-        : t
-      ))
-      setBearbeiteTrip(null)
+    if (error) { console.error('Fehler:', error); toast(t('verbindungsfehler'), 'error'); return }
+
+    setTrips(trips.map(t => t.id === bearbeiteTrip.id
+      ? { ...t, name: bearbeiteDaten.name, land_code: bearbeiteDaten.land_code, datum: datumText, waehrung: bearbeiteDaten.waehrung || 'EUR' }
+      : t
+    ))
+    setBearbeiteTrip(null)
+  }
+
+  // Reisewährung ändern UND bestehende Ausgaben/Abrechnungen umrechnen (K1) –
+  // sequentiell statt Promise.all, da es sich um eine seltene Admin-Aktion und
+  // nicht um eine performancekritische Liste handelt
+  const reiseSpeichernMitUmrechnung = async () => {
+    if (waehrungUmrechnenLaeuft) return
+    setWaehrungUmrechnenLaeuft(true)
+    try {
+      const altWaehrung = bearbeiteTrip.waehrung || 'EUR'
+      const neuWaehrung = bearbeiteDaten.waehrung
+
+      const { data: ausgabenDesTrips } = await supabase
+        .from('ausgaben').select('id, betrag').eq('trip_id', bearbeiteTrip.id)
+      for (const a of ausgabenDesTrips || []) {
+        await supabase.from('ausgaben')
+          .update({ betrag: parseFloat(umrechnen(a.betrag, altWaehrung, neuWaehrung).toFixed(2)) })
+          .eq('id', a.id)
+      }
+
+      const { data: abrechnungenDesTrips } = await supabase
+        .from('abrechnungen').select('id, betrag').eq('trip_id', bearbeiteTrip.id)
+      for (const ab of abrechnungenDesTrips || []) {
+        await supabase.from('abrechnungen')
+          .update({ betrag: parseFloat(umrechnen(ab.betrag, altWaehrung, neuWaehrung).toFixed(2)) })
+          .eq('id', ab.id)
+      }
+
+      await reiseSpeichern()
+      toast(t('waehrungUmgerechnet'), 'success')
+    } finally {
+      setWaehrungAenderungBestaetigen(false)
+      setWaehrungUmrechnenLaeuft(false)
     }
   }
 
@@ -615,10 +663,24 @@ function TripsOverview() {
             <input placeholder={t('reiseNamePlatzhalter')} value={neueReise.name}
               onChange={(e) => setNeueReise({ ...neueReise, name: e.target.value })} style={inputStyle} />
             <select value={neueReise.land_code}
-              onChange={(e) => setNeueReise({ ...neueReise, land_code: e.target.value })} style={inputStyle}>
+              onChange={(e) => setNeueReise({ ...neueReise, land_code: e.target.value, waehrung: waehrungFuerLand(e.target.value) })} style={inputStyle}>
               <option value="">{t('landAuswaehlen')}</option>
               {laender.map(land => <option key={land.code} value={land.code}>{land.name}</option>)}
             </select>
+            <p style={{ color: 'var(--text-sub)', fontSize: '0.82rem', marginBottom: '8px' }}>{t('reisewaehrungLabel')}</p>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '14px' }}>
+              {WAEHRUNGEN.map(w => (
+                <button key={w.iso} onClick={() => setNeueReise({ ...neueReise, waehrung: w.iso })}
+                  className="btn-press" type="button" style={{
+                    padding: '0 10px', minHeight: '38px', borderRadius: '10px', border: 'none', cursor: 'pointer',
+                    fontWeight: '600', fontSize: '0.78rem',
+                    backgroundColor: neueReise.waehrung === w.iso ? 'var(--gold)' : 'var(--sub)',
+                    color: neueReise.waehrung === w.iso ? '#0a0f1e' : 'var(--text-sub)',
+                  }}>
+                  {w.iso}
+                </button>
+              ))}
+            </div>
             <DatePicker selected={neueReise.startDatum}
               onChange={(date) => setNeueReise({ ...neueReise, startDatum: date })}
               selectsStart startDate={neueReise.startDatum} endDate={neueReise.endDatum}
@@ -647,6 +709,20 @@ function TripsOverview() {
               <option value="">{t('landAuswaehlen')}</option>
               {laender.map(land => <option key={land.code} value={land.code}>{land.name}</option>)}
             </select>
+            <p style={{ color: 'var(--text-sub)', fontSize: '0.82rem', marginBottom: '8px' }}>{t('reisewaehrungLabel')}</p>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '14px' }}>
+              {WAEHRUNGEN.map(w => (
+                <button key={w.iso} onClick={() => setBearbeiteDaten({ ...bearbeiteDaten, waehrung: w.iso })}
+                  className="btn-press" type="button" style={{
+                    padding: '0 10px', minHeight: '38px', borderRadius: '10px', border: 'none', cursor: 'pointer',
+                    fontWeight: '600', fontSize: '0.78rem',
+                    backgroundColor: bearbeiteDaten.waehrung === w.iso ? 'var(--gold)' : 'var(--sub)',
+                    color: bearbeiteDaten.waehrung === w.iso ? '#0a0f1e' : 'var(--text-sub)',
+                  }}>
+                  {w.iso}
+                </button>
+              ))}
+            </div>
             <p style={{ color: 'var(--text-sub)', fontSize: '0.82rem', marginBottom: '10px' }}>
               {t('datumLeerLassen')}
             </p>
@@ -661,8 +737,39 @@ function TripsOverview() {
               minDate={bearbeiteDaten.startDatum} placeholderText={t('neuesEnddatum')} locale={de}
               dateFormat="dd.MM.yyyy" customInput={<input style={inputStyle} />} />
             <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
-              <button onClick={reiseSpeichern} className="btn-press" style={speichernButtonStyle}>{t('speichern')}</button>
+              <button onClick={reiseSpeichernAnfragen} className="btn-press" style={speichernButtonStyle}>{t('speichern')}</button>
               <button onClick={() => setBearbeiteTrip(null)} className="btn-press" style={abbrechenButtonStyle}>{t('abbrechen')}</button>
+            </div>
+          </div>
+        )}
+
+        {/* Bestätigungs-Sheet: Reisewährung geändert – bestehende Beträge umrechnen? (K1) */}
+        {waehrungAenderungBestaetigen && (
+          <div onClick={() => setWaehrungAenderungBestaetigen(false)} style={{
+            position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)',
+            display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 9998,
+          }}>
+            <div onClick={(e) => e.stopPropagation()} className="fade-in" style={{
+              backgroundColor: 'var(--card)', borderRadius: '24px 24px 0 0',
+              width: '100%', maxWidth: '600px', boxSizing: 'border-box',
+              padding: '24px 20px calc(32px + env(safe-area-inset-bottom))', zIndex: 9999,
+            }}>
+              <div style={{ width: '40px', height: '4px', backgroundColor: 'var(--sub)', borderRadius: '2px', margin: '0 auto 24px' }} />
+              <h3 style={{ margin: '0 0 8px', fontWeight: '700', fontSize: '1.2rem' }}>{t('waehrungAendernTitel')}</h3>
+              <p style={{ color: 'var(--text-sub)', margin: '0 0 24px', fontSize: '0.92rem', lineHeight: 1.5 }}>
+                {t('waehrungAendernText')(bearbeiteTrip?.waehrung || 'EUR', bearbeiteDaten.waehrung)}
+              </p>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button onClick={reiseSpeichernMitUmrechnung} disabled={waehrungUmrechnenLaeuft} className="btn-press" style={{
+                  backgroundColor: 'var(--gold)', color: '#0a0f1e', border: 'none',
+                  padding: '14px', minHeight: '48px', boxSizing: 'border-box', borderRadius: '14px', cursor: 'pointer',
+                  flex: 1, fontWeight: '700', fontSize: '0.95rem', opacity: waehrungUmrechnenLaeuft ? 0.6 : 1,
+                }}>{waehrungUmrechnenLaeuft ? t('wirdGespeichert') : t('waehrungUmrechnenBtn')}</button>
+                <button onClick={() => setWaehrungAenderungBestaetigen(false)} className="btn-press" style={{
+                  backgroundColor: 'var(--sub)', color: 'var(--text)', border: 'none',
+                  padding: '14px', minHeight: '48px', boxSizing: 'border-box', borderRadius: '14px', cursor: 'pointer', flex: 1, fontWeight: '600',
+                }}>{t('abbrechen')}</button>
+              </div>
             </div>
           </div>
         )}

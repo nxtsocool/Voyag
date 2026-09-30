@@ -1,15 +1,17 @@
 import { useState, useEffect } from 'react'
+import { WAEHRUNGEN } from '../data/waehrungen'
 
 const CACHE_KEY = 'voyag_wechselkurse'
 const CACHE_DAUER = 60 * 60 * 1000 // 1 Stunde
 
-// Fallback-Kurse falls die API nicht erreichbar ist
+// Fallback-Kurse falls die API nicht erreichbar ist (grobe Näherungswerte)
 const FALLBACK_KURSE = {
-  EUR: 1,
-  USD: 1.08,
-  CZK: 25.3,
-  HUF: 390,
+  EUR: 1, USD: 1.08, GBP: 0.85, CHF: 0.95, JPY: 163,
+  CZK: 25.3, HUF: 390, PLN: 4.3, SEK: 11.3, NOK: 11.7,
+  DKK: 7.46, TRY: 34, THB: 38, AUD: 1.65, CAD: 1.47,
 }
+
+const ISO_SYMBOLE = WAEHRUNGEN.filter(w => w.iso !== 'EUR').map(w => w.iso).join(',')
 
 export default function useWechselkurse() {
   const [kurse, setKurse] = useState(FALLBACK_KURSE)
@@ -30,7 +32,7 @@ export default function useWechselkurse() {
       }
       // Neue Kurse laden
       try {
-        const res = await fetch('https://api.frankfurter.app/latest?base=EUR&symbols=USD,CZK,HUF')
+        const res = await fetch(`https://api.frankfurter.app/latest?base=EUR&symbols=${ISO_SYMBOLE}`)
         if (!res.ok) throw new Error('Wechselkurse konnten nicht geladen werden')
         const data = await res.json()
         const neuKurse = { EUR: 1, ...data.rates }

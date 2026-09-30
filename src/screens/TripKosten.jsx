@@ -11,17 +11,15 @@ import useBodyScrollLock from '../hooks/useBodyScrollLock'
 import TripNichtGefunden from '../components/TripNichtGefunden'
 import { useSettings } from '../context/SettingsContext'
 import useWechselkurse from '../hooks/useWechselkurse'
-import { WAEHRUNGEN } from '../data/waehrungen'
+import { WAEHRUNGEN, symbolOderIsoZuIso } from '../data/waehrungen'
 import { saldenBerechnen, schuldenBerechnen, anteilBerechnen } from '../utils/kosten'
 import { heuteISO } from '../utils/datum'
 
 function TripKosten() {
   const { id } = useParams()
   const { toasts, setToasts, toast } = useToast()
-  const { waehrung, t, design } = useSettings()
+  const { waehrungISO: heimISO, t, design } = useSettings()
   const { umrechnen, veraltet } = useWechselkurse()
-  // ISO-Code der Heimwährung – Fallback auf EUR falls die Heimwährung nicht umgerechnet werden kann
-  const heimISO = WAEHRUNGEN.find(w => w.symbol === waehrung)?.iso || 'EUR'
   const [trip, setTrip] = useState(null)
   const [ausgaben, setAusgaben] = useState([])
   const [teilnehmer, setTeilnehmer] = useState([])
@@ -49,6 +47,12 @@ function TripKosten() {
 
   useEffect(() => { datenLaden() }, [id])
   useBodyScrollLock(formularOffen)
+
+  // Alle Beträge sind ab jetzt immer in Trip-Währung (K1) – die Heimwährung
+  // des Betrachters (heimISO) dient nur noch für eine optionale Zusatzzeile
+  const tripISO = trip?.waehrung || 'EUR'
+  const tripWaehrungObj = WAEHRUNGEN.find(w => w.iso === tripISO) || WAEHRUNGEN[0]
+  const tripSymbol = tripWaehrungObj.symbol
 
   // Warnung anzeigen, falls die API nicht erreichbar war und Näherungswerte verwendet werden
   useEffect(() => {
@@ -108,20 +112,21 @@ function TripKosten() {
 
     setSpeichernLaeuft(true)
     try {
-      // Original-Betrag immer in die Heimwährung umrechnen – Saldo/Schulden basieren nur auf betrag
-      const betragInHeim = umrechnen(
+      // Betrag immer in die Trip-Währung umrechnen – Saldo/Schulden basieren
+      // nur auf betrag, das für alle Mitreisenden dieselbe kanonische Zahl ist
+      const betragInTrip = umrechnen(
         parseFloat(neueAusgabe.betrag),
         neueAusgabe.waehrung.iso,
-        heimISO
+        tripISO
       )
 
       const { data, error } = await supabase
         .from('ausgaben')
         .insert([{
           beschreibung: neueAusgabe.beschreibung,
-          betrag: parseFloat(betragInHeim.toFixed(2)),
+          betrag: parseFloat(betragInTrip.toFixed(2)),
           betrag_original: parseFloat(neueAusgabe.betrag),
-          waehrung_original: neueAusgabe.waehrung.symbol,
+          waehrung_original: neueAusgabe.waehrung.iso,
           bezahlt_von_id: Number(neueAusgabe.bezahlt_von),
           trip_id: id,
           datum: neueAusgabe.datum,
@@ -137,7 +142,7 @@ function TripKosten() {
         setNeueAusgabe({
           beschreibung: '', betrag: '', bezahlt_von: eigenerTeilnehmer ? String(eigenerTeilnehmer.id) : '', fuer: [],
           datum: heuteISO(),
-          waehrung: { symbol: '€', iso: 'EUR' },
+          waehrung: tripWaehrungObj,
         })
         setFormularOffen(false)
         toast(t('ausgabeHinzugefuegt'), 'success')
@@ -251,12 +256,12 @@ function TripKosten() {
     if (!eigenerTeilnehmer) return null
     const eigenerSaldo = salden.find(s => s.id === eigenerTeilnehmer.id)?.saldo || 0
     if (Math.abs(eigenerSaldo) < 0.01) return t('duBistQuitt')
-    if (eigenerSaldo > 0) return t('duBekommst')(`${eigenerSaldo.toFixed(2)}${waehrung}`)
+    if (eigenerSaldo > 0) return t('duBekommst')(`${eigenerSaldo.toFixed(2)}${tripSymbol}`)
     const eigeneSchulden = schulden.filter(s => s.vonId === eigenerTeilnehmer.id)
     if (eigeneSchulden.length === 1) {
-      return t('duSchuldest')(eigeneSchulden[0].an, `${eigeneSchulden[0].betrag}${waehrung}`)
+      return t('duSchuldest')(eigeneSchulden[0].an, `${eigeneSchulden[0].betrag}${tripSymbol}`)
     }
-    return t('duSchuldestMehreren')(`${Math.abs(eigenerSaldo).toFixed(2)}${waehrung}`)
+    return t('duSchuldestMehreren')(`${Math.abs(eigenerSaldo).toFixed(2)}${tripSymbol}`)
   }
 
   if (laden) return (
@@ -306,7 +311,7 @@ function TripKosten() {
             fontWeight: '800', letterSpacing: '-1.5px', overflowWrap: 'break-word',
             textShadow: design === 'light' ? '0 2px 12px rgba(0,0,0,0.2)' : '0 0 40px rgba(201,168,76,0.2)',
           }}>
-            {gesamt.toFixed(2)}{waehrung}
+            {gesamt.toFixed(2)}{tripSymbol}
           </h2>
 
           {teilnehmer.length > 0 && (
@@ -320,13 +325,13 @@ function TripKosten() {
                 <div>
                   <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.65rem', margin: '0 0 3px', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: '600' }}>{t('deinAnteil')}</p>
                   <p style={{ color: '#ffffff', fontWeight: '700', margin: 0, fontSize: '0.95rem' }}>
-                    {ausgaben.reduce((sum, a) => sum + anteilBerechnen(a, eigenerTeilnehmer.id, teilnehmer.map(p => p.id)), 0).toFixed(2)}{waehrung}
+                    {ausgaben.reduce((sum, a) => sum + anteilBerechnen(a, eigenerTeilnehmer.id, teilnehmer.map(p => p.id)), 0).toFixed(2)}{tripSymbol}
                   </p>
                 </div>
               ) : (
                 <div>
                   <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.65rem', margin: '0 0 3px', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: '600' }}>{t('proPerson')}</p>
-                  <p style={{ color: '#ffffff', fontWeight: '700', margin: 0, fontSize: '0.95rem' }}>{(gesamt / teilnehmer.length).toFixed(2)}{waehrung}</p>
+                  <p style={{ color: '#ffffff', fontWeight: '700', margin: 0, fontSize: '0.95rem' }}>{(gesamt / teilnehmer.length).toFixed(2)}{tripSymbol}</p>
                 </div>
               )}
               <div style={{ width: '1px', backgroundColor: 'rgba(255,255,255,0.1)' }} />
@@ -413,12 +418,12 @@ function TripKosten() {
                               ))}
                             </div>
 
-                            {bearbeiteAusgabe.betrag && bearbeiteAusgabe.waehrung.iso !== heimISO && (
+                            {bearbeiteAusgabe.betrag && bearbeiteAusgabe.waehrung.iso !== tripISO && (
                               <p style={{
                                 color: 'var(--text-sub)', fontSize: '0.82rem',
                                 marginBottom: '10px', textAlign: 'right',
                               }}>
-                                ≈ {umrechnen(parseFloat(bearbeiteAusgabe.betrag), bearbeiteAusgabe.waehrung.iso, heimISO).toFixed(2)}{waehrung}
+                                ≈ {umrechnen(parseFloat(bearbeiteAusgabe.betrag), bearbeiteAusgabe.waehrung.iso, tripISO).toFixed(2)}{tripSymbol}
                               </p>
                             )}
 
@@ -432,16 +437,16 @@ function TripKosten() {
                             </select>
                             <div style={{ display: 'flex', gap: '8px' }}>
                               <button onClick={async () => {
-                                const betragInHeim = umrechnen(
+                                const betragInTrip = umrechnen(
                                   parseFloat(bearbeiteAusgabe.betrag),
                                   bearbeiteAusgabe.waehrung.iso,
-                                  heimISO
+                                  tripISO
                                 )
                                 await ausgabeBearbeiten(ausgabe.id, {
                                   beschreibung: bearbeiteAusgabe.beschreibung,
-                                  betrag: parseFloat(betragInHeim.toFixed(2)),
+                                  betrag: parseFloat(betragInTrip.toFixed(2)),
                                   betrag_original: parseFloat(bearbeiteAusgabe.betrag),
-                                  waehrung_original: bearbeiteAusgabe.waehrung.symbol,
+                                  waehrung_original: bearbeiteAusgabe.waehrung.iso,
                                   bezahlt_von_id: Number(bearbeiteAusgabe.bezahlt_von_id),
                                   datum: bearbeiteAusgabe.datum,
                                 })
@@ -466,12 +471,20 @@ function TripKosten() {
                                 <p style={{ fontWeight: '600', margin: '0 0 4px', overflowWrap: 'break-word', wordBreak: 'break-word', minWidth: 0, fontSize: '0.95rem' }}>
                                   {ausgabe.beschreibung}
                                 </p>
-                                <span style={{ fontSize: '1.1rem', color: 'var(--gold)', fontWeight: '700', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                                  {/* Bei Fremdwährung Original + umgerechneten Betrag anzeigen */}
-                                  {ausgabe.waehrung_original && ausgabe.waehrung_original !== waehrung
-                                    ? `${Number(ausgabe.betrag_original).toFixed(2)}${ausgabe.waehrung_original} (${Number(ausgabe.betrag).toFixed(2)}${waehrung})`
-                                    : `${Number(ausgabe.betrag).toFixed(2)}${waehrung}`}
-                                </span>
+                                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                                  <span style={{ fontSize: '1.1rem', color: 'var(--gold)', fontWeight: '700', whiteSpace: 'nowrap' }}>
+                                    {/* Betrag ist immer in Trip-Währung; bei Fremdwährungs-Eintrag zusätzlich der Original-Betrag */}
+                                    {ausgabe.waehrung_original && symbolOderIsoZuIso(ausgabe.waehrung_original) !== tripISO
+                                      ? `${Number(ausgabe.betrag_original).toFixed(2)}${WAEHRUNGEN.find(w => w.iso === symbolOderIsoZuIso(ausgabe.waehrung_original))?.symbol || ''} (${Number(ausgabe.betrag).toFixed(2)}${tripSymbol})`
+                                      : `${Number(ausgabe.betrag).toFixed(2)}${tripSymbol}`}
+                                  </span>
+                                  {/* Optionale Zusatzzeile in der Heimwährung des Betrachters, wenn sie von der Trip-Währung abweicht */}
+                                  {heimISO !== tripISO && (
+                                    <p style={{ margin: '2px 0 0', fontSize: '0.72rem', color: 'var(--text-sub)', whiteSpace: 'nowrap' }}>
+                                      ≈ {umrechnen(ausgabe.betrag, tripISO, heimISO).toFixed(2)}{WAEHRUNGEN.find(w => w.iso === heimISO)?.symbol}
+                                    </p>
+                                  )}
+                                </div>
                               </div>
                               <p style={{ color: 'var(--text-sub)', fontSize: '0.78rem', margin: 0, overflowWrap: 'break-word', wordBreak: 'break-word' }}>
                                 {t('bezahltVonText')(teilnehmerName(ausgabe.bezahlt_von_id))}
@@ -490,7 +503,9 @@ function TripKosten() {
                                 ...ausgabe,
                                 datum: ausgabe.datum || heuteISO(),
                                 betrag: ausgabe.betrag_original != null ? ausgabe.betrag_original : ausgabe.betrag,
-                                waehrung: WAEHRUNGEN.find(w => w.symbol === ausgabe.waehrung_original) || WAEHRUNGEN.find(w => w.iso === heimISO) || WAEHRUNGEN[0],
+                                // waehrung_original kann (vor K1) noch ein Symbol statt eines ISO-Codes sein
+                                waehrung: (ausgabe.waehrung_original && WAEHRUNGEN.find(w => w.iso === symbolOderIsoZuIso(ausgabe.waehrung_original)))
+                                  || tripWaehrungObj,
                               })} className="btn-press" style={ikonButtonStyle}>
                                 <SquarePen size={13} color="var(--gold)" />
                               </button>
@@ -531,7 +546,7 @@ function TripKosten() {
                       {person.name}
                     </p>
                     <p style={{ fontWeight: '700', margin: 0, whiteSpace: 'nowrap', marginLeft: '8px', color: positiv ? '#4caf50' : '#e94560', fontSize: '0.95rem' }}>
-                      {positiv ? '+' : ''}{saldo.toFixed(2)}{waehrung}
+                      {positiv ? '+' : ''}{saldo.toFixed(2)}{tripSymbol}
                     </p>
                   </div>
                   <div style={{ backgroundColor: 'var(--sub)', borderRadius: '6px', height: '5px', overflow: 'hidden' }}>
@@ -580,7 +595,7 @@ function TripKosten() {
                   <span style={{ color: 'var(--text)', fontWeight: '700', overflowWrap: 'break-word', wordBreak: 'break-word' }}>{s.von}</span>
                   <span style={{ color: 'var(--text-sub)', fontSize: '0.82rem' }}>{t('schuldet')}</span>
                   <span style={{ color: 'var(--text)', fontWeight: '700', overflowWrap: 'break-word', wordBreak: 'break-word' }}>{s.an}</span>
-                  <span style={{ color: 'var(--gold)', fontWeight: '800', marginLeft: 'auto' }}>{s.betrag}{waehrung}</span>
+                  <span style={{ color: 'var(--gold)', fontWeight: '800', marginLeft: 'auto' }}>{s.betrag}{tripSymbol}</span>
 
                   {abrechnenOffen && (
                     <button onClick={() => schuldAbrechnen(s)} disabled={abrechnenLaeuft.has(`${s.von}|${s.an}`)} className="btn-press" style={{
@@ -604,9 +619,14 @@ function TripKosten() {
       {/* Floating Action Button – wie bei Splid – bottom berücksichtigt Safe-Area, damit er nicht mit der BottomNav kollidiert */}
       <button
         onClick={() => {
-          if (eigenerTeilnehmer && !neueAusgabe.bezahlt_von) {
-            setNeueAusgabe({ ...neueAusgabe, bezahlt_von: String(eigenerTeilnehmer.id) })
-          }
+          // Vorbelegung fürs "Neue Ausgabe"-Sheet erst beim Öffnen setzen (nicht
+          // per Effect), damit weder das State-Update noch ein bereits vom Nutzer
+          // gewähltes Feld ungewollt überschrieben wird
+          setNeueAusgabe(prev => ({
+            ...prev,
+            bezahlt_von: prev.bezahlt_von || (eigenerTeilnehmer ? String(eigenerTeilnehmer.id) : ''),
+            waehrung: prev.waehrung.iso === tripISO ? prev.waehrung : tripWaehrungObj,
+          }))
           setFormularOffen(true)
         }}
         className="btn-press"
@@ -684,12 +704,12 @@ function TripKosten() {
             </div>
 
             {/* Live-Umrechnung anzeigen, wenn eine Fremdwährung gewählt wurde */}
-            {neueAusgabe.betrag && neueAusgabe.waehrung.iso !== heimISO && (
+            {neueAusgabe.betrag && neueAusgabe.waehrung.iso !== tripISO && (
               <p style={{
                 color: 'var(--text-sub)', fontSize: '0.82rem',
                 marginBottom: '10px', textAlign: 'right',
               }}>
-                ≈ {umrechnen(parseFloat(neueAusgabe.betrag), neueAusgabe.waehrung.iso, heimISO).toFixed(2)}{waehrung}
+                ≈ {umrechnen(parseFloat(neueAusgabe.betrag), neueAusgabe.waehrung.iso, tripISO).toFixed(2)}{tripSymbol}
               </p>
             )}
 

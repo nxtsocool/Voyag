@@ -2,21 +2,10 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../supabase'
 import { Globe, DollarSign } from 'lucide-react'
 import { useSettings } from '../context/SettingsContext'
-
-// Verfügbare Währungen
-const WAEHRUNGEN = [
-  { symbol: '€', name: 'Euro' },
-  { symbol: '$', name: 'Dollar' },
-  { symbol: '£', name: 'Pfund' },
-  { symbol: '¥', name: 'Yen' },
-  { symbol: '₺', name: 'Lira' },
-  { symbol: 'CHF', name: 'Franken' },
-  { symbol: 'kr', name: 'Krone' },
-  { symbol: 'zł', name: 'Zloty' },
-]
+import { WAEHRUNGEN } from '../data/waehrungen'
 
 export default function OnboardingScreen({ user, onComplete }) {
-  const { t, sprache, setSprache, waehrung, setWaehrung } = useSettings()
+  const { t, sprache, setSprache, waehrungISO, setWaehrung } = useSettings()
   const [schritt, setSchritt] = useState(1)
   const [userName, setUserName] = useState('')
   const [speichern, setSpeichern] = useState(false)
@@ -45,13 +34,13 @@ export default function OnboardingScreen({ user, onComplete }) {
     const { error } = await supabase.from('profiles').upsert({
       id: user.id,
       sprache,
-      waehrung,
+      waehrung: waehrungISO,
       onboarding_done: true,
     })
     if (error) console.error('Fehler beim Onboarding-Speichern:', error)
     // Context sofort aktualisieren damit die App die richtigen Werte hat
     setSprache(sprache)
-    setWaehrung(waehrung)
+    setWaehrung(waehrungISO)
     setSpeichern(false)
     onComplete()
   }
@@ -208,14 +197,14 @@ export default function OnboardingScreen({ user, onComplete }) {
                 </div>
                 <h2 style={schrittTitelStyle}>{t('onboardingWaehrungTitel')}</h2>
 
-                {/* Währungs-Kacheln – 4x2 Grid */}
+                {/* Währungs-Kacheln – 4-spaltiges Grid */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '32px' }}>
-                  {WAEHRUNGEN.map(({ symbol, name: waehrungsName }) => {
-                    const aktiv = waehrung === symbol
+                  {WAEHRUNGEN.map(({ iso, symbol, name_de, name_en }) => {
+                    const aktiv = waehrungISO === iso
                     return (
                       <button
-                        key={symbol}
-                        onClick={() => setWaehrung(symbol)}
+                        key={iso}
+                        onClick={() => setWaehrung(iso)}
                         className="btn-press"
                         style={{
                           padding: '14px 6px', borderRadius: '14px',
@@ -236,7 +225,7 @@ export default function OnboardingScreen({ user, onComplete }) {
                           {symbol}
                         </div>
                         <div style={{ fontSize: '0.6rem', color: aktiv ? 'var(--gold)' : 'var(--text-sub)', fontWeight: '500' }}>
-                          {waehrungsName}
+                          {sprache === 'en' ? name_en : name_de}
                         </div>
                       </button>
                     )
