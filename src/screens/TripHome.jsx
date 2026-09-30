@@ -134,7 +134,7 @@ function TripHome() {
 
         {/* Zurück Button – eleganter Kreis */}
         <button onClick={() => navigate('/')} className="btn-press" style={{
-          position: 'absolute', top: '20px', left: '20px',
+          position: 'absolute', top: 'calc(20px + env(safe-area-inset-top))', left: '20px',
           background: 'rgba(0,0,0,0.3)',
           backdropFilter: 'blur(12px)',
           border: '1px solid rgba(255,255,255,0.2)',
@@ -148,7 +148,7 @@ function TripHome() {
         </button>
 
         {/* Hero Textinhalt */}
-        <div style={{ padding: '88px 24px 36px', position: 'relative', zIndex: 1 }}>
+        <div style={{ padding: 'calc(88px + env(safe-area-inset-top)) 24px 36px', position: 'relative', zIndex: 1 }}>
           {landName && (
             <p style={{
               color: 'rgba(255,255,255,0.75)',

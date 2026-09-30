@@ -127,7 +127,7 @@ export default function SettingsScreen() {
   const ausloggen = async () => await supabase.auth.signOut()
 
   if (laden) return (
-    <div style={{ padding: '24px', maxWidth: '600px', margin: '0 auto' }}>
+    <div style={{ padding: '24px', paddingTop: 'calc(24px + env(safe-area-inset-top))', maxWidth: '600px', margin: '0 auto' }}>
       {[1,2,3].map(i => (
         <div key={i} className="skeleton" style={{ height: '80px', borderRadius: '20px', marginBottom: '12px' }} />
       ))}
@@ -143,7 +143,7 @@ export default function SettingsScreen() {
 
       {/* Header mit Avatar */}
       <div className="fade-in-1" style={{
-        padding: '32px 20px 24px',
+        padding: 'calc(32px + env(safe-area-inset-top)) 20px 24px',
         display: 'flex', alignItems: 'center', gap: '16px',
       }}>
         <div style={{
@@ -418,7 +418,7 @@ export default function SettingsScreen() {
             <div onClick={(e) => e.stopPropagation()} className="fade-in" style={{
               backgroundColor: 'var(--card)', borderRadius: '24px 24px 0 0',
               width: '100%', maxWidth: '600px',
-              maxHeight: '88vh', overflowY: 'auto', overflowX: 'hidden', boxSizing: 'border-box',
+              maxHeight: 'calc(100dvh - env(safe-area-inset-top) - 24px)', overflowY: 'auto', overflowX: 'hidden', boxSizing: 'border-box',
               padding: '24px 20px calc(32px + env(safe-area-inset-bottom))',
               zIndex: 9999,
             }}>

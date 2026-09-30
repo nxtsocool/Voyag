@@ -110,13 +110,13 @@ export default function JoinScreen() {
   const flaggeUrl = trip?.land_code ? `https://flagcdn.com/w80/${trip.land_code.toLowerCase()}.png` : null
 
   if (laden) return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '24px', maxWidth: '500px', margin: '0 auto', boxSizing: 'border-box' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '24px', paddingTop: 'calc(24px + env(safe-area-inset-top))', maxWidth: '500px', margin: '0 auto', boxSizing: 'border-box' }}>
       <div className="skeleton" style={{ height: '200px', borderRadius: '24px' }} />
     </div>
   )
 
   if (ungueltig) return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', textAlign: 'center' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', paddingTop: 'calc(24px + env(safe-area-inset-top))', textAlign: 'center' }}>
       <div style={{
         width: '72px', height: '72px', borderRadius: '20px',
         backgroundColor: 'var(--card)', display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -139,7 +139,7 @@ export default function JoinScreen() {
   )
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '24px', maxWidth: '500px', margin: '0 auto', boxSizing: 'border-box' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '24px', paddingTop: 'calc(24px + env(safe-area-inset-top))', maxWidth: '500px', margin: '0 auto', boxSizing: 'border-box' }}>
       <div className="fade-in" style={{
         backgroundColor: 'var(--card)', borderRadius: '24px', padding: '28px 24px',
         boxShadow: 'var(--shadow)', boxSizing: 'border-box', textAlign: 'center',
@@ -201,7 +201,7 @@ export default function JoinScreen() {
             style={{
               backgroundColor: 'var(--card)', borderRadius: '24px 24px 0 0',
               width: '100%', maxWidth: '600px',
-              maxHeight: '88vh', overflowY: 'auto', overflowX: 'hidden',
+              maxHeight: 'calc(100dvh - env(safe-area-inset-top) - 24px)', overflowY: 'auto', overflowX: 'hidden',
               boxSizing: 'border-box',
               padding: '24px 20px calc(32px + env(safe-area-inset-bottom))',
               zIndex: 9999,

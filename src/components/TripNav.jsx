@@ -27,7 +27,7 @@ function TripNav({ tripName }) {
     <div style={{ maxWidth: '600px', margin: '0 auto', padding: '0 clamp(14px, 4vw, 20px)' }}>
 
       {/* Zurück Button + Trip Name */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', paddingTop: '20px', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', paddingTop: 'calc(20px + env(safe-area-inset-top))', marginBottom: '20px' }}>
         <button onClick={() => navigate(`/trip/${id}`)} className="btn-press" style={{
           background: 'rgba(201,168,76,0.1)',
           border: '1px solid rgba(201,168,76,0.2)',

@@ -262,7 +262,7 @@ function TripInfo() {
 
   if (laden) return (
     <div style={{ paddingBottom: '40px' }}>
-      <div style={{ padding: '20px' }}>
+      <div style={{ padding: '20px', paddingTop: 'calc(20px + env(safe-area-inset-top))' }}>
         <div className="skeleton" style={{ height: '24px', borderRadius: '8px', marginBottom: '12px', width: '60%' }} />
         <div className="skeleton" style={{ height: '120px', borderRadius: '16px' }} />
       </div>

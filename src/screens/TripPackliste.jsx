@@ -179,7 +179,7 @@ export default function TripPackliste() {
   if (laden) return (
     <div style={{ paddingBottom: '40px' }}>
       <div style={{ padding: '0 20px', maxWidth: '600px', margin: '0 auto' }}>
-        <div className="skeleton" style={{ height: '120px', borderRadius: '22px', marginBottom: '16px', marginTop: '20px' }} />
+        <div className="skeleton" style={{ height: '120px', borderRadius: '22px', marginBottom: '16px', marginTop: 'calc(20px + env(safe-area-inset-top))' }} />
         <div className="skeleton" style={{ height: '300px', borderRadius: '22px' }} />
       </div>
     </div>

@@ -267,7 +267,7 @@ function TripKosten() {
   if (laden) return (
     <div style={{ paddingBottom: '40px' }}>
       <div style={{ padding: '0 20px', maxWidth: '600px', margin: '0 auto' }}>
-        <div className="skeleton" style={{ height: '160px', borderRadius: '24px', marginBottom: '16px', marginTop: '20px' }} />
+        <div className="skeleton" style={{ height: '160px', borderRadius: '24px', marginBottom: '16px', marginTop: 'calc(20px + env(safe-area-inset-top))' }} />
         <div className="skeleton" style={{ height: '240px', borderRadius: '22px' }} />
       </div>
     </div>
@@ -653,7 +653,7 @@ function TripKosten() {
           <div onClick={(e) => e.stopPropagation()} className="fade-in" style={{
             backgroundColor: 'var(--card)', borderRadius: '24px 24px 0 0',
             width: '100%', maxWidth: '600px',
-            maxHeight: '88vh', overflowY: 'auto', overflowX: 'hidden', boxSizing: 'border-box',
+            maxHeight: 'calc(100dvh - env(safe-area-inset-top) - 24px)', overflowY: 'auto', overflowX: 'hidden', boxSizing: 'border-box',
             padding: '24px 20px calc(32px + env(safe-area-inset-bottom))',
             zIndex: 9999,
           }}>

@@ -79,7 +79,9 @@ export default function OnboardingScreen({ user, onComplete }) {
         alignItems: 'center', justifyContent: 'center',
         backgroundColor: 'var(--bg)',
         backgroundImage: 'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(201,168,76,0.12) 0%, transparent 70%)',
-        padding: 'clamp(20px, 5vw, 40px)', boxSizing: 'border-box',
+        padding: 'clamp(20px, 5vw, 40px)',
+        paddingTop: 'calc(clamp(20px, 5vw, 40px) + env(safe-area-inset-top))',
+        boxSizing: 'border-box',
       }}>
         <div style={{ width: '100%', maxWidth: '400px', boxSizing: 'border-box' }}>
 

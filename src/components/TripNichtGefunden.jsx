@@ -10,7 +10,7 @@ export default function TripNichtGefunden() {
   const { t } = useSettings()
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', textAlign: 'center' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', paddingTop: 'calc(24px + env(safe-area-inset-top))', textAlign: 'center' }}>
       <div style={{
         width: '72px', height: '72px', borderRadius: '20px',
         backgroundColor: 'var(--card)', display: 'flex', alignItems: 'center', justifyContent: 'center',
