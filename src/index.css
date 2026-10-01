@@ -15,6 +15,11 @@
   --input-bg:     #1a2235;
   --input-border: rgba(255,255,255,0.08);
   --nav-bg:       #111827;
+  /* Weltkarte (MapScreen) – eigene Tokens statt hart codierter Farben im D3-Code (O6) */
+  --map-ocean:      #080d1a;
+  --map-land:       #1a2235;
+  --map-land-hover: #2a3a55;
+  --map-stroke:     #0a0f1e;
 }
 
 /* Light Mode – warmes Creme mit gedämpftem Gold */
@@ -34,6 +39,11 @@
   --input-bg:     #ede8de;
   --input-border: rgba(139,110,60,0.2);
   --nav-bg:       #faf7f2;
+  /* Weltkarte (MapScreen) – eigene Tokens statt hart codierter Farben im D3-Code (O6) */
+  --map-ocean:      #e8e0d0;
+  --map-land:       #d9cfb8;
+  --map-land-hover: #c9bc9c;
+  --map-stroke:     #f5f0e8;
 }
 
 * {

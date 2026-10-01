@@ -63,6 +63,9 @@ function MapScreen() {
   const [suche, setSuche] = useState('')
   const [popup, setPopup] = useState(null)
   const [balkenBreite, setBalkenBreite] = useState(0)
+  // Zählt bei jedem Fenster-Resize hoch, damit die Karte bei Rotation/Größenänderung
+  // neu gezeichnet wird statt die Breite vom Erstzeichnen beizubehalten (O6)
+  const [resizeTick, setResizeTick] = useState(0)
   const svgRef = useRef(null)
   const mapContainerRef = useRef(null)
 
@@ -122,6 +125,21 @@ function MapScreen() {
 
   const { ziehen, fortschritt, schwellenwert } = usePullToRefresh(laden)
 
+  // Karte bei Fenster-Resize (z.B. Rotation) neu zeichnen (O6) – debounced,
+  // damit nicht bei jedem einzelnen Resize-Event sofort neu gerendert wird
+  useEffect(() => {
+    let timer = null
+    const aufResize = () => {
+      clearTimeout(timer)
+      timer = setTimeout(() => setResizeTick(n => n + 1), 200)
+    }
+    window.addEventListener('resize', aufResize)
+    return () => {
+      window.removeEventListener('resize', aufResize)
+      clearTimeout(timer)
+    }
+  }, [])
+
   // Fortschrittsbalken animiert einblenden
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -137,10 +155,12 @@ function MapScreen() {
 
     const besuchteCodesListe = besucht.map(b => b.country_code)
     const geplanteCodesListe = geplant.map(g => g.country_code)
+    // Farben über CSS-Variablen statt hart codierter Hex-Werte, damit die Karte
+    // im Light Mode nicht die dunklen Dark-Mode-Farben behält (O6)
     const farbeFuer = (code, hover) => {
-      if (besuchteCodesListe.includes(code)) return hover ? '#e0b84a' : '#c9a84c'
-      if (geplanteCodesListe.includes(code)) return hover ? 'rgba(201,168,76,0.55)' : 'rgba(201,168,76,0.35)'
-      return hover ? '#2a3a55' : '#1a2235'
+      if (besuchteCodesListe.includes(code)) return hover ? 'var(--gold)' : 'rgba(var(--gold-rgb), 0.9)'
+      if (geplanteCodesListe.includes(code)) return hover ? 'rgba(var(--gold-rgb), 0.55)' : 'rgba(var(--gold-rgb), 0.35)'
+      return hover ? 'var(--map-land-hover)' : 'var(--map-land)'
     }
     const width = mapContainerRef.current.clientWidth
     const height = Math.round(width * 0.55)
@@ -155,7 +175,7 @@ function MapScreen() {
     svg.append('rect')
       .attr('width', width)
       .attr('height', height)
-      .attr('fill', '#080d1a')
+      .attr('fill', 'var(--map-ocean)')
       .on('click', () => setPopup(null))
 
     const g = svg.append('g')
@@ -178,19 +198,23 @@ function MapScreen() {
     svg.call(zoom)
     svg.call(zoom.transform, zoomTransformRef.current)
 
-    fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')
+    // Lokal aus public/ geladen statt von einem externen CDN zur Laufzeit (O6)
+    fetch('/countries-110m.json')
       .then(r => r.json())
       .then(world => {
         if (abgebrochen) return
         const countries = topojson.feature(world, world.objects.countries)
+        // Antarktis wird nirgends als reisbares Land gelistet und nur als
+        // graue Fläche am unteren Kartenrand angezeigt – raus damit (O6)
+        const landFeatures = countries.features.filter(d => String(d.id).padStart(3, '0') !== '010')
 
         g.selectAll('path')
-          .data(countries.features)
+          .data(landFeatures)
           .enter()
           .append('path')
           .attr('d', path)
           .attr('fill', d => farbeFuer(countryIds[String(d.id).padStart(3, '0')], false))
-          .attr('stroke', '#0a0f1e')
+          .attr('stroke', 'var(--map-stroke)')
           .attr('stroke-width', 0.3)
           .style('cursor', 'pointer')
           .on('mouseover', function(event, d) {
@@ -234,7 +258,7 @@ function MapScreen() {
       })
 
     return () => { abgebrochen = true }
-  }, [besucht, geplant, sprache])
+  }, [besucht, geplant, sprache, resizeTick])
 
   const landHinzufuegen = async (code) => {
     const codes = besucht.map(b => b.country_code)
@@ -273,7 +297,9 @@ function MapScreen() {
   return (
     <div style={{
       padding: 'clamp(14px, 4vw, 20px)',
-      maxWidth: '680px',
+      // Etwas breiter als die restlichen 680px-Screens (O6) – die Karte braucht
+      // auf Tablet/Desktop mehr Platz, um Länderdetails erkennbar zu machen
+      maxWidth: '820px',
       margin: '0 auto',
       paddingTop: 'calc(clamp(14px, 4vw, 20px) + env(safe-area-inset-top))',
       paddingBottom: 'calc(120px + env(safe-area-inset-bottom))',
@@ -453,15 +479,15 @@ function MapScreen() {
       {/* Legende unter der Karte (K11/W16) */}
       <div className="fade-in" style={{ display: 'flex', gap: '18px', flexWrap: 'wrap', marginBottom: '14px', padding: '0 4px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ width: '12px', height: '12px', borderRadius: '3px', backgroundColor: '#c9a84c', flexShrink: 0 }} />
+          <span style={{ width: '12px', height: '12px', borderRadius: '3px', backgroundColor: 'rgba(var(--gold-rgb), 0.9)', flexShrink: 0 }} />
           <span style={{ fontSize: '0.78rem', color: 'var(--text-sub)' }}>{t('legendeBereist')}</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ width: '12px', height: '12px', borderRadius: '3px', backgroundColor: 'rgba(201,168,76,0.35)', flexShrink: 0 }} />
+          <span style={{ width: '12px', height: '12px', borderRadius: '3px', backgroundColor: 'rgba(var(--gold-rgb), 0.35)', flexShrink: 0 }} />
           <span style={{ fontSize: '0.78rem', color: 'var(--text-sub)' }}>{t('legendeGeplant')}</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ width: '12px', height: '12px', borderRadius: '3px', backgroundColor: '#1a2235', flexShrink: 0, border: '1px solid var(--border)' }} />
+          <span style={{ width: '12px', height: '12px', borderRadius: '3px', backgroundColor: 'var(--map-land)', flexShrink: 0, border: '1px solid var(--border)' }} />
           <span style={{ fontSize: '0.78rem', color: 'var(--text-sub)' }}>{t('legendeUnbekannt')}</span>
         </div>
       </div>
