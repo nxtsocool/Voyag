@@ -12,6 +12,17 @@ const passwortStaerkeBerechnen = (pw) => {
   return 'mittel'
 }
 
+// Bekannte Supabase-Auth-Fehlermeldungen auf übersetzte Texte abbilden (W13) –
+// unbekannte Meldungen bekommen einen generischen Fallback statt des rohen Englisch-Texts
+const authFehlerUebersetzen = (message, t) => {
+  if (!message) return t('authFehlerAllgemein')
+  if (message.includes('already registered')) return t('authFehlerBereitsRegistriert')
+  if (message.includes('Password should be at least')) return t('authFehlerPasswortZuKurz')
+  if (message.includes('rate limit')) return t('authFehlerRateLimit')
+  if (message.includes('Invalid login credentials')) return t('loginFehlerFalsch')
+  return t('authFehlerAllgemein')
+}
+
 function LoginScreen({ emailNichtBestaetigt }) {
   const { t, sprache, setSprache } = useSettings()
   const [email, setEmail] = useState('')
@@ -78,7 +89,7 @@ function LoginScreen({ emailNichtBestaetigt }) {
         },
       })
       if (error) {
-        setFehler(error.message)
+        setFehler(authFehlerUebersetzen(error.message, t))
       } else {
         setRegistrierteEmail(email)
         setRegistrierungErfolgreich(true)
@@ -108,7 +119,7 @@ function LoginScreen({ emailNichtBestaetigt }) {
       redirectTo: window.location.origin,
     })
     setPasswortResetLaeuft(false)
-    if (error) setFehler(error.message)
+    if (error) setFehler(authFehlerUebersetzen(error.message, t))
     else setPasswortResetGesendet(true)
   }
 
@@ -463,6 +474,7 @@ function LoginScreen({ emailNichtBestaetigt }) {
             <input
               placeholder={t('email')} type="email" value={email}
               onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email" name="email" inputMode="email"
               style={{ ...inputStyle, paddingLeft: '44px' }}
             />
           </div>
@@ -479,6 +491,7 @@ function LoginScreen({ emailNichtBestaetigt }) {
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                autoComplete="name" name="name"
                 style={{ ...inputStyle, paddingLeft: '44px' }}
               />
             </div>
@@ -498,6 +511,7 @@ function LoginScreen({ emailNichtBestaetigt }) {
               onChange={(e) => setPasswort(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
               autoComplete={isRegistrieren ? 'new-password' : 'current-password'}
+              name="password"
               style={{ ...inputStyle, paddingLeft: '44px', paddingRight: '48px' }}
             />
             <button
@@ -596,6 +610,7 @@ function LoginScreen({ emailNichtBestaetigt }) {
                 value={passwortBestaetigung}
                 onChange={(e) => setPasswortBestaetigung(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+                autoComplete="new-password" name="password-confirm"
                 style={{
                   ...inputStyle,
                   paddingLeft: '44px',
