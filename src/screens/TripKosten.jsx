@@ -107,7 +107,7 @@ function TripKosten() {
 
   // Pflichtfeld-Hinweis (W3) – welches Feld fehlt noch fürs Speichern
   const formFehlendesFeld = !formDaten.beschreibung.trim() ? t('beschreibungPlatzhalter')
-    : !formDaten.betrag ? t('betragPlatzhalter')
+    : !formDaten.betrag || parseFloat(formDaten.betrag) <= 0 ? t('betragPlatzhalter')
     : !formDaten.bezahlt_von ? t('bezahltVonOption')
     : null
 
@@ -148,7 +148,7 @@ function TripKosten() {
     // Schnelles Doppel-Tippen auf den Speichern-Button würde sonst die Ausgabe doppelt anlegen/speichern
     if (speichernLaeuft) return
 
-    if (!formDaten.beschreibung || !formDaten.betrag || !formDaten.bezahlt_von) {
+    if (!formDaten.beschreibung || !formDaten.betrag || parseFloat(formDaten.betrag) <= 0 || !formDaten.bezahlt_von) {
       toast(t('bitteAlleFelderAusfuellen'), 'error')
       return
     }
@@ -610,7 +610,10 @@ function TripKosten() {
               onChange={(e) => setFormDaten({ ...formDaten, beschreibung: e.target.value })}
               style={inputStyle} />
 
-            <input placeholder={t('betragInWaehrungPlatzhalter')} type="number" value={formDaten.betrag}
+            {/* min/step verhindern negative/zu feine Werte, inputMode öffnet auf iOS
+                direkt die Zifferntastatur mit Dezimalpunkt statt der Standardtastatur (O8) */}
+            <input placeholder={t('betragInWaehrungPlatzhalter')} type="number"
+              min="0" step="0.01" inputMode="decimal" value={formDaten.betrag}
               onChange={(e) => setFormDaten({ ...formDaten, betrag: e.target.value })}
               style={inputStyle} />
 
