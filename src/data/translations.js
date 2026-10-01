@@ -342,7 +342,7 @@ export const translations = {
 
     // Onboarding
     onboardingWillkommen: (name) => `Willkommen, ${name}! 👋`,
-    onboardingWillkommenSubtitel: 'Voyag hilft dir deine Gruppenreisen zu organisieren – Kosten teilen, Packlisten, Fotos und mehr.',
+    onboardingWillkommenSubtitel: 'Voyag hilft dir deine Gruppenreisen zu organisieren – Kosten teilen, Packlisten, Orte und mehr.',
     onboardingLosGehts: "Los geht's →",
     onboardingSpracheTitel: 'Deine Sprache',
     onboardingWeiter: 'Weiter →',
@@ -705,7 +705,7 @@ export const translations = {
 
     // Onboarding
     onboardingWillkommen: (name) => `Welcome, ${name}! 👋`,
-    onboardingWillkommenSubtitel: 'Voyag helps you organize group trips – split costs, packing lists, photos and more.',
+    onboardingWillkommenSubtitel: 'Voyag helps you organize group trips – split costs, packing lists, places and more.',
     onboardingLosGehts: "Let's go →",
     onboardingSpracheTitel: 'Your Language',
     onboardingWeiter: 'Next →',
