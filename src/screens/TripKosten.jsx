@@ -26,20 +26,21 @@ function TripKosten() {
   const [abrechnungen, setAbrechnungen] = useState([]) // bereits beglichene Schulden
   const [currentUserId, setCurrentUserId] = useState(null)
   const [laden, setLaden] = useState(true)
-  const [formularOffen, setFormularOffen] = useState(false) // Bottom Sheet für neue Ausgabe
+  // Ein Bottom-Sheet für Neu + Bearbeiten (W9) – bearbeiteAusgabe null = neu anlegen,
+  // sonst die Original-Ausgabe, die gerade bearbeitet wird
+  const [formularOffen, setFormularOffen] = useState(false)
   const [bearbeiteAusgabe, setBearbeiteAusgabe] = useState(null)
   const [abrechnenOffen, setAbrechnenOffen] = useState(false)
   // Ob die gesamte Ausgaben-Liste aufgeklappt ist – standardmäßig aufgeklappt
   const [ausgabenOffen, setAusgabenOffen] = useState(true)
-  // Schützt gegen doppeltes Anlegen einer Ausgabe durch schnelles Doppel-Tippen
+  // Schützt gegen doppeltes Anlegen/Speichern einer Ausgabe durch schnelles Doppel-Tippen
   const [speichernLaeuft, setSpeichernLaeuft] = useState(false)
-  // Schützt gegen doppeltes Bearbeiten/Abrechnen durch schnelles Doppel-Tippen –
-  // als Set (nicht ein einzelner Boolean), da mehrere Einträge unabhängig
-  // voneinander gleichzeitig in der Liste bearbeitbar sind
-  const [bearbeitenLaeuft, setBearbeitenLaeuft] = useState(new Set())
+  // Schützt gegen doppeltes Abrechnen durch schnelles Doppel-Tippen – als Set
+  // (nicht ein einzelner Boolean), da mehrere Schulden unabhängig voneinander
+  // gleichzeitig in der Liste abrechenbar sind
   const [abrechnenLaeuft, setAbrechnenLaeuft] = useState(new Set())
 
-  const [neueAusgabe, setNeueAusgabe] = useState({
+  const [formDaten, setFormDaten] = useState({
     beschreibung: '', betrag: '', bezahlt_von: '', fuer: [],
     datum: heuteISO(),
     waehrung: { symbol: '€', iso: 'EUR' },
@@ -101,17 +102,49 @@ function TripKosten() {
     teilnehmer.find(p => p.id === teilnehmerId)?.name || t('unbekannterTeilnehmer')
 
   // Pflichtfeld-Hinweis (W3) – welches Feld fehlt noch fürs Speichern
-  const neueAusgabeFehlendesFeld = !neueAusgabe.beschreibung.trim() ? t('beschreibungPlatzhalter')
-    : !neueAusgabe.betrag ? t('betragPlatzhalter')
-    : !neueAusgabe.bezahlt_von ? t('bezahltVonOption')
+  const formFehlendesFeld = !formDaten.beschreibung.trim() ? t('beschreibungPlatzhalter')
+    : !formDaten.betrag ? t('betragPlatzhalter')
+    : !formDaten.bezahlt_von ? t('bezahltVonOption')
     : null
 
-  // Neue Ausgabe speichern
-  const ausgabeHinzufuegen = async () => {
-    // Schnelles Doppel-Tippen auf den Speichern-Button würde sonst die Ausgabe doppelt anlegen
+  // Sheet öffnen – leer (mit sinnvollen Vorbelegungen) für Neu, vorausgefüllt
+  // für Bearbeiten; ein einziges Bottom-Sheet für beide Fälle (W9)
+  const sheetOeffnen = (ausgabe = null) => {
+    setBearbeiteAusgabe(ausgabe)
+    if (ausgabe) {
+      setFormDaten({
+        beschreibung: ausgabe.beschreibung,
+        betrag: String(ausgabe.betrag_original != null ? ausgabe.betrag_original : ausgabe.betrag),
+        bezahlt_von: String(ausgabe.bezahlt_von_id),
+        fuer: ausgabe.fuer_ids || [],
+        datum: ausgabe.datum || heuteISO(),
+        // waehrung_original kann (vor K1) noch ein Symbol statt eines ISO-Codes sein
+        waehrung: (ausgabe.waehrung_original && WAEHRUNGEN.find(w => w.iso === symbolOderIsoZuIso(ausgabe.waehrung_original)))
+          || tripWaehrungObj,
+      })
+    } else {
+      setFormDaten({
+        beschreibung: '', betrag: '',
+        bezahlt_von: eigenerTeilnehmer ? String(eigenerTeilnehmer.id) : '',
+        fuer: [],
+        datum: heuteISO(),
+        waehrung: tripWaehrungObj,
+      })
+    }
+    setFormularOffen(true)
+  }
+
+  const sheetSchliessen = () => {
+    setFormularOffen(false)
+    setBearbeiteAusgabe(null)
+  }
+
+  // Ausgabe speichern – je nach Modus Insert oder Update (W9: ein Formular für beides)
+  const ausgabeSpeichern = async () => {
+    // Schnelles Doppel-Tippen auf den Speichern-Button würde sonst die Ausgabe doppelt anlegen/speichern
     if (speichernLaeuft) return
 
-    if (!neueAusgabe.beschreibung || !neueAusgabe.betrag || !neueAusgabe.bezahlt_von) {
+    if (!formDaten.beschreibung || !formDaten.betrag || !formDaten.bezahlt_von) {
       toast(t('bitteAlleFelderAusfuellen'), 'error')
       return
     }
@@ -121,38 +154,33 @@ function TripKosten() {
       // Betrag immer in die Trip-Währung umrechnen – Saldo/Schulden basieren
       // nur auf betrag, das für alle Mitreisenden dieselbe kanonische Zahl ist
       const betragInTrip = umrechnen(
-        parseFloat(neueAusgabe.betrag),
-        neueAusgabe.waehrung.iso,
+        parseFloat(formDaten.betrag),
+        formDaten.waehrung.iso,
         tripISO
       )
 
-      const { data, error } = await supabase
-        .from('ausgaben')
-        .insert([{
-          beschreibung: neueAusgabe.beschreibung,
-          betrag: parseFloat(betragInTrip.toFixed(2)),
-          betrag_original: parseFloat(neueAusgabe.betrag),
-          waehrung_original: neueAusgabe.waehrung.iso,
-          bezahlt_von_id: Number(neueAusgabe.bezahlt_von),
-          trip_id: id,
-          datum: neueAusgabe.datum,
-          fuer_ids: neueAusgabe.fuer.length > 0 ? neueAusgabe.fuer : null,
-        }])
-        .select()
+      const payload = {
+        beschreibung: formDaten.beschreibung,
+        betrag: parseFloat(betragInTrip.toFixed(2)),
+        betrag_original: parseFloat(formDaten.betrag),
+        waehrung_original: formDaten.waehrung.iso,
+        bezahlt_von_id: Number(formDaten.bezahlt_von),
+        datum: formDaten.datum,
+        fuer_ids: formDaten.fuer.length > 0 ? formDaten.fuer : null,
+      }
 
-      if (error) {
-        console.error('Fehler:', error)
-        toast(t('fehlerBeimSpeichern'), 'error')
+      if (bearbeiteAusgabe) {
+        const { error } = await supabase.from('ausgaben').update(payload).eq('id', bearbeiteAusgabe.id)
+        if (error) { console.error('Fehler:', error); toast(t('speichernFehlgeschlagen'), 'error'); return }
+        setAusgaben(ausgaben.map(a => a.id === bearbeiteAusgabe.id ? { ...a, ...payload } : a))
+        toast(t('gespeichertHaken'), 'success')
       } else {
+        const { data, error } = await supabase.from('ausgaben').insert([{ ...payload, trip_id: id }]).select()
+        if (error) { console.error('Fehler:', error); toast(t('fehlerBeimSpeichern'), 'error'); return }
         setAusgaben([data[0], ...ausgaben])
-        setNeueAusgabe({
-          beschreibung: '', betrag: '', bezahlt_von: eigenerTeilnehmer ? String(eigenerTeilnehmer.id) : '', fuer: [],
-          datum: heuteISO(),
-          waehrung: tripWaehrungObj,
-        })
-        setFormularOffen(false)
         toast(t('ausgabeHinzugefuegt'), 'success')
       }
+      sheetSchliessen()
     } finally {
       setSpeichernLaeuft(false)
     }
@@ -181,26 +209,6 @@ function TripKosten() {
     })
   }
 
-  const ausgabeBearbeiten = async (ausgabeId, updates) => {
-    if (bearbeitenLaeuft.has(ausgabeId)) return
-    setBearbeitenLaeuft(prev => new Set(prev).add(ausgabeId))
-    try {
-      const { error } = await supabase
-        .from('ausgaben')
-        .update(updates)
-        .eq('id', ausgabeId)
-
-      if (error) {
-        console.error('Fehler:', error)
-        toast(t('speichernFehlgeschlagen'), 'error')
-      } else {
-        setAusgaben(ausgaben.map(a => a.id === ausgabeId ? { ...a, ...updates } : a))
-        toast(t('gespeichertHaken'), 'success')
-      }
-    } finally {
-      setBearbeitenLaeuft(prev => { const next = new Set(prev); next.delete(ausgabeId); return next })
-    }
-  }
 
   // Salden/Schulden werden ID-basiert in utils/kosten.js berechnet (K6) –
   // Namensgleichheit oder Umbenennungen können die Kostenaufteilung damit
@@ -393,136 +401,55 @@ function TripKosten() {
 
                     {ausgabenDesTages.map((ausgabe, index) => (
                       <div key={ausgabe.id}>
-                        {bearbeiteAusgabe?.id === ausgabe.id ? (
-                          <div className="fade-in" style={{ marginBottom: '16px' }}>
-                            <input value={bearbeiteAusgabe.beschreibung}
-                              onChange={(e) => setBearbeiteAusgabe({ ...bearbeiteAusgabe, beschreibung: e.target.value })}
-                              style={inputStyle} placeholder={t('beschreibungPlatzhalter')} />
-                            <input type="number" value={bearbeiteAusgabe.betrag}
-                              onChange={(e) => setBearbeiteAusgabe({ ...bearbeiteAusgabe, betrag: e.target.value })}
-                              style={inputStyle} placeholder={t('betragPlatzhalter')} />
+                        <div className={`fade-in-${Math.min(index + 1, 5)}`} style={{
+                          display: 'flex', alignItems: 'flex-start', gap: '12px',
+                          paddingBottom: index < ausgabenDesTages.length - 1 ? '16px' : '0',
+                          marginBottom: index < ausgabenDesTages.length - 1 ? '16px' : '0',
+                          borderBottom: index < ausgabenDesTages.length - 1 ? '1px solid var(--border)' : 'none',
+                        }}>
+                          <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: 'var(--gold)', marginTop: '6px', flexShrink: 0, boxShadow: '0 0 8px rgba(201,168,76,0.4)' }} />
 
-                            {/* Währungs-Auswahl – gleicher Style wie beim Hinzufügen */}
-                            <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
-                              {WAEHRUNGEN.map(w => (
-                                <button
-                                  key={w.iso}
-                                  onClick={() => setBearbeiteAusgabe({ ...bearbeiteAusgabe, waehrung: w })}
-                                  className="btn-press"
-                                  style={{
-                                    flex: 1,
-                                    padding: '10px 8px',
-                                    borderRadius: '12px',
-                                    border: 'none',
-                                    cursor: 'pointer',
-                                    fontWeight: '700',
-                                    fontSize: '0.9rem',
-                                    backgroundColor: bearbeiteAusgabe.waehrung.iso === w.iso ? 'var(--gold)' : 'var(--sub)',
-                                    color: bearbeiteAusgabe.waehrung.iso === w.iso ? '#0a0f1e' : 'var(--text-sub)',
-                                  }}
-                                >
-                                  {w.symbol}
-                                </button>
-                              ))}
-                            </div>
-
-                            {bearbeiteAusgabe.betrag && bearbeiteAusgabe.waehrung.iso !== tripISO && (
-                              <p style={{
-                                color: 'var(--text-sub)', fontSize: '0.82rem',
-                                marginBottom: '10px', textAlign: 'right',
-                              }}>
-                                ≈ {umrechnen(parseFloat(bearbeiteAusgabe.betrag), bearbeiteAusgabe.waehrung.iso, tripISO).toFixed(2)}{tripSymbol}
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+                              <p style={{ fontWeight: '600', margin: '0 0 4px', wordBreak: 'normal', overflowWrap: 'anywhere', hyphens: 'auto', minWidth: 0, fontSize: '0.95rem' }}>
+                                {ausgabe.beschreibung}
                               </p>
-                            )}
-
-                            <input type="date" value={bearbeiteAusgabe.datum}
-                              onChange={(e) => setBearbeiteAusgabe({ ...bearbeiteAusgabe, datum: e.target.value })}
-                              style={dateInputStyle} />
-                            <select value={bearbeiteAusgabe.bezahlt_von_id}
-                              onChange={(e) => setBearbeiteAusgabe({ ...bearbeiteAusgabe, bezahlt_von_id: e.target.value })}
-                              style={{ ...inputStyle, appearance: 'none' }}>
-                              {teilnehmer.map(person => <option key={person.id} value={person.id}>{person.name}</option>)}
-                            </select>
-                            <div style={{ display: 'flex', gap: '8px' }}>
-                              <button onClick={async () => {
-                                const betragInTrip = umrechnen(
-                                  parseFloat(bearbeiteAusgabe.betrag),
-                                  bearbeiteAusgabe.waehrung.iso,
-                                  tripISO
-                                )
-                                await ausgabeBearbeiten(ausgabe.id, {
-                                  beschreibung: bearbeiteAusgabe.beschreibung,
-                                  betrag: parseFloat(betragInTrip.toFixed(2)),
-                                  betrag_original: parseFloat(bearbeiteAusgabe.betrag),
-                                  waehrung_original: bearbeiteAusgabe.waehrung.iso,
-                                  bezahlt_von_id: Number(bearbeiteAusgabe.bezahlt_von_id),
-                                  datum: bearbeiteAusgabe.datum,
-                                })
-                                setBearbeiteAusgabe(null)
-                              }} disabled={bearbeitenLaeuft.has(ausgabe.id)} className="btn-press" style={{ ...speichernButtonStyle, flex: 1, opacity: bearbeitenLaeuft.has(ausgabe.id) ? 0.6 : 1 }}>
-                                {bearbeitenLaeuft.has(ausgabe.id) ? t('wirdGespeichert') : t('speichern')}
-                              </button>
-                              <button onClick={() => setBearbeiteAusgabe(null)} className="btn-press" style={{ ...abbrechenButtonStyle, flex: 1 }}>{t('abbrechen')}</button>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className={`fade-in-${Math.min(index + 1, 5)}`} style={{
-                            display: 'flex', alignItems: 'flex-start', gap: '12px',
-                            paddingBottom: index < ausgabenDesTages.length - 1 ? '16px' : '0',
-                            marginBottom: index < ausgabenDesTages.length - 1 ? '16px' : '0',
-                            borderBottom: index < ausgabenDesTages.length - 1 ? '1px solid var(--border)' : 'none',
-                          }}>
-                            <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: 'var(--gold)', marginTop: '6px', flexShrink: 0, boxShadow: '0 0 8px rgba(201,168,76,0.4)' }} />
-
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
-                                <p style={{ fontWeight: '600', margin: '0 0 4px', wordBreak: 'normal', overflowWrap: 'anywhere', hyphens: 'auto', minWidth: 0, fontSize: '0.95rem' }}>
-                                  {ausgabe.beschreibung}
-                                </p>
-                                <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                                  <span style={{ fontSize: '1.1rem', color: 'var(--gold)', fontWeight: '700', whiteSpace: 'nowrap' }}>
-                                    {/* Betrag ist immer in Trip-Währung; bei Fremdwährungs-Eintrag zusätzlich der Original-Betrag */}
-                                    {ausgabe.waehrung_original && symbolOderIsoZuIso(ausgabe.waehrung_original) !== tripISO
-                                      ? `${Number(ausgabe.betrag_original).toFixed(2)}${WAEHRUNGEN.find(w => w.iso === symbolOderIsoZuIso(ausgabe.waehrung_original))?.symbol || ''} (${Number(ausgabe.betrag).toFixed(2)}${tripSymbol})`
-                                      : `${Number(ausgabe.betrag).toFixed(2)}${tripSymbol}`}
-                                  </span>
-                                  {/* Optionale Zusatzzeile in der Heimwährung des Betrachters, wenn sie von der Trip-Währung abweicht */}
-                                  {heimISO !== tripISO && (
-                                    <p style={{ margin: '2px 0 0', fontSize: '0.72rem', color: 'var(--text-sub)', whiteSpace: 'nowrap' }}>
-                                      ≈ {umrechnen(ausgabe.betrag, tripISO, heimISO).toFixed(2)}{WAEHRUNGEN.find(w => w.iso === heimISO)?.symbol}
-                                    </p>
-                                  )}
-                                </div>
+                              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                                <span style={{ fontSize: '1.1rem', color: 'var(--gold)', fontWeight: '700', whiteSpace: 'nowrap' }}>
+                                  {/* Betrag ist immer in Trip-Währung; bei Fremdwährungs-Eintrag zusätzlich der Original-Betrag */}
+                                  {ausgabe.waehrung_original && symbolOderIsoZuIso(ausgabe.waehrung_original) !== tripISO
+                                    ? `${Number(ausgabe.betrag_original).toFixed(2)}${WAEHRUNGEN.find(w => w.iso === symbolOderIsoZuIso(ausgabe.waehrung_original))?.symbol || ''} (${Number(ausgabe.betrag).toFixed(2)}${tripSymbol})`
+                                    : `${Number(ausgabe.betrag).toFixed(2)}${tripSymbol}`}
+                                </span>
+                                {/* Optionale Zusatzzeile in der Heimwährung des Betrachters, wenn sie von der Trip-Währung abweicht */}
+                                {heimISO !== tripISO && (
+                                  <p style={{ margin: '2px 0 0', fontSize: '0.72rem', color: 'var(--text-sub)', whiteSpace: 'nowrap' }}>
+                                    ≈ {umrechnen(ausgabe.betrag, tripISO, heimISO).toFixed(2)}{WAEHRUNGEN.find(w => w.iso === heimISO)?.symbol}
+                                  </p>
+                                )}
                               </div>
-                              <p style={{ color: 'var(--text-sub)', fontSize: '0.78rem', margin: 0, overflowWrap: 'break-word', wordBreak: 'break-word' }}>
-                                {t('bezahltVonText')(teilnehmerName(ausgabe.bezahlt_von_id))}
-                                {(() => {
-                                  const fuerArr = ausgabe.fuer_ids || []
-                                  const alleBetroffen = fuerArr.length === 0 || fuerArr.length === teilnehmer.length
-                                  return (
-                                    <span> · {alleBetroffen ? t('fuerAlleText') : t('fuerWenText')(fuerArr.map(teilnehmerName).join(', '))}</span>
-                                  )
-                                })()}
-                              </p>
                             </div>
-
-                            <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
-                              <button onClick={() => setBearbeiteAusgabe({
-                                ...ausgabe,
-                                datum: ausgabe.datum || heuteISO(),
-                                betrag: ausgabe.betrag_original != null ? ausgabe.betrag_original : ausgabe.betrag,
-                                // waehrung_original kann (vor K1) noch ein Symbol statt eines ISO-Codes sein
-                                waehrung: (ausgabe.waehrung_original && WAEHRUNGEN.find(w => w.iso === symbolOderIsoZuIso(ausgabe.waehrung_original)))
-                                  || tripWaehrungObj,
-                              })} className="btn-press" style={ikonButtonStyle}>
-                                <SquarePen size={13} color="var(--gold)" />
-                              </button>
-                              <button onClick={() => ausgabeLoeschen(ausgabe.id)} className="btn-press" style={ikonButtonStyleRot}>
-                                <Trash2 size={13} color="#e94560" />
-                              </button>
-                            </div>
+                            <p style={{ color: 'var(--text-sub)', fontSize: '0.78rem', margin: 0, overflowWrap: 'break-word', wordBreak: 'break-word' }}>
+                              {t('bezahltVonText')(teilnehmerName(ausgabe.bezahlt_von_id))}
+                              {(() => {
+                                const fuerArr = ausgabe.fuer_ids || []
+                                const alleBetroffen = fuerArr.length === 0 || fuerArr.length === teilnehmer.length
+                                return (
+                                  <span> · {alleBetroffen ? t('fuerAlleText') : t('fuerWenText')(fuerArr.map(teilnehmerName).join(', '))}</span>
+                                )
+                              })()}
+                            </p>
                           </div>
-                        )}
+
+                          <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
+                            <button onClick={() => sheetOeffnen(ausgabe)} className="btn-press" style={ikonButtonStyle}>
+                              <SquarePen size={13} color="var(--gold)" />
+                            </button>
+                            <button onClick={() => ausgabeLoeschen(ausgabe.id)} className="btn-press" style={ikonButtonStyleRot}>
+                              <Trash2 size={13} color="#e94560" />
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -626,17 +553,7 @@ function TripKosten() {
 
       {/* Floating Action Button – wie bei Splid – bottom berücksichtigt Safe-Area, damit er nicht mit der BottomNav kollidiert */}
       <button
-        onClick={() => {
-          // Vorbelegung fürs "Neue Ausgabe"-Sheet erst beim Öffnen setzen (nicht
-          // per Effect), damit weder das State-Update noch ein bereits vom Nutzer
-          // gewähltes Feld ungewollt überschrieben wird
-          setNeueAusgabe(prev => ({
-            ...prev,
-            bezahlt_von: prev.bezahlt_von || (eigenerTeilnehmer ? String(eigenerTeilnehmer.id) : ''),
-            waehrung: prev.waehrung.iso === tripISO ? prev.waehrung : tripWaehrungObj,
-          }))
-          setFormularOffen(true)
-        }}
+        onClick={() => sheetOeffnen()}
         className="btn-press"
         style={{
           position: 'fixed', bottom: 'calc(20px + env(safe-area-inset-bottom))', right: '20px',
@@ -652,7 +569,7 @@ function TripKosten() {
 
       {/* Neue Ausgabe – Bottom Sheet Modal */}
       {formularOffen && (
-        <div onClick={() => setFormularOffen(false)} style={{
+        <div onClick={sheetSchliessen} style={{
           position: 'fixed', inset: 0,
           backgroundColor: 'rgba(0,0,0,0.6)',
           display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
@@ -669,8 +586,10 @@ function TripKosten() {
             <div style={{ width: '40px', height: '4px', backgroundColor: 'var(--sub)', borderRadius: '2px', margin: '0 auto 20px' }} />
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h3 style={{ margin: 0, fontWeight: '800', fontSize: '1.2rem' }}>{t('neueAusgabeTitel')}</h3>
-              <button onClick={() => setFormularOffen(false)} style={{
+              <h3 style={{ margin: 0, fontWeight: '800', fontSize: '1.2rem' }}>
+                {bearbeiteAusgabe ? t('ausgabeBearbeitenTitel') : t('neueAusgabeTitel')}
+              </h3>
+              <button onClick={sheetSchliessen} style={{
                 background: 'var(--sub)', border: 'none', borderRadius: '50%',
                 width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 cursor: 'pointer', color: 'var(--text-sub)',
@@ -679,12 +598,12 @@ function TripKosten() {
               </button>
             </div>
 
-            <input placeholder={t('beschreibungPlatzhalter')} value={neueAusgabe.beschreibung}
-              onChange={(e) => setNeueAusgabe({ ...neueAusgabe, beschreibung: e.target.value })}
+            <input placeholder={t('beschreibungPlatzhalter')} value={formDaten.beschreibung}
+              onChange={(e) => setFormDaten({ ...formDaten, beschreibung: e.target.value })}
               style={inputStyle} />
 
-            <input placeholder={t('betragInWaehrungPlatzhalter')} type="number" value={neueAusgabe.betrag}
-              onChange={(e) => setNeueAusgabe({ ...neueAusgabe, betrag: e.target.value })}
+            <input placeholder={t('betragInWaehrungPlatzhalter')} type="number" value={formDaten.betrag}
+              onChange={(e) => setFormDaten({ ...formDaten, betrag: e.target.value })}
               style={inputStyle} />
 
             {/* Währungs-Auswahl für den eingegebenen Betrag */}
@@ -692,7 +611,7 @@ function TripKosten() {
               {WAEHRUNGEN.map(w => (
                 <button
                   key={w.iso}
-                  onClick={() => setNeueAusgabe({ ...neueAusgabe, waehrung: w })}
+                  onClick={() => setFormDaten({ ...formDaten, waehrung: w })}
                   className="btn-press"
                   style={{
                     flex: 1,
@@ -702,8 +621,8 @@ function TripKosten() {
                     cursor: 'pointer',
                     fontWeight: '700',
                     fontSize: '0.9rem',
-                    backgroundColor: neueAusgabe.waehrung.iso === w.iso ? 'var(--gold)' : 'var(--sub)',
-                    color: neueAusgabe.waehrung.iso === w.iso ? '#0a0f1e' : 'var(--text-sub)',
+                    backgroundColor: formDaten.waehrung.iso === w.iso ? 'var(--gold)' : 'var(--sub)',
+                    color: formDaten.waehrung.iso === w.iso ? '#0a0f1e' : 'var(--text-sub)',
                   }}
                 >
                   {w.symbol}
@@ -712,21 +631,21 @@ function TripKosten() {
             </div>
 
             {/* Live-Umrechnung anzeigen, wenn eine Fremdwährung gewählt wurde */}
-            {neueAusgabe.betrag && neueAusgabe.waehrung.iso !== tripISO && (
+            {formDaten.betrag && formDaten.waehrung.iso !== tripISO && (
               <p style={{
                 color: 'var(--text-sub)', fontSize: '0.82rem',
                 marginBottom: '10px', textAlign: 'right',
               }}>
-                ≈ {umrechnen(parseFloat(neueAusgabe.betrag), neueAusgabe.waehrung.iso, tripISO).toFixed(2)}{tripSymbol}
+                ≈ {umrechnen(parseFloat(formDaten.betrag), formDaten.waehrung.iso, tripISO).toFixed(2)}{tripSymbol}
               </p>
             )}
 
-            <input type="date" value={neueAusgabe.datum}
-              onChange={(e) => setNeueAusgabe({ ...neueAusgabe, datum: e.target.value })}
+            <input type="date" value={formDaten.datum}
+              onChange={(e) => setFormDaten({ ...formDaten, datum: e.target.value })}
               style={dateInputStyle} />
 
-            <select value={neueAusgabe.bezahlt_von}
-              onChange={(e) => setNeueAusgabe({ ...neueAusgabe, bezahlt_von: e.target.value })}
+            <select value={formDaten.bezahlt_von}
+              onChange={(e) => setFormDaten({ ...formDaten, bezahlt_von: e.target.value })}
               style={{ ...inputStyle, appearance: 'none' }}>
               <option value="">{t('bezahltVonOption')}</option>
               {teilnehmer.map(person => <option key={person.id} value={person.id}>{person.name}</option>)}
@@ -736,15 +655,15 @@ function TripKosten() {
               {t('fuerWenLeerAlle')}
             </p>
             {teilnehmer.map(person => {
-              const istGewaehlt = neueAusgabe.fuer.includes(person.id)
+              const istGewaehlt = formDaten.fuer.includes(person.id)
               return (
                 <div key={person.id}
                   onClick={() => {
-                    const aktuell = neueAusgabe.fuer
+                    const aktuell = formDaten.fuer
                     const neu = aktuell.includes(person.id)
                       ? aktuell.filter(p => p !== person.id)
                       : [...aktuell, person.id]
-                    setNeueAusgabe({ ...neueAusgabe, fuer: neu })
+                    setFormDaten({ ...formDaten, fuer: neu })
                   }}
                   className="btn-press"
                   style={{
@@ -769,16 +688,16 @@ function TripKosten() {
               )
             })}
 
-            {neueAusgabeFehlendesFeld && (
+            {formFehlendesFeld && (
               <p style={{ color: 'var(--text-sub)', fontSize: '0.78rem', margin: '10px 0 0' }}>
-                {t('pflichtfeldFehlt')(neueAusgabeFehlendesFeld)}
+                {t('pflichtfeldFehlt')(formFehlendesFeld)}
               </p>
             )}
             <div style={{ display: 'flex', gap: '10px', marginTop: '18px' }}>
-              <button onClick={ausgabeHinzufuegen} disabled={speichernLaeuft || !!neueAusgabeFehlendesFeld} className="btn-press" style={{ ...speichernButtonStyle, flex: 1, opacity: speichernLaeuft || neueAusgabeFehlendesFeld ? 0.6 : 1 }}>
+              <button onClick={ausgabeSpeichern} disabled={speichernLaeuft || !!formFehlendesFeld} className="btn-press" style={{ ...speichernButtonStyle, flex: 1, opacity: speichernLaeuft || formFehlendesFeld ? 0.6 : 1 }}>
                 {speichernLaeuft ? t('wirdGespeichert') : t('speichern')}
               </button>
-              <button onClick={() => setFormularOffen(false)} className="btn-press" style={{ ...abbrechenButtonStyle, flex: 1 }}>{t('abbrechen')}</button>
+              <button onClick={sheetSchliessen} className="btn-press" style={{ ...abbrechenButtonStyle, flex: 1 }}>{t('abbrechen')}</button>
             </div>
           </div>
         </div>
