@@ -68,9 +68,15 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Tap-Highlight und iOS Callout-Menü auf allen Elementen entfernen */
+/* Tap-Highlight auf allen Elementen entfernen (harmlos, betrifft nur den grauen Tap-Flash) */
 * {
   -webkit-tap-highlight-color: transparent;
+}
+
+/* iOS Callout-Menü (Kopieren/Teilen bei Long-Press) nur auf interaktiven
+   Elementen unterdrücken, nicht global – sonst lässt sich z.B. der
+   Einladungscode oder ein Reisename nicht mehr per Long-Press kopieren (O10) */
+button, a, .btn-press, .karte-hover {
   -webkit-touch-callout: none;
 }
 
@@ -110,15 +116,21 @@ input, select, textarea {
   font-size: 16px;
 }
 
-/* Smooth transitions für alle interaktiven Elemente */
+/* Smooth transitions für alle interaktiven Elemente – konkrete Properties statt
+   "all", damit der Browser nicht jede einzelne CSS-Property auf Änderungen
+   überwachen muss (Performance) und keine unbeabsichtigten Transitions auf
+   z.B. Layout-Properties entstehen (O10) */
 button, a, input, select, textarea {
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
 }
 
-/* Karten hover Effekt – Shadow passt sich ans Theme an */
-.karte-hover:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(0,0,0,0.18);
+/* Karten hover Effekt nur auf Geräten mit echtem Hover (Maus/Trackpad) – auf
+   Touchscreens bleibt der :hover-Zustand nach einem Tap sonst oft hängen (O10) */
+@media (hover: hover) {
+  .karte-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.18);
+  }
 }
 
 .karte-hover:active {
@@ -313,6 +325,18 @@ input[type="date"] {
 .logo-slide {
   animation: logoSlideIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.5s both;
   display: inline-block;
+}
+
+/* Bewegung für Nutzer mit aktivierter "Bewegung reduzieren"-Einstellung
+   (Betriebssystem/Browser) auf fast Null kürzen statt komplett zu entfernen –
+   so bleiben z.B. Fade-Ins weiter sichtbar, nur ohne die Bewegung selbst (O10) */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 .logo-gold {
