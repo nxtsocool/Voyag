@@ -158,21 +158,32 @@ function TripsOverview() {
       const { data: authData } = await supabase.auth.getUser()
       const user = authData.user
 
-      const code = (() => {
+      const zufallsCode = () => {
         const zeichen = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
         let result = ''
         for (let i = 0; i < 6; i++) result += zeichen.charAt(Math.floor(Math.random() * zeichen.length))
         return result
-      })()
+      }
 
-      const { data: tripData, error } = await supabase
-        .from('trips')
-        .insert([{
-          name: neueReise.name, land_code: neueReise.land_code, datum: datumText,
-          start_datum: neueReise.startDatum, end_datum: neueReise.endDatum,
-          waehrung: neueReise.waehrung || 'EUR', user_id: user.id, invite_code: code,
-        }])
-        .select()
+      // invite_code ist seit der Phase-0-Migration UNIQUE. Bei 36^6 möglichen
+      // Codes ist eine Kollision extrem selten, aber nicht ausgeschlossen –
+      // bei Kollision (Postgres-Fehlercode 23505) mit neuem Code erneut
+      // versuchen statt dem Nutzer einen Fehler zu zeigen (O13)
+      let tripData = null
+      let error = null
+      for (let versuch = 0; versuch < 5; versuch++) {
+        const res = await supabase
+          .from('trips')
+          .insert([{
+            name: neueReise.name, land_code: neueReise.land_code, datum: datumText,
+            start_datum: neueReise.startDatum, end_datum: neueReise.endDatum,
+            waehrung: neueReise.waehrung || 'EUR', user_id: user.id, invite_code: zufallsCode(),
+          }])
+          .select()
+        error = res.error
+        if (!error) { tripData = res.data; break }
+        if (error.code !== '23505') break
+      }
 
       if (error) { console.error('Fehler:', error); toast(t('verbindungsfehler'), 'error'); return }
 
