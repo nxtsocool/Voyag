@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
-import { ChevronLeft, Info, Users, CheckSquare, Wallet, MapPin, Rocket, PartyPopper } from 'lucide-react'
+import { ChevronLeft, Info, Users, CheckSquare, Wallet, MapPin, Rocket, PartyPopper, Plane } from 'lucide-react'
 import usePullToRefresh from '../hooks/usePullToRefresh'
 import PullToRefreshIndicator from '../components/PullToRefreshIndicator'
 import TripNichtGefunden from '../components/TripNichtGefunden'
@@ -88,12 +88,22 @@ function TripHome() {
     ? `https://flagcdn.com/w320/${trip.land_code.toLowerCase()}.png`
     : null
 
-  // Countdown-Anzeige je nach Reise-Status
+  // Countdown-Anzeige je nach Reise-Status – laufend und abgeschlossen teilten sich
+  // bisher dasselbe PartyPopper-Icon, obwohl "gerade unterwegs" kein Grund zum Feiern
+  // ist, sondern einfach der aktuelle Zustand (O14). Jeder Status bekommt jetzt sein
+  // eigenes, passendes Icon statt sich eines zu teilen.
   const renderCountdown = () => {
-    if (tripStatus === 'laufend' || tripStatus === 'vergangen') {
+    if (tripStatus === 'laufend') {
       return (
         <span style={{ color: 'var(--gold)', fontWeight: '700', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          {tripStatus === 'laufend' ? t('reiseLaeuft') : t('reiseAbgeschlossenAusruf')} <PartyPopper size={18} />
+          {t('reiseLaeuft')} <Plane size={18} />
+        </span>
+      )
+    }
+    if (tripStatus === 'vergangen') {
+      return (
+        <span style={{ color: 'var(--gold)', fontWeight: '700', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          {t('reiseAbgeschlossenAusruf')} <PartyPopper size={18} />
         </span>
       )
     }
