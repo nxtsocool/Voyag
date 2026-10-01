@@ -159,7 +159,7 @@ export default function JoinScreen() {
         {flaggeUrl && (
           <img src={flaggeUrl} alt={trip.land_code} style={{
             width: '64px', height: '48px', borderRadius: '10px', objectFit: 'cover',
-            margin: '0 auto 18px', display: 'block', boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
+            margin: '0 auto 18px', display: 'block', boxShadow: 'var(--shadow)',
           }} />
         )}
         <h2 style={{ margin: '0 0 4px', fontWeight: '800', fontSize: '1.3rem', overflowWrap: 'break-word', wordBreak: 'break-word' }}>

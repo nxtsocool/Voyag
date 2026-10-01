@@ -3,9 +3,12 @@ import { supabase } from '../supabase'
 import { Globe, DollarSign } from 'lucide-react'
 import { useSettings } from '../context/useSettings'
 import { WAEHRUNGEN } from '../data/waehrungen'
+import Toast from '../components/Toast'
+import useToast from '../hooks/useToast.jsx'
 
 export default function OnboardingScreen({ user, onComplete }) {
   const { t, sprache, setSprache, waehrungISO, setWaehrung } = useSettings()
+  const { toasts, setToasts, toast } = useToast()
   const [schritt, setSchritt] = useState(1)
   const [userName, setUserName] = useState('')
   const [speichern, setSpeichern] = useState(false)
@@ -37,7 +40,12 @@ export default function OnboardingScreen({ user, onComplete }) {
       waehrung: waehrungISO,
       onboarding_done: true,
     })
-    if (error) console.error('Fehler beim Onboarding-Speichern:', error)
+    if (error) {
+      console.error('Fehler beim Onboarding-Speichern:', error)
+      toast(t('verbindungsfehler'), 'error')
+      setSpeichern(false)
+      return
+    }
     // Context sofort aktualisieren damit die App die richtigen Werte hat
     setSprache(sprache)
     setWaehrung(waehrungISO)
@@ -285,6 +293,8 @@ export default function OnboardingScreen({ user, onComplete }) {
           </div>
         </div>
       </div>
+
+      <Toast toasts={toasts} setToasts={setToasts} />
     </>
   )
 }
