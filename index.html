@@ -4,8 +4,16 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="theme-color" content="#080d1a" />
+    <meta name="theme-color" content="#f5f0e8" />
     <meta name="description" content="Plane und erlebe Reisen gemeinsam mit Voyag." />
+
+    <!-- Theme (Hell/Dunkel) wird erst nach dem Login aus profiles.design geladen, daher
+         kein echter Nutzer-Wert vor dem ersten Render verfügbar. Setzt hier schon synchron
+         das Default-Theme (Hell), damit der Lade-Screen in App.jsx nicht erst dunkel
+         aufblitzt bevor SettingsContext das echte Theme setzt (O3). -->
+    <script>
+      document.documentElement.setAttribute('data-theme', 'light')
+    </script>
 
     <!-- PWA – Homescreen-Installation auf iOS Safari -->
     <meta name="apple-mobile-web-app-capable" content="yes" />

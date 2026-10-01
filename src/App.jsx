@@ -213,7 +213,7 @@ function App() {
   }, [laden, user])
 
   if (laden) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#080d1a' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--bg)' }}>
       <div className="skeleton" style={{ width: '120px', height: '28px', borderRadius: '10px' }} />
     </div>
   )
