@@ -4,7 +4,7 @@ import { supabase } from '../supabase'
 import TripNav from '../components/TripNav'
 import { Wallet, Trash2, SquarePen, Plus, Check, Calendar, X, ChevronDown } from 'lucide-react'
 import Toast from '../components/Toast'
-import useToast from '../hooks/useToast.jsx'
+import useUndoLoeschen from '../hooks/useUndoLoeschen'
 import usePullToRefresh from '../hooks/usePullToRefresh'
 import PullToRefreshIndicator from '../components/PullToRefreshIndicator'
 import useBodyScrollLock from '../hooks/useBodyScrollLock'
@@ -17,7 +17,7 @@ import { heuteISO } from '../utils/datum'
 
 function TripKosten() {
   const { id } = useParams()
-  const { toasts, setToasts, toast } = useToast()
+  const { toasts, setToasts, toast, loeschenMitUndo } = useUndoLoeschen()
   const { waehrungISO: heimISO, t, design } = useSettings()
   const { umrechnen, veraltet } = useWechselkurse()
   const [trip, setTrip] = useState(null)
@@ -158,25 +158,27 @@ function TripKosten() {
     }
   }
 
-  // Ausgabe löschen – mit optimistic update + Fehlerbehandlung
-  const ausgabeLoeschen = async (ausgabeId) => {
-    // Sofort lokal entfernen für schnelles Feedback
+  // Ausgabe löschen – mit Rückgängig-Option (W4) statt sofortigem Löschen
+  const ausgabeLoeschen = (ausgabeId) => {
     const vorherigeAusgaben = ausgaben
-    setAusgaben(ausgaben.filter(a => a.id !== ausgabeId))
-
-    const { error } = await supabase
-      .from('ausgaben')
-      .delete()
-      .eq('id', ausgabeId)
-
-    if (error) {
-      console.error('Fehler beim Löschen:', error)
-      // Bei Fehler die Ausgabe wieder zurückholen
-      setAusgaben(vorherigeAusgaben)
-      toast(t('loeschenFehlgeschlagen'), 'error')
-    } else {
-      toast(t('ausgabeGeloescht'), 'success')
-    }
+    loeschenMitUndo(ausgabeId, {
+      entfernenLokal: () => setAusgaben(ausgaben.filter(a => a.id !== ausgabeId)),
+      wiederherstellenLokal: () => setAusgaben(vorherigeAusgaben),
+      ausfuehren: async () => {
+        const { error } = await supabase
+          .from('ausgaben')
+          .delete()
+          .eq('id', ausgabeId)
+        if (error) {
+          console.error('Fehler beim Löschen:', error)
+          // Bei Fehler die Ausgabe wieder zurückholen
+          setAusgaben(vorherigeAusgaben)
+          toast(t('loeschenFehlgeschlagen'), 'error')
+        }
+      },
+      nachricht: t('ausgabeGeloescht'),
+      rueckgaengigLabel: t('rueckgaengig'),
+    })
   }
 
   const ausgabeBearbeiten = async (ausgabeId, updates) => {

@@ -6,7 +6,7 @@ import { Trash2, SquarePen, PackageCheck } from 'lucide-react'
 import { useSettings } from '../context/SettingsContext'
 import TripNichtGefunden from '../components/TripNichtGefunden'
 import Toast from '../components/Toast'
-import useToast from '../hooks/useToast.jsx'
+import useUndoLoeschen from '../hooks/useUndoLoeschen'
 
 // Wischt man ein Item 60px nach links, erscheint der rote Hintergrund mit Trash Icon.
 // Ab 120px wird das Item beim Loslassen gelöscht.
@@ -85,7 +85,7 @@ function SwipeToDelete({ onDelete, children }) {
 export default function TripPackliste() {
   const { id } = useParams()
   const { t } = useSettings()
-  const { toasts, setToasts, toast } = useToast()
+  const { toasts, setToasts, toast, loeschenMitUndo } = useUndoLoeschen()
   const [trip, setTrip] = useState(null)
   const [packliste, setPackliste] = useState([])
   const [neuesItem, setNeuesItem] = useState('')
@@ -147,10 +147,20 @@ export default function TripPackliste() {
     ))
   }
 
-  const itemLoeschen = async (itemId) => {
-    const { error } = await supabase.from('packliste').delete().eq('id', itemId)
-    if (error) { console.error('Fehler:', error); toast(t('verbindungsfehler'), 'error'); return }
-    setPackliste(packliste.filter(i => i.id !== itemId))
+  // Löschen mit Rückgängig-Option (W4) – gilt sowohl für den Löschen-Button
+  // als auch für Swipe-to-Delete, da beide hier durchlaufen
+  const itemLoeschen = (itemId) => {
+    const vorherigePackliste = packliste
+    loeschenMitUndo(itemId, {
+      entfernenLokal: () => setPackliste(packliste.filter(i => i.id !== itemId)),
+      wiederherstellenLokal: () => setPackliste(vorherigePackliste),
+      ausfuehren: async () => {
+        const { error } = await supabase.from('packliste').delete().eq('id', itemId)
+        if (error) { console.error('Fehler:', error); toast(t('verbindungsfehler'), 'error') }
+      },
+      nachricht: t('itemGeloescht'),
+      rueckgaengigLabel: t('rueckgaengig'),
+    })
   }
 
   // Item Text in Supabase speichern

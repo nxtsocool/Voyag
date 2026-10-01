@@ -45,6 +45,25 @@ export default function Toast({ toasts, setToasts }) {
               {toast.nachricht}
             </p>
 
+            {/* Action-Button (z. B. "Rückgängig") */}
+            {toast.aktion && (
+              <button
+                onClick={() => {
+                  toast.aktion.onClick()
+                  setToasts(ts => ts.filter(x => x.id !== toast.id))
+                }}
+                className="btn-press"
+                style={{
+                  background: 'none', border: 'none', color: config.farbe,
+                  cursor: 'pointer', fontWeight: '700', fontSize: '0.85rem',
+                  flexShrink: 0, padding: '10px 6px', margin: '-10px 0',
+                  textTransform: 'uppercase', letterSpacing: '0.02em',
+                }}
+              >
+                {toast.aktion.label}
+              </button>
+            )}
+
             {/* Schließen Button – min. 44x44px Touch-Target (Apple HIG) */}
             <button
               onClick={() => setToasts(t => t.filter(t => t.id !== toast.id))}

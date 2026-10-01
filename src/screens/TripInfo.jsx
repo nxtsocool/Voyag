@@ -6,7 +6,7 @@ import { Plane, Hotel, Link, Trash2, NotebookPen, SquarePen, ExternalLink, Chevr
 import { useSettings } from '../context/SettingsContext'
 import TripNichtGefunden from '../components/TripNichtGefunden'
 import Toast from '../components/Toast'
-import useToast from '../hooks/useToast.jsx'
+import useUndoLoeschen from '../hooks/useUndoLoeschen'
 
 // Datum als Label formatieren, z.B. "Fr, 31. Juli 2026"
 const formatDatumLabel = (datumStr, sprache) => {
@@ -20,7 +20,7 @@ const formatDatumLabel = (datumStr, sprache) => {
 function TripInfo() {
   const { id } = useParams()
   const { t, sprache } = useSettings()
-  const { toasts, setToasts, toast } = useToast()
+  const { toasts, setToasts, toast, loeschenMitUndo } = useUndoLoeschen()
   const [trip, setTrip] = useState(null)
   const [laden, setLaden] = useState(true)
 
@@ -132,10 +132,18 @@ function TripInfo() {
   }
 
   // Flug löschen
-  const flugLoeschen = async (flugId) => {
-    const { error } = await supabase.from('trip_fluege').delete().eq('id', flugId)
-    if (error) { console.error('Fehler:', error); toast(t('verbindungsfehler'), 'error'); return }
-    setFluege(fluege.filter(f => f.id !== flugId))
+  const flugLoeschen = (flugId) => {
+    const vorherigeFluege = fluege
+    loeschenMitUndo(flugId, {
+      entfernenLokal: () => setFluege(fluege.filter(f => f.id !== flugId)),
+      wiederherstellenLokal: () => setFluege(vorherigeFluege),
+      ausfuehren: async () => {
+        const { error } = await supabase.from('trip_fluege').delete().eq('id', flugId)
+        if (error) { console.error('Fehler:', error); toast(t('verbindungsfehler'), 'error') }
+      },
+      nachricht: t('flugGeloescht'),
+      rueckgaengigLabel: t('rueckgaengig'),
+    })
   }
 
   // Unterkunft hinzufügen
@@ -188,10 +196,18 @@ function TripInfo() {
   }
 
   // Unterkunft löschen
-  const unterkunftLoeschen = async (unterkunftId) => {
-    const { error } = await supabase.from('trip_unterkuenfte').delete().eq('id', unterkunftId)
-    if (error) { console.error('Fehler:', error); toast(t('verbindungsfehler'), 'error'); return }
-    setUnterkuenfte(unterkuenfte.filter(u => u.id !== unterkunftId))
+  const unterkunftLoeschen = (unterkunftId) => {
+    const vorherigeUnterkuenfte = unterkuenfte
+    loeschenMitUndo(unterkunftId, {
+      entfernenLokal: () => setUnterkuenfte(unterkuenfte.filter(u => u.id !== unterkunftId)),
+      wiederherstellenLokal: () => setUnterkuenfte(vorherigeUnterkuenfte),
+      ausfuehren: async () => {
+        const { error } = await supabase.from('trip_unterkuenfte').delete().eq('id', unterkunftId)
+        if (error) { console.error('Fehler:', error); toast(t('verbindungsfehler'), 'error') }
+      },
+      nachricht: t('unterkunftGeloescht'),
+      rueckgaengigLabel: t('rueckgaengig'),
+    })
   }
 
   // Link hinzufügen
@@ -217,10 +233,18 @@ function TripInfo() {
   }
 
   // Link löschen
-  const linkLoeschen = async (linkId) => {
-    const { error } = await supabase.from('trip_links').delete().eq('id', linkId)
-    if (error) { console.error('Fehler:', error); toast(t('verbindungsfehler'), 'error'); return }
-    setLinks(links.filter(l => l.id !== linkId))
+  const linkLoeschen = (linkId) => {
+    const vorherigeLinks = links
+    loeschenMitUndo(linkId, {
+      entfernenLokal: () => setLinks(links.filter(l => l.id !== linkId)),
+      wiederherstellenLokal: () => setLinks(vorherigeLinks),
+      ausfuehren: async () => {
+        const { error } = await supabase.from('trip_links').delete().eq('id', linkId)
+        if (error) { console.error('Fehler:', error); toast(t('verbindungsfehler'), 'error') }
+      },
+      nachricht: t('linkGeloescht'),
+      rueckgaengigLabel: t('rueckgaengig'),
+    })
   }
 
   // Notizen speichern

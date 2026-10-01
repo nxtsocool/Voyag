@@ -10,7 +10,7 @@ import { useSettings } from '../context/SettingsContext'
 import useBodyScrollLock from '../hooks/useBodyScrollLock'
 import TripNichtGefunden from '../components/TripNichtGefunden'
 import Toast from '../components/Toast'
-import useToast from '../hooks/useToast.jsx'
+import useUndoLoeschen from '../hooks/useUndoLoeschen'
 
 // Kategorie-Definition mit Lucide Icons
 const KATEGORIEN = [
@@ -27,7 +27,7 @@ const KATEGORIEN = [
 export default function TripOrte() {
   const { id } = useParams()
   const { t } = useSettings()
-  const { toasts, setToasts, toast } = useToast()
+  const { toasts, setToasts, toast, loeschenMitUndo } = useUndoLoeschen()
   const [trip, setTrip] = useState(null)
   const [orte, setOrte] = useState([])
   const [laden, setLaden] = useState(true)
@@ -137,10 +137,18 @@ export default function TripOrte() {
   }
 
   // Ort löschen
-  const ortLoeschen = async (ortId) => {
-    const { error } = await supabase.from('trip_orte').delete().eq('id', ortId)
-    if (error) { console.error('Fehler beim Löschen:', error); toast(t('verbindungsfehler'), 'error'); return }
-    setOrte(orte.filter(o => o.id !== ortId))
+  const ortLoeschen = (ortId) => {
+    const vorherigeOrte = orte
+    loeschenMitUndo(ortId, {
+      entfernenLokal: () => setOrte(orte.filter(o => o.id !== ortId)),
+      wiederherstellenLokal: () => setOrte(vorherigeOrte),
+      ausfuehren: async () => {
+        const { error } = await supabase.from('trip_orte').delete().eq('id', ortId)
+        if (error) { console.error('Fehler beim Löschen:', error); toast(t('verbindungsfehler'), 'error') }
+      },
+      nachricht: t('ortGeloescht'),
+      rueckgaengigLabel: t('rueckgaengig'),
+    })
   }
 
   // Anzahl besuchter Orte (abgeleitet aus State, kein eigener State nötig)
