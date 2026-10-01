@@ -292,18 +292,8 @@ function TripsOverview() {
   }
 
   const reiseEntfernen = async (tripId) => {
-    // Bereiste/geplante Länder werden aus den Reisen abgeleitet (K11/W16) –
-    // visited_countries muss hier nicht mehr angefasst werden
-    await supabase.from('teilnehmer').delete().eq('trip_id', tripId)
-    await supabase.from('ausgaben').delete().eq('trip_id', tripId)
-    await supabase.from('abrechnungen').delete().eq('trip_id', tripId)
-    await supabase.from('trip_members').delete().eq('trip_id', tripId)
-    await supabase.from('packliste').delete().eq('trip_id', tripId)
-    await supabase.from('trip_links').delete().eq('trip_id', tripId)
-    await supabase.from('trip_fluege').delete().eq('trip_id', tripId)
-    await supabase.from('trip_unterkuenfte').delete().eq('trip_id', tripId)
-    await supabase.from('trip_orte').delete().eq('trip_id', tripId)
-    await supabase.from('trip_photos').delete().eq('trip_id', tripId)
+    // Alle abhängigen Tabellen haben seit der Phase-0-Migration ON DELETE CASCADE
+    // auf trip_id – ein einzelnes Löschen der Reise reicht aus (W15)
     const { error } = await supabase.from('trips').delete().eq('id', tripId)
     if (error) { console.error('Fehler:', error); toast(t('verbindungsfehler'), 'error'); return }
     setTrips(trips.filter(t => t.id !== tripId))
