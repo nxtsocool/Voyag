@@ -10,7 +10,11 @@ const toastConfig = {
 export default function Toast({ toasts, setToasts }) {
   return (
     <div style={{
-      position: 'fixed', bottom: '90px',
+      position: 'fixed',
+      // Fester 90px-Abstand hat auf Geräten mit Home-Indikator (sicherer Bereich
+      // unten) mit BottomNav kollidiert, da BottomNav zusätzlich um
+      // env(safe-area-inset-bottom) nach oben verschoben wird (O5)
+      bottom: 'calc(100px + env(safe-area-inset-bottom))',
       left: 0, right: 0, marginLeft: 'auto', marginRight: 'auto',
       zIndex: 9999, display: 'flex',
       flexDirection: 'column', gap: '8px',
