@@ -4,9 +4,6 @@ import { supabase } from '../supabase'
 import laender from '../data/laender'
 import { Trash2, SquarePen, Globe, ChevronDown, LayoutGrid, CalendarDays } from 'lucide-react'
 import TripsTimeline from '../components/TripsTimeline'
-import DatePicker from 'react-datepicker'
-import 'react-datepicker/dist/react-datepicker.css'
-import { de } from 'date-fns/locale'
 import Toast from '../components/Toast'
 import useToast from '../hooks/useToast.jsx'
 import usePullToRefresh from '../hooks/usePullToRefresh'
@@ -60,6 +57,13 @@ const getFlaggeUrl = (code) => {
   return `https://flagcdn.com/w40/${code.toLowerCase()}.png`
 }
 
+// ISO-Datum ("YYYY-MM-DD", aus <input type="date">) ins alte Textformat
+// "DD.MM.YYYY" umwandeln (W10) – reiner String-Split, kein Date-Objekt nötig
+const formatDatumDE = (iso) => {
+  const [jahr, monat, tag] = iso.split('-')
+  return `${tag}.${monat}.${jahr}`
+}
+
 // Prüft ob eine Reise abgeschlossen ist (letzter Reisetag zählt noch als laufend)
 const istAbgeschlossen = (trip) => reiseStatus(trip) === 'vergangen'
 
@@ -79,11 +83,12 @@ function TripsOverview() {
   const [loescheTrip, setLoescheTrip] = useState(null)
   const [verlasseTrip, setVerlasseTrip] = useState(null)
   const [bearbeiteTrip, setBearbeiteTrip] = useState(null)
+  // startDatum/endDatum sind ISO-Strings ("YYYY-MM-DD") aus <input type="date"> (W10)
   const [bearbeiteDaten, setBearbeiteDaten] = useState({
-    name: '', land_code: '', startDatum: null, endDatum: null, waehrung: 'EUR'
+    name: '', land_code: '', startDatum: '', endDatum: '', waehrung: 'EUR'
   })
   const [neueReise, setNeueReise] = useState({
-    name: '', land_code: '', startDatum: null, endDatum: null, waehrung: 'EUR'
+    name: '', land_code: '', startDatum: '', endDatum: '', waehrung: 'EUR'
   })
   // Bestätigungs-Sheet beim Ändern der Reisewährung im Bearbeiten-Formular (K1)
   const [waehrungAenderungBestaetigen, setWaehrungAenderungBestaetigen] = useState(false)
@@ -142,12 +147,13 @@ function TripsOverview() {
   const reiseHinzufuegen = async () => {
     if (speichernLaeuft) return
     if (!neueReise.name || !neueReise.land_code || !neueReise.startDatum || !neueReise.endDatum) return
+    if (neueReise.endDatum < neueReise.startDatum) return
 
     setSpeichernLaeuft(true)
     try {
-      const formatDatum = (date) =>
-        `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`
-      const datumText = `${formatDatum(neueReise.startDatum)} - ${formatDatum(neueReise.endDatum)}`
+      // Altes Textfeld bleibt zusätzlich bestehen (O2), die echten Datumsfelder
+      // start_datum/end_datum sind jetzt die primäre Quelle (K4)
+      const datumText = `${formatDatumDE(neueReise.startDatum)} - ${formatDatumDE(neueReise.endDatum)}`
 
       const { data: authData } = await supabase.auth.getUser()
       const user = authData.user
@@ -161,7 +167,11 @@ function TripsOverview() {
 
       const { data: tripData, error } = await supabase
         .from('trips')
-        .insert([{ name: neueReise.name, land_code: neueReise.land_code, datum: datumText, waehrung: neueReise.waehrung || 'EUR', user_id: user.id, invite_code: code }])
+        .insert([{
+          name: neueReise.name, land_code: neueReise.land_code, datum: datumText,
+          start_datum: neueReise.startDatum, end_datum: neueReise.endDatum,
+          waehrung: neueReise.waehrung || 'EUR', user_id: user.id, invite_code: code,
+        }])
         .select()
 
       if (error) { console.error('Fehler:', error); toast(t('verbindungsfehler'), 'error'); return }
@@ -180,7 +190,7 @@ function TripsOverview() {
 
       // Bereiste/geplante Länder werden jetzt aus den Reisen selbst abgeleitet
       // (K11/W16) – hier keine visited_countries-Einträge mehr schreiben
-      setNeueReise({ name: '', land_code: '', startDatum: null, endDatum: null, waehrung: 'EUR' })
+      setNeueReise({ name: '', land_code: '', startDatum: '', endDatum: '', waehrung: 'EUR' })
       setFormularOffen(false)
     } finally {
       setSpeichernLaeuft(false)
@@ -189,13 +199,20 @@ function TripsOverview() {
 
   const bearbeitenOeffnen = (trip) => {
     setBearbeiteTrip(trip)
-    setBearbeiteDaten({ name: trip.name, land_code: trip.land_code || '', startDatum: null, endDatum: null, waehrung: trip.waehrung || 'EUR' })
+    // Start/Ende werden jetzt vorbelegt statt leer zu bleiben (W10) – die
+    // Migration aus Phase 0 befüllt start_datum/end_datum für alle Bestands-Reisen
+    setBearbeiteDaten({
+      name: trip.name, land_code: trip.land_code || '',
+      startDatum: trip.start_datum || '', endDatum: trip.end_datum || '',
+      waehrung: trip.waehrung || 'EUR',
+    })
   }
 
   // Speichern anstossen – bei geänderter Reisewährung erst Bestätigungs-Sheet
   // zeigen (bestehende Beträge werden umgerechnet, siehe K1)
   const reiseSpeichernAnfragen = () => {
-    if (!bearbeiteDaten.name || !bearbeiteDaten.land_code) return
+    if (!bearbeiteDaten.name || !bearbeiteDaten.land_code || !bearbeiteDaten.startDatum || !bearbeiteDaten.endDatum) return
+    if (bearbeiteDaten.endDatum < bearbeiteDaten.startDatum) return
     if (bearbeiteDaten.waehrung !== (bearbeiteTrip.waehrung || 'EUR')) {
       setWaehrungAenderungBestaetigen(true)
     } else {
@@ -207,22 +224,31 @@ function TripsOverview() {
     if (speichernLaeuft) return
     setSpeichernLaeuft(true)
     try {
+      // Start/Ende sind jetzt immer vorbelegt (W10); nur im seltenen Fall einer
+      // Bestands-Reise ohne start_datum/end_datum (Migration nicht gelaufen)
+      // bleiben Text/Datumsfelder unverändert, statt sie mit leeren Werten zu überschreiben
       let datumText = bearbeiteTrip.datum
+      let startDatum = bearbeiteTrip.start_datum
+      let endDatum = bearbeiteTrip.end_datum
       if (bearbeiteDaten.startDatum && bearbeiteDaten.endDatum) {
-        const formatDatum = (date) =>
-          `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`
-        datumText = `${formatDatum(bearbeiteDaten.startDatum)} - ${formatDatum(bearbeiteDaten.endDatum)}`
+        datumText = `${formatDatumDE(bearbeiteDaten.startDatum)} - ${formatDatumDE(bearbeiteDaten.endDatum)}`
+        startDatum = bearbeiteDaten.startDatum
+        endDatum = bearbeiteDaten.endDatum
       }
 
       const { error } = await supabase
         .from('trips')
-        .update({ name: bearbeiteDaten.name, land_code: bearbeiteDaten.land_code, datum: datumText, waehrung: bearbeiteDaten.waehrung || 'EUR' })
+        .update({
+          name: bearbeiteDaten.name, land_code: bearbeiteDaten.land_code, datum: datumText,
+          start_datum: startDatum, end_datum: endDatum,
+          waehrung: bearbeiteDaten.waehrung || 'EUR',
+        })
         .eq('id', bearbeiteTrip.id)
 
       if (error) { console.error('Fehler:', error); toast(t('verbindungsfehler'), 'error'); return }
 
       setTrips(trips.map(t => t.id === bearbeiteTrip.id
-        ? { ...t, name: bearbeiteDaten.name, land_code: bearbeiteDaten.land_code, datum: datumText, waehrung: bearbeiteDaten.waehrung || 'EUR' }
+        ? { ...t, name: bearbeiteDaten.name, land_code: bearbeiteDaten.land_code, datum: datumText, start_datum: startDatum, end_datum: endDatum, waehrung: bearbeiteDaten.waehrung || 'EUR' }
         : t
       ))
       setBearbeiteTrip(null)
@@ -363,14 +389,19 @@ function TripsOverview() {
     await tripsLaden()
   }
 
-  // Pflichtfeld-Hinweis (W3) – welches Feld fehlt noch fürs Speichern/Erstellen
+  // Pflichtfeld-Hinweis (W3) – welches Feld fehlt noch fürs Speichern/Erstellen.
+  // W10: Enddatum muss am oder nach dem Startdatum liegen
   const neueReiseFehlendesFeld = !neueReise.name.trim() ? t('name')
     : !neueReise.land_code ? t('landAuswaehlen')
     : !neueReise.startDatum ? t('startdatumPlatzhalter')
     : !neueReise.endDatum ? t('enddatumPlatzhalter')
+    : neueReise.endDatum < neueReise.startDatum ? t('enddatumVorStartdatum')
     : null
   const bearbeiteReiseFehlendesFeld = !bearbeiteDaten.name.trim() ? t('name')
     : !bearbeiteDaten.land_code ? t('landAuswaehlen')
+    : !bearbeiteDaten.startDatum ? t('startdatumPlatzhalter')
+    : !bearbeiteDaten.endDatum ? t('enddatumPlatzhalter')
+    : bearbeiteDaten.endDatum < bearbeiteDaten.startDatum ? t('enddatumVorStartdatum')
     : null
 
   // Aktive/kommende Reisen oben, abgeschlossene Reisen unten im Archiv
@@ -681,16 +712,14 @@ function TripsOverview() {
                 </button>
               ))}
             </div>
-            <DatePicker selected={neueReise.startDatum}
-              onChange={(date) => setNeueReise({ ...neueReise, startDatum: date })}
-              selectsStart startDate={neueReise.startDatum} endDate={neueReise.endDatum}
-              placeholderText={t('startdatumPlatzhalter')} locale={de} dateFormat="dd.MM.yyyy"
-              customInput={<input style={inputStyle} />} />
-            <DatePicker selected={neueReise.endDatum}
-              onChange={(date) => setNeueReise({ ...neueReise, endDatum: date })}
-              selectsEnd startDate={neueReise.startDatum} endDate={neueReise.endDatum}
-              minDate={neueReise.startDatum} placeholderText={t('enddatumPlatzhalter')} locale={de}
-              dateFormat="dd.MM.yyyy" customInput={<input style={inputStyle} />} />
+            <label style={datumFeldLabelStyle}>{t('startdatumPlatzhalter')}</label>
+            <input type="date" value={neueReise.startDatum}
+              onChange={(e) => setNeueReise({ ...neueReise, startDatum: e.target.value })}
+              style={dateInputStyle} />
+            <label style={datumFeldLabelStyle}>{t('enddatumPlatzhalter')}</label>
+            <input type="date" value={neueReise.endDatum} min={neueReise.startDatum || undefined}
+              onChange={(e) => setNeueReise({ ...neueReise, endDatum: e.target.value })}
+              style={dateInputStyle} />
             {neueReiseFehlendesFeld && (
               <p style={{ color: 'var(--text-sub)', fontSize: '0.78rem', margin: '0 0 10px' }}>
                 {t('pflichtfeldFehlt')(neueReiseFehlendesFeld)}
@@ -730,19 +759,14 @@ function TripsOverview() {
                 </button>
               ))}
             </div>
-            <p style={{ color: 'var(--text-sub)', fontSize: '0.82rem', marginBottom: '10px' }}>
-              {t('datumLeerLassen')}
-            </p>
-            <DatePicker selected={bearbeiteDaten.startDatum}
-              onChange={(date) => setBearbeiteDaten({ ...bearbeiteDaten, startDatum: date })}
-              selectsStart startDate={bearbeiteDaten.startDatum} endDate={bearbeiteDaten.endDatum}
-              placeholderText={t('neuesStartdatum')} locale={de} dateFormat="dd.MM.yyyy"
-              customInput={<input style={inputStyle} />} />
-            <DatePicker selected={bearbeiteDaten.endDatum}
-              onChange={(date) => setBearbeiteDaten({ ...bearbeiteDaten, endDatum: date })}
-              selectsEnd startDate={bearbeiteDaten.startDatum} endDate={bearbeiteDaten.endDatum}
-              minDate={bearbeiteDaten.startDatum} placeholderText={t('neuesEnddatum')} locale={de}
-              dateFormat="dd.MM.yyyy" customInput={<input style={inputStyle} />} />
+            <label style={datumFeldLabelStyle}>{t('neuesStartdatum')}</label>
+            <input type="date" value={bearbeiteDaten.startDatum}
+              onChange={(e) => setBearbeiteDaten({ ...bearbeiteDaten, startDatum: e.target.value })}
+              style={dateInputStyle} />
+            <label style={datumFeldLabelStyle}>{t('neuesEnddatum')}</label>
+            <input type="date" value={bearbeiteDaten.endDatum} min={bearbeiteDaten.startDatum || undefined}
+              onChange={(e) => setBearbeiteDaten({ ...bearbeiteDaten, endDatum: e.target.value })}
+              style={dateInputStyle} />
             {bearbeiteReiseFehlendesFeld && (
               <p style={{ color: 'var(--text-sub)', fontSize: '0.78rem', margin: '0 0 10px' }}>
                 {t('pflichtfeldFehlt')(bearbeiteReiseFehlendesFeld)}
@@ -1049,6 +1073,23 @@ const inputStyle = {
   width: '100%', padding: '13px 14px', backgroundColor: 'var(--input-bg)',
   border: '1.5px solid var(--input-border)', borderRadius: '12px',
   color: 'var(--text)', fontSize: '1rem', marginBottom: '10px', boxSizing: 'border-box',
+}
+
+// Eigener Style fürs Datumsfeld – native Date-Inputs haben auf iOS Safari eine
+// eigene Intrinsic-Width und zeigen bei leerem Wert nichts an; minWidth erzwingt
+// die volle Breite, appearance:none entfernt die native Breite des Kalender-Widgets (W10)
+const dateInputStyle = {
+  ...inputStyle,
+  width: '100%', minWidth: '100%', maxWidth: '100%',
+  minHeight: '48px', fontFamily: 'inherit', display: 'block',
+  appearance: 'none', WebkitAppearance: 'none',
+}
+
+// Label über einem Datumsfeld – ersetzt den auf iOS unsichtbaren Placeholder
+const datumFeldLabelStyle = {
+  display: 'block', color: 'var(--text-sub)',
+  fontSize: '0.78rem', fontWeight: '600', marginBottom: '6px',
+  textTransform: 'uppercase', letterSpacing: '0.06em',
 }
 
 const speichernButtonStyle = {

@@ -228,15 +228,6 @@ input[type="date"] {
   }
 }
 
-/* Datepicker immer ganz oben */
-.react-datepicker-popper {
-  z-index: 9999 !important;
-}
-
-.react-datepicker {
-  z-index: 9999 !important;
-}
-
 @keyframes toastIn {
   from {
     opacity: 0;
