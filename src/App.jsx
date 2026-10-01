@@ -228,7 +228,9 @@ function App() {
       ) : onboardingNoetig ? (
         <OnboardingScreen user={user} onComplete={() => setOnboardingNoetig(false)} />
       ) : (
-        <BrowserRouter>
+        // v7-Future-Flags (O12) opt-in auf das künftige React-Router-v7-Verhalten,
+        // vermeidet die Deprecation-Warnungen in der Konsole bei v6.30+
+        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <PendingInviteRedirect />
           <Suspense fallback={
             <div style={{ minHeight: '100vh', padding: '24px', maxWidth: '600px', margin: '0 auto', boxSizing: 'border-box' }}>
