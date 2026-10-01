@@ -476,7 +476,7 @@ function TripKosten() {
 
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
-                                <p style={{ fontWeight: '600', margin: '0 0 4px', overflowWrap: 'break-word', wordBreak: 'break-word', minWidth: 0, fontSize: '0.95rem' }}>
+                                <p style={{ fontWeight: '600', margin: '0 0 4px', wordBreak: 'normal', overflowWrap: 'anywhere', hyphens: 'auto', minWidth: 0, fontSize: '0.95rem' }}>
                                   {ausgabe.beschreibung}
                                 </p>
                                 <div style={{ textAlign: 'right', flexShrink: 0 }}>

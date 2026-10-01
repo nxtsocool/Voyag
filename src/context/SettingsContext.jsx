@@ -40,6 +40,12 @@ export function SettingsProvider({ children }) {
     document.documentElement.setAttribute('data-theme', design)
   }, [design])
 
+  // lang-Attribut passend zur Sprache setzen – wichtig für hyphens:'auto'
+  // (korrekte Trennregeln) und Screenreader (W7/W11)
+  useEffect(() => {
+    document.documentElement.setAttribute('lang', sprache)
+  }, [sprache])
+
   useEffect(() => {
     const init = async () => {
       const { data: { user } } = await supabase.auth.getUser()
