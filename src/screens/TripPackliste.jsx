@@ -100,7 +100,7 @@ export default function TripPackliste() {
       // Beide Queries hängen nur von der Trip-ID ab, nicht voneinander – parallel laden
       const [tripRes, packlisteRes] = await Promise.all([
         supabase.from('trips').select('*').eq('id', id).single(),
-        supabase.from('packliste').select('*').eq('trip_id', id),
+        supabase.from('packliste').select('*').eq('trip_id', id).order('created_at', { ascending: true }),
       ])
 
       if (tripRes.error) console.error('Fehler beim Laden des Trips:', tripRes.error)
@@ -138,13 +138,19 @@ export default function TripPackliste() {
     }
   }
 
+  // Optimistisches Toggle mit Rollback bei Fehler (W18) – UI reagiert sofort,
+  // statt auf die Server-Antwort zu warten
   const toggleErledigt = async (item) => {
+    const neuerWert = !item.erledigt
+    setPackliste(prev => prev.map(i => i.id === item.id ? { ...i, erledigt: neuerWert } : i))
+
     const { error } = await supabase
-      .from('packliste').update({ erledigt: !item.erledigt }).eq('id', item.id)
-    if (error) { console.error('Fehler:', error); toast(t('verbindungsfehler'), 'error'); return }
-    setPackliste(packliste.map(i =>
-      i.id === item.id ? { ...i, erledigt: !i.erledigt } : i
-    ))
+      .from('packliste').update({ erledigt: neuerWert }).eq('id', item.id)
+    if (error) {
+      console.error('Fehler:', error)
+      toast(t('verbindungsfehler'), 'error')
+      setPackliste(prev => prev.map(i => i.id === item.id ? { ...i, erledigt: item.erledigt } : i))
+    }
   }
 
   // Löschen mit Rückgängig-Option (W4) – gilt sowohl für den Löschen-Button
