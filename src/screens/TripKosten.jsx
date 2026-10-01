@@ -792,7 +792,7 @@ function TripKosten() {
 const karteStyle = {
   backgroundColor: 'var(--card)', borderRadius: '20px',
   padding: 'clamp(18px, 4vw, 24px)', marginBottom: '16px',
-  boxSizing: 'border-box', boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
+  boxSizing: 'border-box', boxShadow: 'var(--shadow)',
 }
 
 const inputStyle = {

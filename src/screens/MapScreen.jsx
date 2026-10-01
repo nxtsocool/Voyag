@@ -362,7 +362,7 @@ function MapScreen() {
             backgroundColor: 'var(--card)',
             borderRadius: '16px',
             padding: '12px 14px',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.7), 0 0 0 1px rgba(201,168,76,0.2)',
+            boxShadow: 'var(--shadow), 0 0 0 1px rgba(201,168,76,0.2)',
             zIndex: 10,
             minWidth: '160px',
             maxWidth: '200px',

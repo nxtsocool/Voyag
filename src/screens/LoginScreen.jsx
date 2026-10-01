@@ -319,7 +319,7 @@ function LoginScreen({ emailNichtBestaetigt }) {
         backgroundColor: 'var(--card)',
         borderRadius: '50px',
         padding: '4px',
-        boxShadow: '0 4px 16px rgba(0,0,0,0.35)',
+        boxShadow: 'var(--shadow)',
       }}>
         {['de', 'en'].map((code) => {
           const aktiv = sprache === code

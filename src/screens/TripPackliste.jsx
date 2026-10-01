@@ -212,7 +212,7 @@ export default function TripPackliste() {
             padding: 'clamp(20px, 5vw, 28px)',
             marginBottom: '16px',
             boxSizing: 'border-box',
-            boxShadow: '0 4px 24px rgba(0,0,0,0.35)',
+            boxShadow: 'var(--shadow)',
           }}>
             {/* Prozent + Label */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '16px' }}>
@@ -261,7 +261,7 @@ export default function TripPackliste() {
           borderRadius: '22px',
           padding: 'clamp(18px, 4vw, 24px)',
           boxSizing: 'border-box',
-          boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
+          boxShadow: 'var(--shadow)',
         }}>
 
           {packliste.length === 0 ? (

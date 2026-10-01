@@ -348,7 +348,7 @@ export default function SettingsScreen() {
           backgroundColor: 'var(--card)', border: 'none', borderRadius: '16px',
           cursor: 'pointer', display: 'flex', alignItems: 'center',
           justifyContent: 'space-between',
-          boxShadow: '0 2px 12px rgba(0,0,0,0.2)',
+          boxShadow: 'var(--shadow)',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{ ...iconWrapperStyle, backgroundColor: 'rgba(136,146,164,0.1)' }}>
@@ -438,7 +438,7 @@ export default function SettingsScreen() {
 
 const karteStyle = {
   backgroundColor: 'var(--card)', borderRadius: '20px',
-  boxShadow: '0 2px 16px rgba(0,0,0,0.25)',
+  boxShadow: 'var(--shadow)',
   padding: '20px', marginBottom: '12px',
 }
 

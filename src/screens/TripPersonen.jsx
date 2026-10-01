@@ -330,7 +330,7 @@ export default function TripPersonen() {
                         backgroundColor: avatarFarbe,
                         border: verknuepftProfil
                           ? '2px solid var(--gold)'
-                          : '2px solid rgba(255,255,255,0.1)',
+                          : '2px solid var(--border)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         boxShadow: verknuepftProfil ? '0 0 16px rgba(201,168,76,0.25)' : 'none',
                         transition: 'border-color 0.3s ease, box-shadow 0.3s ease',
@@ -733,7 +733,7 @@ const karteStyle = {
   padding: 'clamp(16px, 4vw, 22px)',
   marginBottom: '12px',
   boxSizing: 'border-box',
-  boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
+  boxShadow: 'var(--shadow)',
 }
 
 const inputStyle = {

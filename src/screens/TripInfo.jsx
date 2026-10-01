@@ -752,7 +752,7 @@ const sectionStyle = {
   padding: 'clamp(18px, 4vw, 24px)',
   marginBottom: '16px',
   boxSizing: 'border-box',
-  boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
+  boxShadow: 'var(--shadow)',
 }
 
 const sectionHeaderStyle = {
@@ -791,7 +791,7 @@ const unterkunftCardStyle = {
 }
 
 const formularStyle = {
-  backgroundColor: 'rgba(8,13,26,0.5)',
+  backgroundColor: 'var(--sub)',
   borderRadius: '16px',
   padding: '16px',
   marginBottom: '12px',
@@ -865,7 +865,7 @@ const speichernButtonStyle = {
 
 const abbrechenButtonStyle = {
   backgroundColor: 'transparent', color: 'var(--text)',
-  border: '1px solid rgba(255,255,255,0.15)',
+  border: '1px solid var(--border)',
   padding: '14px', minHeight: '48px', borderRadius: '14px',
   cursor: 'pointer', boxSizing: 'border-box', fontWeight: '500',
 }

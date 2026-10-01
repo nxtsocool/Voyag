@@ -29,7 +29,7 @@ export default function Toast({ toasts, setToasts }) {
               borderRadius: '16px',
               padding: '14px 16px',
               display: 'flex', alignItems: 'center', gap: '12px',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+              boxShadow: 'var(--shadow)',
               pointerEvents: 'all',
               animation: 'toastIn 0.3s ease forwards',
             }}

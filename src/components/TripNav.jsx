@@ -66,13 +66,13 @@ function TripNav({ tripName }) {
               style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px',
                 backgroundColor: aktiv ? 'var(--gold)' : 'var(--sub)',
-                color: aktiv ? '#ffffff' : 'var(--text-sub)',
+                color: aktiv ? '#0a0f1e' : 'var(--text-sub)',
                 border: 'none',
                 padding: '10px 16px', minHeight: '44px',
                 borderRadius: '50px',
                 cursor: 'pointer', fontSize: '0.82rem', fontWeight: aktiv ? '700' : '500',
                 whiteSpace: 'nowrap', flexShrink: 0, boxSizing: 'border-box',
-                boxShadow: aktiv ? '0 4px 16px rgba(201,168,76,0.35)' : '0 2px 8px rgba(0,0,0,0.3)',
+                boxShadow: aktiv ? '0 4px 16px rgba(201,168,76,0.35)' : 'none',
                 transition: 'background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease',
               }}
             >

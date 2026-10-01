@@ -92,7 +92,7 @@ export default function OnboardingScreen({ user, onComplete }) {
                 width: n === schritt ? '24px' : '10px',
                 height: '10px', borderRadius: '5px',
                 backgroundColor: n === schritt ? 'var(--gold)'
-                  : n < schritt ? 'rgba(201,168,76,0.4)' : 'rgba(255,255,255,0.15)',
+                  : n < schritt ? 'rgba(201,168,76,0.4)' : 'var(--border)',
                 transition: 'all 0.35s cubic-bezier(0.22,1,0.36,1)',
               }} />
             ))}
@@ -161,7 +161,7 @@ export default function OnboardingScreen({ user, onComplete }) {
                           backgroundColor: aktiv ? 'rgba(201,168,76,0.1)' : 'var(--card)',
                           border: aktiv ? '2px solid rgba(201,168,76,0.6)' : '2px solid var(--input-border)',
                           cursor: 'pointer', textAlign: 'center',
-                          boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+                          boxShadow: 'var(--shadow)',
                           transition: 'border-color 0.2s, background-color 0.2s',
                           boxSizing: 'border-box',
                         }}
@@ -176,7 +176,7 @@ export default function OnboardingScreen({ user, onComplete }) {
                         }}>
                           {badge}
                         </div>
-                        <p style={{ margin: 0, color: aktiv ? '#fff' : 'var(--text-sub)', fontWeight: aktiv ? '700' : '400', fontSize: '0.92rem' }}>
+                        <p style={{ margin: 0, color: aktiv ? 'var(--gold)' : 'var(--text-sub)', fontWeight: aktiv ? '700' : '400', fontSize: '0.92rem' }}>
                           {label}
                         </p>
                       </button>
@@ -213,7 +213,7 @@ export default function OnboardingScreen({ user, onComplete }) {
                           backgroundColor: aktiv ? 'rgba(201,168,76,0.12)' : 'var(--card)',
                           border: aktiv ? '2px solid rgba(201,168,76,0.55)' : '2px solid var(--input-border)',
                           cursor: 'pointer', textAlign: 'center',
-                          boxShadow: '0 4px 16px rgba(0,0,0,0.25)',
+                          boxShadow: 'var(--shadow)',
                           transition: 'border-color 0.2s, background-color 0.2s',
                           boxSizing: 'border-box',
                         }}
@@ -221,7 +221,7 @@ export default function OnboardingScreen({ user, onComplete }) {
                         <div style={{
                           fontSize: symbol.length > 1 ? '0.85rem' : '1.2rem',
                           fontWeight: '800',
-                          color: aktiv ? 'var(--gold)' : '#fff',
+                          color: aktiv ? 'var(--gold)' : 'var(--text)',
                           marginBottom: '4px',
                         }}>
                           {symbol}

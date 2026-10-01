@@ -21,7 +21,7 @@ function PullToRefreshIndicator({ ziehen, fortschritt, schwellenwert }) {
         width: '44px', height: '44px', borderRadius: '50%',
         backgroundColor: 'var(--card)',
         border: '1px solid rgba(201,168,76,0.25)',
-        boxShadow: '0 4px 16px rgba(0,0,0,0.35)',
+        boxShadow: 'var(--shadow)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
         <svg
