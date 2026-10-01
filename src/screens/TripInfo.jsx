@@ -45,6 +45,8 @@ function TripInfo() {
 
   // State für Notizen
   const [notizen, setNotizen] = useState('')
+  // Zuletzt gespeicherter Stand – wird bei "Abbrechen" wiederhergestellt (W5)
+  const [notizenOriginal, setNotizenOriginal] = useState('')
   const [notizenBearbeiten, setNotizenBearbeiten] = useState(false)
 
   // Schützt gegen doppeltes Anlegen/Speichern durch schnelles Doppel-Tippen (K9) –
@@ -67,8 +69,9 @@ function TripInfo() {
       if (tripRes.error) console.error('Fehler beim Laden des Trips:', tripRes.error)
       setTrip(tripRes.data)
       if (!tripRes.data) { setLaden(false); return }
-      if (tripRes.data.notizen) setNotizen(tripRes.data.notizen)
-      else setNotizen('')
+      const notizenGeladen = tripRes.data.notizen || ''
+      setNotizen(notizenGeladen)
+      setNotizenOriginal(notizenGeladen)
 
       if (fluegeRes.error || unterkuenfteRes.error || linksRes.error) {
         console.error('Fehler beim Laden der Trip-Daten:', fluegeRes.error || unterkuenfteRes.error || linksRes.error)
@@ -254,10 +257,17 @@ function TripInfo() {
     try {
       const { error } = await supabase.from('trips').update({ notizen: notizen || null }).eq('id', id)
       if (error) { console.error('Fehler:', error); toast(t('verbindungsfehler'), 'error'); return }
+      setNotizenOriginal(notizen)
       setNotizenBearbeiten(false)
     } finally {
       setNotizenSpeichernLaeuft(false)
     }
+  }
+
+  // Bearbeiten abbrechen – tippte Text verwerfen und auf den zuletzt gespeicherten Stand zurücksetzen (W5)
+  const notizenAbbrechen = () => {
+    setNotizen(notizenOriginal)
+    setNotizenBearbeiten(false)
   }
 
   // Fluginfo parsen: "06:30 MUC" → { zeit: "06:30", ort: "MUC" }
@@ -699,7 +709,7 @@ function TripInfo() {
               <div style={sectionIconStyle}><NotebookPen size={16} color="var(--gold)" /></div>
               <h3 style={sectionTitelStyle}>{t('notizenTitel')}</h3>
             </div>
-            <button onClick={() => setNotizenBearbeiten(!notizenBearbeiten)} className="btn-press" style={addButtonStyle}>
+            <button onClick={() => notizenBearbeiten ? notizenAbbrechen() : setNotizenBearbeiten(true)} className="btn-press" style={addButtonStyle}>
               {notizenBearbeiten ? t('abbrechen') : t('bearbeiten')}
             </button>
           </div>
