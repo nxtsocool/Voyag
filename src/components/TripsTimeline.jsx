@@ -1,9 +1,9 @@
 import { useNavigate } from 'react-router-dom'
-import laender from '../data/laender'
 import { reiseZeitraum, reiseStatus, tageBis } from '../utils/datum'
+import { laenderName } from '../utils/laendernamen'
 
 // Zeitleisten-Ansicht der Reisen – wird in TripsOverview als Alternative zur Karten-Ansicht eingebettet
-function TripsTimeline({ trips, currentUser, t }) {
+function TripsTimeline({ trips, currentUser, t, sprache }) {
   const navigate = useNavigate()
 
   const getFlaggeUrl = (code) => code ? `https://flagcdn.com/w40/${code.toLowerCase()}.png` : null
@@ -42,7 +42,7 @@ function TripsTimeline({ trips, currentUser, t }) {
   // Eine Zeitleisten-Karte rendern
   const renderEintrag = (eintrag, index) => {
     const { trip, status } = eintrag
-    const landName = laender.find(l => l.code === trip.land_code)?.name || ''
+    const landName = laenderName(trip.land_code, sprache)
     const eigenTrip = trip.user_id === currentUser?.id
 
     return (

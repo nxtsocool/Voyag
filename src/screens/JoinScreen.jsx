@@ -1,19 +1,19 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
-import laender from '../data/laender'
 import { Compass } from 'lucide-react'
 import { useSettings } from '../context/SettingsContext'
 import useBodyScrollLock from '../hooks/useBodyScrollLock'
 import { einladungLesen, einladungEntfernen } from '../utils/einladung'
 import { findeVorauswahl } from '../utils/teilnehmerVerknuepfung'
+import { laenderName } from '../utils/laendernamen'
 import Toast from '../components/Toast'
 import useToast from '../hooks/useToast.jsx'
 
 export default function JoinScreen() {
   const { code } = useParams()
   const navigate = useNavigate()
-  const { t } = useSettings()
+  const { t, sprache } = useSettings()
   const { toasts, setToasts, toast } = useToast()
 
   const [trip, setTrip] = useState(null)
@@ -118,7 +118,7 @@ export default function JoinScreen() {
     navigate(`/trip/${joinedTripId}`)
   }
 
-  const landName = trip ? laender.find(l => l.code === trip.land_code)?.name || '' : ''
+  const landName = trip ? laenderName(trip.land_code, sprache) : ''
   const flaggeUrl = trip?.land_code ? `https://flagcdn.com/w80/${trip.land_code.toLowerCase()}.png` : null
 
   if (laden) return (

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
-import laender from '../data/laender'
 import { Trash2, SquarePen, Globe, ChevronDown, LayoutGrid, CalendarDays } from 'lucide-react'
 import TripsTimeline from '../components/TripsTimeline'
 import Toast from '../components/Toast'
@@ -14,6 +13,7 @@ import { findeVorauswahl } from '../utils/teilnehmerVerknuepfung'
 import { reiseZeitraum, reiseStatus, tageBis } from '../utils/datum'
 import { WAEHRUNGEN, waehrungFuerLand } from '../data/waehrungen'
 import useWechselkurse from '../hooks/useWechselkurse'
+import { laenderName, laenderSortiert } from '../utils/laendernamen'
 
 
 // Farbe anhand Trip-ID auswählen
@@ -68,7 +68,7 @@ const formatDatumDE = (iso) => {
 const istAbgeschlossen = (trip) => reiseStatus(trip) === 'vergangen'
 
 function TripsOverview() {
-  const { t, design } = useSettings()
+  const { t, design, sprache } = useSettings()
   const navigate = useNavigate()
   const { toasts, setToasts, toast } = useToast()
   
@@ -413,7 +413,7 @@ function TripsOverview() {
   const renderTripCard = (trip, index, archiviert) => {
     const farbe = getRegionFarbe(trip.land_code)
     const countdown = archiviert ? t('archivAbgeschlossenLabel') : getCountdown(trip, t)
-    const landName = laender.find(l => l.code === trip.land_code)?.name || ''
+    const landName = laenderName(trip.land_code, sprache)
     const eigenTrip = trip.user_id === currentUser?.id
 
     return (
@@ -696,7 +696,7 @@ function TripsOverview() {
             <select value={neueReise.land_code}
               onChange={(e) => setNeueReise({ ...neueReise, land_code: e.target.value, waehrung: waehrungFuerLand(e.target.value) })} style={inputStyle}>
               <option value="">{t('landAuswaehlen')}</option>
-              {laender.map(land => <option key={land.code} value={land.code}>{land.name}</option>)}
+              {laenderSortiert(sprache).map(land => <option key={land.code} value={land.code}>{land.anzeigeName}</option>)}
             </select>
             <p style={{ color: 'var(--text-sub)', fontSize: '0.82rem', marginBottom: '8px' }}>{t('reisewaehrungLabel')}</p>
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '14px' }}>
@@ -743,7 +743,7 @@ function TripsOverview() {
             <select value={bearbeiteDaten.land_code}
               onChange={(e) => setBearbeiteDaten({ ...bearbeiteDaten, land_code: e.target.value })} style={inputStyle}>
               <option value="">{t('landAuswaehlen')}</option>
-              {laender.map(land => <option key={land.code} value={land.code}>{land.name}</option>)}
+              {laenderSortiert(sprache).map(land => <option key={land.code} value={land.code}>{land.anzeigeName}</option>)}
             </select>
             <p style={{ color: 'var(--text-sub)', fontSize: '0.82rem', marginBottom: '8px' }}>{t('reisewaehrungLabel')}</p>
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '14px' }}>
@@ -855,7 +855,7 @@ function TripsOverview() {
             )}
           </>
         ) : (
-          <TripsTimeline trips={trips} currentUser={currentUser} t={t} />
+          <TripsTimeline trips={trips} currentUser={currentUser} t={t} sprache={sprache} />
         )}
 
         {/* Leerer Zustand */}

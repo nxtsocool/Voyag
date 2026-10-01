@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
-import laender from '../data/laender'
 import { ChevronLeft, Info, Users, CheckSquare, Wallet, MapPin, Rocket, PartyPopper } from 'lucide-react'
 import usePullToRefresh from '../hooks/usePullToRefresh'
 import PullToRefreshIndicator from '../components/PullToRefreshIndicator'
@@ -11,11 +10,12 @@ import useToast from '../hooks/useToast.jsx'
 import { useSettings } from '../context/SettingsContext'
 import { reiseZeitraum, reiseStatus, tageBis } from '../utils/datum'
 import { WAEHRUNGEN } from '../data/waehrungen'
+import { laenderName } from '../utils/laendernamen'
 
 function TripHome() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { t } = useSettings()
+  const { t, sprache } = useSettings()
   const { toasts, setToasts, toast } = useToast()
 
   const [trip, setTrip] = useState(null)
@@ -79,7 +79,7 @@ function TripHome() {
 
   if (!trip) return <TripNichtGefunden />
 
-  const landName = laender.find(l => l.code === trip.land_code)?.name
+  const landName = laenderName(trip.land_code, sprache)
   const flagUrl = trip.land_code
     ? `https://flagcdn.com/w320/${trip.land_code.toLowerCase()}.png`
     : null

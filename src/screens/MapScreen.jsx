@@ -8,6 +8,7 @@ import usePullToRefresh from '../hooks/usePullToRefresh'
 import PullToRefreshIndicator from '../components/PullToRefreshIndicator'
 import { useSettings } from '../context/SettingsContext'
 import { reiseStatus } from '../utils/datum'
+import { laenderName, laenderSortiert } from '../utils/laendernamen'
 import Toast from '../components/Toast'
 import useToast from '../hooks/useToast.jsx'
 
@@ -51,7 +52,7 @@ const countryIds = {
 }
 
 function MapScreen() {
-  const { t } = useSettings()
+  const { t, sprache } = useSettings()
   const { toasts, setToasts, toast } = useToast()
   // Bereiste Länder: eigene/beigetretene Reisen mit Status laufend/vergangen,
   // plus manuell erfasste Einträge (trip_id null). Geplante Länder: nur
@@ -204,6 +205,7 @@ function MapScreen() {
             if (!code) return
             const land = laender.find(l => l.code === code)
             if (!land) return
+            const landAnzeigeName = laenderName(code, sprache)
             // Position relativ zum äußeren Wrapper berechnen
             const rect = mapContainerRef.current.getBoundingClientRect()
             const rawX = event.clientX - rect.left
@@ -216,7 +218,7 @@ function MapScreen() {
             const eintragGeplant = geplant.find(g => g.country_code === code)
             setPopup({
               code,
-              name: land.name,
+              name: landAnzeigeName,
               isBesucht: besuchteCodesListe.includes(code),
               isGeplant: geplanteCodesListe.includes(code),
               trip: eintragBesucht?.trip || eintragGeplant?.trip || null,
@@ -228,7 +230,7 @@ function MapScreen() {
       })
 
     return () => { abgebrochen = true }
-  }, [besucht, geplant])
+  }, [besucht, geplant, sprache])
 
   const landHinzufuegen = async (code) => {
     const codes = besucht.map(b => b.country_code)
@@ -253,12 +255,13 @@ function MapScreen() {
   const besuchteCodesListe = besucht.map(b => b.country_code)
   const prozent = laender.length > 0 ? Math.round((besucht.length / laender.length) * 100) : 0
 
-  // Länderliste für Suche filtern (bereits besuchte ausblenden)
+  // Länderliste für Suche filtern (bereits besuchte ausblenden) – Suche und
+  // Anzeige laufen über den lokalisierten Namen (W11)
   const gefilterteLaender = suche.trim().length > 0
-    ? laender
+    ? laenderSortiert(sprache)
         .filter(l =>
           !besuchteCodesListe.includes(l.code) &&
-          l.name.toLowerCase().includes(suche.toLowerCase())
+          l.anzeigeName.toLowerCase().includes(suche.toLowerCase())
         )
         .slice(0, 15)
     : []
@@ -514,7 +517,7 @@ function MapScreen() {
                   alt=""
                   style={{ width: '16px', borderRadius: '2px' }}
                 />
-                {land.name}
+                {land.anzeigeName}
               </button>
             ))}
           </div>
@@ -545,7 +548,7 @@ function MapScreen() {
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
             {besucht.map((eintrag, index) => {
-              const land = laender.find(l => l.code === eintrag.country_code)
+              const landAnzeigeName = laenderName(eintrag.country_code, sprache)
               return (
                 <div key={eintrag.country_code} className={`fade-in-${Math.min(index + 1, 5)}`} style={{
                   backgroundColor: 'var(--sub)',
@@ -561,7 +564,7 @@ function MapScreen() {
                     style={{ width: '18px', borderRadius: '2px', flexShrink: 0 }}
                   />
                   <span style={{ fontSize: '0.85rem', fontWeight: '500', overflowWrap: 'break-word', wordBreak: 'break-word' }}>
-                    {land?.name || eintrag.country_code}
+                    {landAnzeigeName}
                   </span>
                   {/* Nur manuell hinzugefügte Länder können entfernt werden */}
                   {!eintrag.trip && (
@@ -603,7 +606,7 @@ function MapScreen() {
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
             {geplant.map((eintrag, index) => {
-              const land = laender.find(l => l.code === eintrag.country_code)
+              const landAnzeigeName = laenderName(eintrag.country_code, sprache)
               return (
                 <div key={eintrag.country_code} className={`fade-in-${Math.min(index + 1, 5)}`} style={{
                   backgroundColor: 'rgba(201,168,76,0.08)',
@@ -619,7 +622,7 @@ function MapScreen() {
                     style={{ width: '18px', borderRadius: '2px', flexShrink: 0, opacity: 0.85 }}
                   />
                   <span style={{ fontSize: '0.85rem', fontWeight: '500', color: 'var(--text-sub)', overflowWrap: 'break-word', wordBreak: 'break-word' }}>
-                    {land?.name || eintrag.country_code}
+                    {landAnzeigeName}
                   </span>
                 </div>
               )

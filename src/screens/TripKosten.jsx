@@ -13,12 +13,12 @@ import { useSettings } from '../context/SettingsContext'
 import useWechselkurse from '../hooks/useWechselkurse'
 import { WAEHRUNGEN, symbolOderIsoZuIso } from '../data/waehrungen'
 import { saldenBerechnen, schuldenBerechnen, anteilBerechnen } from '../utils/kosten'
-import { heuteISO } from '../utils/datum'
+import { heuteISO, parseDatum, formatDatum } from '../utils/datum'
 
 function TripKosten() {
   const { id } = useParams()
   const { toasts, setToasts, toast, loeschenMitUndo } = useUndoLoeschen()
-  const { waehrungISO: heimISO, t, design } = useSettings()
+  const { waehrungISO: heimISO, t, design, sprache } = useSettings()
   const { umrechnen, veraltet } = useWechselkurse()
   const [trip, setTrip] = useState(null)
   const [ausgaben, setAusgaben] = useState([])
@@ -247,11 +247,15 @@ function TripKosten() {
     }
   }
 
+  // Interner Gruppierungsschlüssel für Ausgaben ohne Datum – die Anzeige läuft
+  // über t('ohneDatum'), damit der Text sprachabhängig ist (W11)
+  const OHNE_DATUM_KEY = '__ohne_datum__'
+
   // Ausgaben nach Datum gruppieren
   const ausgabenNachDatum = () => {
     const gruppen = {}
     ausgaben.forEach(a => {
-      const datum = a.datum || 'Ohne Datum'
+      const datum = a.datum || OHNE_DATUM_KEY
       if (!gruppen[datum]) gruppen[datum] = []
       gruppen[datum].push(a)
     })
@@ -259,9 +263,8 @@ function TripKosten() {
   }
 
   const datumFormatieren = (datumStr) => {
-    if (datumStr === 'Ohne Datum') return datumStr
-    const datum = new Date(datumStr)
-    return datum.toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' })
+    if (datumStr === OHNE_DATUM_KEY) return t('ohneDatum')
+    return formatDatum(parseDatum(datumStr), sprache)
   }
 
   const maxSaldo = Math.max(...salden.map(s => Math.abs(s.saldo)), 0.01)
