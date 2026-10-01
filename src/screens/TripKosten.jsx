@@ -160,7 +160,8 @@ function TripKosten() {
       const betragInTrip = umrechnen(
         parseFloat(formDaten.betrag),
         formDaten.waehrung.iso,
-        tripISO
+        tripISO,
+        formDaten.datum
       )
 
       const payload = {
@@ -431,7 +432,7 @@ function TripKosten() {
                                 {/* Optionale Zusatzzeile in der Heimwährung des Betrachters, wenn sie von der Trip-Währung abweicht */}
                                 {heimISO !== tripISO && (
                                   <p style={{ margin: '2px 0 0', fontSize: '0.72rem', color: 'var(--text-sub)', whiteSpace: 'nowrap' }}>
-                                    ≈ {umrechnen(ausgabe.betrag, tripISO, heimISO).toFixed(2)}{WAEHRUNGEN.find(w => w.iso === heimISO)?.symbol}
+                                    ≈ {umrechnen(ausgabe.betrag, tripISO, heimISO, ausgabe.datum).toFixed(2)}{WAEHRUNGEN.find(w => w.iso === heimISO)?.symbol}
                                   </p>
                                 )}
                               </div>
@@ -643,7 +644,7 @@ function TripKosten() {
                 color: 'var(--text-sub)', fontSize: '0.82rem',
                 marginBottom: '10px', textAlign: 'right',
               }}>
-                ≈ {umrechnen(parseFloat(formDaten.betrag), formDaten.waehrung.iso, tripISO).toFixed(2)}{tripSymbol}
+                ≈ {umrechnen(parseFloat(formDaten.betrag), formDaten.waehrung.iso, tripISO, formDaten.datum).toFixed(2)}{tripSymbol}
               </p>
             )}
 
