@@ -394,9 +394,16 @@ function TripsOverview() {
     : bearbeiteDaten.endDatum < bearbeiteDaten.startDatum ? t('enddatumVorStartdatum')
     : null
 
-  // Aktive/kommende Reisen oben, abgeschlossene Reisen unten im Archiv
-  const aktiveTrips = trips.filter(trip => !istAbgeschlossen(trip))
-  const archivierteTrips = trips.filter(trip => istAbgeschlossen(trip))
+  // Aktive/kommende Reisen oben, abgeschlossene Reisen unten im Archiv (O1):
+  // aktiv/kommend nach Startdatum aufsteigend (nächste Reise zuerst), Archiv
+  // nach Enddatum absteigend (zuletzt beendete Reise zuerst) – dieselbe
+  // Sortierlogik wie in TripsTimeline.jsx
+  const aktiveTrips = trips
+    .filter(trip => !istAbgeschlossen(trip))
+    .sort((a, b) => (reiseZeitraum(a).start?.getTime() || Infinity) - (reiseZeitraum(b).start?.getTime() || Infinity))
+  const archivierteTrips = trips
+    .filter(trip => istAbgeschlossen(trip))
+    .sort((a, b) => (reiseZeitraum(b).ende?.getTime() || 0) - (reiseZeitraum(a).ende?.getTime() || 0))
 
   // Eine Reisekarte rendern – identisch für aktive und archivierte Reisen,
   // archivierte Karten nur gedämpft und mit "Abgeschlossen" statt Countdown
