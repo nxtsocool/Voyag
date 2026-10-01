@@ -142,14 +142,14 @@ function LoginScreen({ emailNichtBestaetigt }) {
       <div style={{
         minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
         backgroundColor: 'var(--bg)',
-        backgroundImage: 'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(201,168,76,0.14) 0%, transparent 70%)',
+        backgroundImage: 'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(var(--gold-rgb),0.14) 0%, transparent 70%)',
         padding: '20px', boxSizing: 'border-box',
       }}>
         <div className="fade-in" style={{ width: '100%', maxWidth: '400px', textAlign: 'center', boxSizing: 'border-box' }}>
           <div style={{
             width: '96px', height: '96px', borderRadius: '50%',
-            backgroundColor: 'rgba(201,168,76,0.12)',
-            border: '2px solid rgba(201,168,76,0.3)',
+            backgroundColor: 'rgba(var(--gold-rgb),0.12)',
+            border: '2px solid rgba(var(--gold-rgb),0.3)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             margin: '0 auto 28px',
           }}>
@@ -169,7 +169,7 @@ function LoginScreen({ emailNichtBestaetigt }) {
             border: 'none', padding: '16px 32px', borderRadius: '16px',
             fontSize: '1rem', fontWeight: '700', cursor: 'pointer',
             display: 'inline-flex', alignItems: 'center', gap: '8px',
-            boxShadow: '0 6px 24px rgba(201,168,76,0.35)',
+            boxShadow: '0 6px 24px rgba(var(--gold-rgb),0.35)',
           }}>
             <ChevronLeft size={18} />
             {t('zurueckZumLogin')}
@@ -185,15 +185,15 @@ function LoginScreen({ emailNichtBestaetigt }) {
       <div style={{
         minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
         backgroundColor: 'var(--bg)',
-        backgroundImage: 'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(201,168,76,0.14) 0%, transparent 70%)',
+        backgroundImage: 'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(var(--gold-rgb),0.14) 0%, transparent 70%)',
         padding: '20px', boxSizing: 'border-box',
       }}>
         <div className="fade-in" style={{ width: '100%', maxWidth: '400px', textAlign: 'center', boxSizing: 'border-box' }}>
           {/* Briefumschlag-Icon in goldenem Kreis */}
           <div style={{
             width: '96px', height: '96px', borderRadius: '50%',
-            backgroundColor: 'rgba(201,168,76,0.12)',
-            border: '2px solid rgba(201,168,76,0.3)',
+            backgroundColor: 'rgba(var(--gold-rgb),0.12)',
+            border: '2px solid rgba(var(--gold-rgb),0.3)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             margin: '0 auto 28px',
           }}>
@@ -213,7 +213,7 @@ function LoginScreen({ emailNichtBestaetigt }) {
             border: 'none', padding: '16px 32px', borderRadius: '16px',
             fontSize: '1rem', fontWeight: '700', cursor: 'pointer',
             display: 'inline-flex', alignItems: 'center', gap: '8px',
-            boxShadow: '0 6px 24px rgba(201,168,76,0.35)',
+            boxShadow: '0 6px 24px rgba(var(--gold-rgb),0.35)',
           }}>
             <ChevronLeft size={18} />
             {t('zurueckZumLogin')}
@@ -349,7 +349,7 @@ function LoginScreen({ emailNichtBestaetigt }) {
                 fontWeight: '700',
                 letterSpacing: '0.04em',
                 backgroundColor: aktiv ? 'var(--gold)' : 'transparent',
-                color: aktiv ? '#0a0f1e' : 'var(--text-sub)',
+                color: aktiv ? '#1a1410' : 'var(--text-sub)',
                 transition: 'background-color 0.25s ease, color 0.25s ease',
               }}
             >
@@ -365,7 +365,7 @@ function LoginScreen({ emailNichtBestaetigt }) {
         minHeight: '100vh',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         backgroundColor: 'var(--bg)',
-        backgroundImage: 'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(201,168,76,0.14) 0%, transparent 70%)',
+        backgroundImage: 'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(var(--gold-rgb),0.14) 0%, transparent 70%)',
         padding: '20px', boxSizing: 'border-box',
       }}>
         <div style={{ width: '100%', maxWidth: '400px', boxSizing: 'border-box' }}>
@@ -404,7 +404,7 @@ function LoginScreen({ emailNichtBestaetigt }) {
                   {/* Nordnadel gold */}
                   <polygon className="nadel-puls" points="30,5 34,30 30,26 26,30" fill="var(--gold)"/>
                   {/* Südnadel weiß */}
-                  <polygon points="30,55 34,30 30,34 26,30" fill="#ffffff" opacity="0.15"/>
+                  <polygon points="30,55 34,30 30,34 26,30" fill="var(--text)" opacity="0.15"/>
                   {/* Mittelpunkt */}
                   <circle cx="30" cy="30" r="4" fill="var(--gold)"/>
                   <circle cx="30" cy="30" r="2" fill="var(--bg)"/>
@@ -444,8 +444,8 @@ function LoginScreen({ emailNichtBestaetigt }) {
           {/* Einladungs-Hinweis (K14) – bleibt sichtbar, egal ob Login oder Registrierung */}
           {eingeladenerCode && (
             <div className="fade-in" style={{
-              backgroundColor: 'rgba(201,168,76,0.1)',
-              border: '1px solid rgba(201,168,76,0.25)',
+              backgroundColor: 'rgba(var(--gold-rgb),0.1)',
+              border: '1px solid rgba(var(--gold-rgb),0.25)',
               borderRadius: '12px', padding: '12px 16px', marginBottom: '20px',
             }}>
               <p style={{ color: 'var(--gold)', margin: 0, fontSize: '0.85rem', fontWeight: '600', lineHeight: 1.4 }}>
@@ -461,7 +461,7 @@ function LoginScreen({ emailNichtBestaetigt }) {
               border: '1px solid rgba(233,69,96,0.3)',
               borderRadius: '12px', padding: '12px 16px', marginBottom: '20px',
             }}>
-              <p style={{ color: '#e94560', margin: 0, fontSize: '0.88rem' }}>{angezeigterFehler}</p>
+              <p style={{ color: 'var(--error)', margin: 0, fontSize: '0.88rem' }}>{angezeigterFehler}</p>
             </div>
           )}
 
@@ -576,9 +576,9 @@ function LoginScreen({ emailNichtBestaetigt }) {
                   const aktiv = staerke === 'stark' ? true
                     : staerke === 'mittel' ? i < 2
                     : i < 1
-                  const farbe = staerke === 'stark' ? '#4caf50'
+                  const farbe = staerke === 'stark' ? 'var(--success)'
                     : staerke === 'mittel' ? 'var(--gold)'
-                    : '#e94560'
+                    : 'var(--error)'
                   return (
                     <div key={stufe} style={{
                       flex: 1, height: '4px', borderRadius: '2px',
@@ -590,7 +590,7 @@ function LoginScreen({ emailNichtBestaetigt }) {
               </div>
               <p style={{
                 fontSize: '0.75rem', margin: 0, fontWeight: '600',
-                color: staerke === 'stark' ? '#4caf50' : staerke === 'mittel' ? 'var(--gold)' : '#e94560',
+                color: staerke === 'stark' ? 'var(--success)' : staerke === 'mittel' ? 'var(--gold)' : 'var(--error)',
               }}>
                 {t(`passwort${staerke.charAt(0).toUpperCase() + staerke.slice(1)}`)}
               </p>
@@ -631,7 +631,7 @@ function LoginScreen({ emailNichtBestaetigt }) {
               cursor: laden || pflichtfelderFehlen ? 'not-allowed' : 'pointer',
               width: '100%', marginBottom: '20px',
               opacity: laden || pflichtfelderFehlen ? 0.7 : 1,
-              boxShadow: '0 6px 24px rgba(201,168,76,0.35)',
+              boxShadow: '0 6px 24px rgba(var(--gold-rgb),0.35)',
               letterSpacing: '0.02em',
             }}>
               {laden ? t('laedt') : isRegistrieren ? t('accountErstellen') : t('einloggen')}

@@ -4,6 +4,7 @@ import { User, Lock, Trash2, LogOut, Mail, ChevronRight, Globe, Palette, DollarS
 import { useSettings } from '../context/useSettings'
 import useBodyScrollLock from '../hooks/useBodyScrollLock'
 import { WAEHRUNGEN } from '../data/waehrungen'
+import { selectStyle } from '../utils/selectStyle'
 import Toast from '../components/Toast'
 import useToast from '../hooks/useToast.jsx'
 
@@ -132,7 +133,7 @@ export default function SettingsScreen() {
           width: '64px', height: '64px', borderRadius: '20px',
           background: 'linear-gradient(135deg, var(--gold), #8a6f2e)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: '1.4rem', fontWeight: '800', color: '#0a0f1e', flexShrink: 0,
+          fontSize: '1.4rem', fontWeight: '800', color: '#1a1410', flexShrink: 0,
         }}>
           {initialen}
         </div>
@@ -228,7 +229,7 @@ export default function SettingsScreen() {
                 <button onClick={passwortAendern} className="btn-press" style={speichernButtonStyle}>{t('speichern')}</button>
                 <button onClick={passwortZuruecksetzen} className="btn-press" style={{
                   ...speichernButtonStyle, backgroundColor: 'transparent',
-                  border: '1px solid rgba(201,168,76,0.3)', color: 'var(--gold)',
+                  border: '1px solid rgba(var(--gold-rgb),0.3)', color: 'var(--gold)',
                 }}>{t('perEmail')}</button>
               </div>
             </div>
@@ -245,19 +246,17 @@ export default function SettingsScreen() {
               <div style={iconWrapperStyle}><DollarSign size={16} color="var(--gold)" /></div>
               <span style={{ fontWeight: '600', fontSize: '0.95rem' }}>{t('waehrungLabel')}</span>
             </div>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            <select
+              value={waehrungISO}
+              onChange={(e) => einstellungSpeichern('waehrung', e.target.value)}
+              style={selectStyle}
+            >
               {WAEHRUNGEN.map(w => (
-                <button key={w.iso} onClick={() => einstellungSpeichern('waehrung', w.iso)}
-                  className="btn-press" style={{
-                    padding: '0 14px', minHeight: '44px', display: 'flex', alignItems: 'center', gap: '6px', borderRadius: '12px', cursor: 'pointer',
-                    fontWeight: '600', fontSize: '0.85rem', border: 'none',
-                    backgroundColor: waehrungISO === w.iso ? 'var(--gold)' : 'var(--sub)',
-                    color: waehrungISO === w.iso ? '#0a0f1e' : 'var(--text-sub)',
-                  }}>
-                  {w.symbol} <span style={{ fontSize: '0.72rem', opacity: 0.85 }}>{w.iso}</span>
-                </button>
+                <option key={w.iso} value={w.iso}>
+                  {w.symbol} — {sprache === 'en' ? w.name_en : w.name_de}
+                </option>
               ))}
-            </div>
+            </select>
           </div>
 
           {/* Sprache */}
@@ -273,7 +272,7 @@ export default function SettingsScreen() {
                     padding: '0 16px', minHeight: '44px', display: 'flex', alignItems: 'center', borderRadius: '12px', cursor: 'pointer',
                     fontWeight: '600', fontSize: '0.9rem', border: 'none',
                     backgroundColor: sprache === s.code ? 'var(--gold)' : 'var(--sub)',
-                    color: sprache === s.code ? '#0a0f1e' : 'var(--text-sub)',
+                    color: sprache === s.code ? '#1a1410' : 'var(--text-sub)',
                   }}>
                   {s.label}
                 </button>
@@ -294,7 +293,7 @@ export default function SettingsScreen() {
                     padding: '0 16px', minHeight: '44px', display: 'flex', alignItems: 'center', borderRadius: '12px', cursor: 'pointer',
                     fontWeight: '600', fontSize: '0.9rem', border: 'none',
                     backgroundColor: design === d.code ? 'var(--gold)' : 'var(--sub)',
-                    color: design === d.code ? '#0a0f1e' : 'var(--text-sub)',
+                    color: design === d.code ? '#1a1410' : 'var(--text-sub)',
                   }}>
                   {t(d.labelKey)}
                 </button>
@@ -370,11 +369,11 @@ export default function SettingsScreen() {
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <div style={{ ...iconWrapperStyle, backgroundColor: 'rgba(233,69,96,0.1)' }}>
-                <Trash2 size={16} color="#e94560" />
+                <Trash2 size={16} color="var(--error)" />
               </div>
-              <span style={{ color: '#e94560', fontWeight: '600', fontSize: '0.95rem' }}>{t('accountLoeschenBtn')}</span>
+              <span style={{ color: 'var(--error)', fontWeight: '600', fontSize: '0.95rem' }}>{t('accountLoeschenBtn')}</span>
             </div>
-            <ChevronRight size={16} color="#e94560" />
+            <ChevronRight size={16} color="var(--error)" />
           </button>
         ) : (
           <div onClick={() => { setLoeschenOffen(false); setLoeschenBestaetigungstext('') }} style={{
@@ -413,7 +412,7 @@ export default function SettingsScreen() {
                   disabled={accountLoeschenLaeuft || loeschenBestaetigungstext.trim().toUpperCase() !== t('loeschenBestaetigungswort')}
                   className="btn-press"
                   style={{
-                    backgroundColor: '#e94560', color: '#fff', border: 'none',
+                    backgroundColor: 'var(--error)', color: '#fff', border: 'none',
                     padding: '14px', minHeight: '44px', boxSizing: 'border-box', borderRadius: '14px', cursor: 'pointer',
                     flex: 1, fontWeight: '700', fontSize: '1rem',
                     opacity: accountLoeschenLaeuft || loeschenBestaetigungstext.trim().toUpperCase() !== t('loeschenBestaetigungswort') ? 0.5 : 1,
@@ -449,21 +448,21 @@ const inputStyle = {
 }
 
 const editButtonStyle = {
-  backgroundColor: 'rgba(201,168,76,0.1)', border: 'none',
+  backgroundColor: 'rgba(var(--gold-rgb),0.1)', border: 'none',
   color: 'var(--gold)', padding: '0 14px', minHeight: '44px', borderRadius: '10px',
   display: 'flex', alignItems: 'center', flexShrink: 0,
   cursor: 'pointer', fontSize: '0.8rem', fontWeight: '700',
 }
 
 const speichernButtonStyle = {
-  backgroundColor: 'var(--gold)', color: '#0a0f1e', border: 'none',
+  backgroundColor: 'var(--gold)', color: '#1a1410', border: 'none',
   padding: '13px', borderRadius: '12px', cursor: 'pointer',
   flex: 1, fontWeight: '700', fontSize: '1rem',
 }
 
 const iconWrapperStyle = {
   width: '32px', height: '32px', borderRadius: '10px',
-  backgroundColor: 'rgba(201,168,76,0.1)',
+  backgroundColor: 'rgba(var(--gold-rgb),0.1)',
   display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
 }
 

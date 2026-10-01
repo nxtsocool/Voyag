@@ -29,8 +29,8 @@ function TripNav({ tripName }) {
       {/* Zurück Button + Trip Name */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', paddingTop: 'calc(20px + env(safe-area-inset-top))', marginBottom: '20px' }}>
         <button onClick={() => navigate(`/trip/${id}`)} className="btn-press" style={{
-          background: 'rgba(201,168,76,0.1)',
-          border: '1px solid rgba(201,168,76,0.2)',
+          background: 'rgba(var(--gold-rgb),0.1)',
+          border: '1px solid rgba(var(--gold-rgb),0.2)',
           color: 'var(--gold)', cursor: 'pointer',
           width: '44px', height: '44px', borderRadius: '50%',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -66,13 +66,13 @@ function TripNav({ tripName }) {
               style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px',
                 backgroundColor: aktiv ? 'var(--gold)' : 'var(--sub)',
-                color: aktiv ? '#0a0f1e' : 'var(--text-sub)',
+                color: aktiv ? '#1a1410' : 'var(--text-sub)',
                 border: 'none',
                 padding: '10px 16px', minHeight: '44px',
                 borderRadius: '50px',
                 cursor: 'pointer', fontSize: '0.82rem', fontWeight: aktiv ? '700' : '500',
                 whiteSpace: 'nowrap', flexShrink: 0, boxSizing: 'border-box',
-                boxShadow: aktiv ? '0 4px 16px rgba(201,168,76,0.35)' : 'none',
+                boxShadow: aktiv ? '0 4px 16px rgba(var(--gold-rgb),0.35)' : 'none',
                 transition: 'background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease',
               }}
             >

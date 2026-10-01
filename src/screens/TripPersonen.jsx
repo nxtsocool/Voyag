@@ -284,7 +284,7 @@ export default function TripPersonen() {
   // Avatar Hintergrundfarbe basierend auf erstem Buchstaben
   const getAvatarFarbe = (name) => {
     const farben = [
-      'rgba(201,168,76,0.18)',
+      'rgba(var(--gold-rgb),0.18)',
       'rgba(74,144,226,0.18)',
       'rgba(80,200,120,0.18)',
       'rgba(155,89,182,0.18)',
@@ -340,7 +340,7 @@ export default function TripPersonen() {
                           ? '2px solid var(--gold)'
                           : '2px solid var(--border)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        boxShadow: verknuepftProfil ? '0 0 16px rgba(201,168,76,0.25)' : 'none',
+                        boxShadow: verknuepftProfil ? '0 0 16px rgba(var(--gold-rgb),0.25)' : 'none',
                         transition: 'border-color 0.3s ease, box-shadow 0.3s ease',
                       }}>
                         <span style={{
@@ -360,7 +360,7 @@ export default function TripPersonen() {
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           border: '2px solid var(--card)',
                         }}>
-                          <BadgeCheck size={12} color="#080d1a" />
+                          <BadgeCheck size={12} color="#1a1410" />
                         </div>
                       )}
                     </div>
@@ -422,8 +422,8 @@ export default function TripPersonen() {
                           setSucheOhneTreffer(false)
                         }}
                         style={{
-                          backgroundColor: 'rgba(201,168,76,0.1)',
-                          border: '1px solid rgba(201,168,76,0.25)',
+                          backgroundColor: 'rgba(var(--gold-rgb),0.1)',
+                          border: '1px solid rgba(var(--gold-rgb),0.25)',
                           color: 'var(--gold)', cursor: 'pointer',
                           padding: '0 14px', minHeight: '44px', boxSizing: 'border-box',
                           borderRadius: '50px', display: 'flex', alignItems: 'center',
@@ -454,7 +454,7 @@ export default function TripPersonen() {
                       <button onClick={() => teilnehmerEntfernenAnfragen(person)} className="btn-press" style={{
                         backgroundColor: 'rgba(233,69,96,0.08)',
                         border: '1px solid rgba(233,69,96,0.2)',
-                        color: '#e94560', cursor: 'pointer',
+                        color: 'var(--error)', cursor: 'pointer',
                         width: '44px', height: '44px', borderRadius: '50%',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         fontSize: '1.1rem', fontWeight: '300', flexShrink: 0,
@@ -492,7 +492,7 @@ export default function TripPersonen() {
                         disabled={sucheLaedt || !sucheEmail.trim()}
                         className="btn-press"
                         style={{
-                          backgroundColor: 'var(--gold)', color: '#0a0f1e', border: 'none',
+                          backgroundColor: 'var(--gold)', color: '#1a1410', border: 'none',
                           padding: '0 18px', borderRadius: '12px', cursor: 'pointer',
                           fontWeight: '700', fontSize: '0.85rem', flexShrink: 0,
                           opacity: sucheLaedt || !sucheEmail.trim() ? 0.6 : 1,
@@ -517,7 +517,7 @@ export default function TripPersonen() {
                       >
                         <div style={{
                           width: '36px', height: '36px', borderRadius: '50%', flexShrink: 0,
-                          backgroundColor: 'var(--gold)', color: '#0a0f1e',
+                          backgroundColor: 'var(--gold)', color: '#1a1410',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           fontWeight: '700', fontSize: '0.95rem',
                         }}>
@@ -558,8 +558,8 @@ export default function TripPersonen() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
             <div style={{
               width: '34px', height: '34px', borderRadius: '10px',
-              backgroundColor: 'rgba(201,168,76,0.1)',
-              border: '1px solid rgba(201,168,76,0.18)',
+              backgroundColor: 'rgba(var(--gold-rgb),0.1)',
+              border: '1px solid rgba(var(--gold-rgb),0.18)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
               <UserPlus size={16} color="var(--gold)" />
@@ -575,10 +575,10 @@ export default function TripPersonen() {
               style={{ ...inputStyle, flex: 1, marginBottom: 0 }}
             />
             <button onClick={teilnehmerHinzufuegen} disabled={speichernLaeuft || !neuerTeilnehmer.trim()} className="btn-press" style={{
-              backgroundColor: 'var(--gold)', color: '#0a0f1e', border: 'none',
+              backgroundColor: 'var(--gold)', color: '#1a1410', border: 'none',
               padding: '0 20px', minHeight: '48px', borderRadius: '14px',
               cursor: 'pointer', fontSize: '1.3rem', fontWeight: '600', flexShrink: 0,
-              boxShadow: '0 4px 14px rgba(201,168,76,0.3)',
+              boxShadow: '0 4px 14px rgba(var(--gold-rgb),0.3)',
               opacity: speichernLaeuft || !neuerTeilnehmer.trim() ? 0.6 : 1,
             }}>+</button>
           </div>
@@ -595,8 +595,8 @@ export default function TripPersonen() {
               backgroundColor: 'var(--sub)',
               borderRadius: '16px', padding: '20px',
               textAlign: 'center',
-              border: '1px solid rgba(201,168,76,0.2)',
-              boxShadow: '0 0 30px rgba(201,168,76,0.08) inset',
+              border: '1px solid rgba(var(--gold-rgb),0.2)',
+              boxShadow: '0 0 30px rgba(var(--gold-rgb),0.08) inset',
             }}>
               <p style={{
                 fontSize: 'clamp(1.8rem, 8vw, 2.4rem)', fontWeight: '800',
@@ -619,7 +619,7 @@ export default function TripPersonen() {
               </button>
               <button onClick={linkTeilen} className="btn-press" style={{
                 flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                backgroundColor: 'var(--gold)', color: '#0a0f1e', border: 'none',
+                backgroundColor: 'var(--gold)', color: '#1a1410', border: 'none',
                 padding: '0 14px', minHeight: '48px', borderRadius: '14px', boxSizing: 'border-box',
                 cursor: 'pointer', fontWeight: '700', fontSize: '0.88rem',
               }}>
@@ -663,7 +663,7 @@ export default function TripPersonen() {
             </p>
             <div style={{ display: 'flex', gap: '10px' }}>
               <button onClick={() => verknuepfungLoesen(loeseVerknuepfungTeilnehmer.id)} className="btn-press" style={{
-                backgroundColor: '#e94560', color: '#fff', border: 'none',
+                backgroundColor: 'var(--error)', color: '#fff', border: 'none',
                 padding: '14px', minHeight: '48px', boxSizing: 'border-box', borderRadius: '14px', cursor: 'pointer',
                 flex: 1, fontWeight: '700', fontSize: '0.95rem',
               }}>{t('verknuepfungLoesenBtn')}</button>
@@ -724,7 +724,7 @@ export default function TripPersonen() {
             </div>
             <div style={{ display: 'flex', gap: '10px' }}>
               <button onClick={() => setEntferneTeilnehmer(null)} className="btn-press" style={{
-                backgroundColor: 'var(--gold)', color: '#0a0f1e', border: 'none',
+                backgroundColor: 'var(--gold)', color: '#1a1410', border: 'none',
                 padding: '14px', minHeight: '48px', boxSizing: 'border-box', borderRadius: '14px', cursor: 'pointer', flex: 1, fontWeight: '700',
               }}>{t('verstandenBtn')}</button>
             </div>

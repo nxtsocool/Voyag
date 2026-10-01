@@ -95,7 +95,7 @@ function PasswortRecoverySheet({ offen, onFertig }) {
               backgroundColor: 'rgba(233,69,96,0.12)', border: '1px solid rgba(233,69,96,0.3)',
               borderRadius: '12px', padding: '10px 14px', marginBottom: '14px',
             }}>
-              <p style={{ color: '#e94560', margin: 0, fontSize: '0.85rem' }}>{fehler}</p>
+              <p style={{ color: 'var(--error)', margin: 0, fontSize: '0.85rem' }}>{fehler}</p>
             </div>
           )}
 
@@ -116,7 +116,7 @@ function PasswortRecoverySheet({ offen, onFertig }) {
           />
 
           <button onClick={speichern} disabled={laeuft} className="btn-press" style={{
-            backgroundColor: 'var(--gold)', color: '#0a0f1e', border: 'none',
+            backgroundColor: 'var(--gold)', color: '#1a1410', border: 'none',
             padding: '14px', minHeight: '48px', boxSizing: 'border-box', borderRadius: '14px',
             cursor: 'pointer', width: '100%', fontWeight: '700', fontSize: '0.95rem',
             opacity: laeuft ? 0.6 : 1, marginTop: '4px',

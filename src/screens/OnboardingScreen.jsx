@@ -86,7 +86,7 @@ export default function OnboardingScreen({ user, onComplete }) {
         minHeight: '100vh', display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',
         backgroundColor: 'var(--bg)',
-        backgroundImage: 'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(201,168,76,0.12) 0%, transparent 70%)',
+        backgroundImage: 'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(var(--gold-rgb),0.12) 0%, transparent 70%)',
         padding: 'clamp(20px, 5vw, 40px)',
         paddingTop: 'calc(clamp(20px, 5vw, 40px) + env(safe-area-inset-top))',
         boxSizing: 'border-box',
@@ -100,7 +100,7 @@ export default function OnboardingScreen({ user, onComplete }) {
                 width: n === schritt ? '24px' : '10px',
                 height: '10px', borderRadius: '5px',
                 backgroundColor: n === schritt ? 'var(--gold)'
-                  : n < schritt ? 'rgba(201,168,76,0.4)' : 'var(--border)',
+                  : n < schritt ? 'rgba(var(--gold-rgb),0.4)' : 'var(--border)',
                 transition: 'all 0.35s cubic-bezier(0.22,1,0.36,1)',
               }} />
             ))}
@@ -118,7 +118,7 @@ export default function OnboardingScreen({ user, onComplete }) {
                     <circle cx="30" cy="30" r="27" fill="none" stroke="var(--gold)" strokeWidth="4"/>
                     <circle cx="30" cy="30" r="18" fill="none" stroke="var(--gold)" strokeWidth="0.8" opacity="0.3"/>
                     <polygon className="nadel-on" points="30,5 34,30 30,26 26,30" fill="var(--gold)"/>
-                    <polygon points="30,55 34,30 30,34 26,30" fill="#ffffff" opacity="0.15"/>
+                    <polygon points="30,55 34,30 30,34 26,30" fill="var(--text)" opacity="0.15"/>
                     <circle cx="30" cy="30" r="4" fill="var(--gold)"/>
                     <circle cx="30" cy="30" r="2" fill="var(--bg)"/>
                     <circle cx="30" cy="5" r="2" fill="var(--gold)"/>
@@ -166,8 +166,8 @@ export default function OnboardingScreen({ user, onComplete }) {
                         className="btn-press"
                         style={{
                           flex: 1, padding: '20px 12px', borderRadius: '18px',
-                          backgroundColor: aktiv ? 'rgba(201,168,76,0.1)' : 'var(--card)',
-                          border: aktiv ? '2px solid rgba(201,168,76,0.6)' : '2px solid var(--input-border)',
+                          backgroundColor: aktiv ? 'rgba(var(--gold-rgb),0.1)' : 'var(--card)',
+                          border: aktiv ? '2px solid rgba(var(--gold-rgb),0.6)' : '2px solid var(--input-border)',
                           cursor: 'pointer', textAlign: 'center',
                           boxShadow: 'var(--shadow)',
                           transition: 'border-color 0.2s, background-color 0.2s',
@@ -178,7 +178,7 @@ export default function OnboardingScreen({ user, onComplete }) {
                           fontSize: '1.1rem', fontWeight: '800',
                           color: aktiv ? 'var(--gold)' : 'var(--text-sub)',
                           marginBottom: '6px',
-                          backgroundColor: aktiv ? 'rgba(201,168,76,0.15)' : 'var(--sub)',
+                          backgroundColor: aktiv ? 'rgba(var(--gold-rgb),0.15)' : 'var(--sub)',
                           borderRadius: '8px', padding: '4px 10px',
                           display: 'inline-block',
                         }}>
@@ -218,8 +218,8 @@ export default function OnboardingScreen({ user, onComplete }) {
                         className="btn-press"
                         style={{
                           padding: '14px 6px', borderRadius: '14px',
-                          backgroundColor: aktiv ? 'rgba(201,168,76,0.12)' : 'var(--card)',
-                          border: aktiv ? '2px solid rgba(201,168,76,0.55)' : '2px solid var(--input-border)',
+                          backgroundColor: aktiv ? 'rgba(var(--gold-rgb),0.12)' : 'var(--card)',
+                          border: aktiv ? '2px solid rgba(var(--gold-rgb),0.55)' : '2px solid var(--input-border)',
                           cursor: 'pointer', textAlign: 'center',
                           boxShadow: 'var(--shadow)',
                           transition: 'border-color 0.2s, background-color 0.2s',
@@ -263,7 +263,7 @@ export default function OnboardingScreen({ user, onComplete }) {
                   <svg viewBox="0 0 40 40" style={{ width: '44px', height: '44px' }}>
                     <polyline
                       points="7,21 16,30 33,11"
-                      fill="none" stroke="#4caf50" strokeWidth="4"
+                      fill="none" stroke="var(--success)" strokeWidth="4"
                       strokeLinecap="round" strokeLinejoin="round"
                     />
                   </svg>
@@ -306,14 +306,14 @@ const goldButtonStyle = {
   backgroundColor: 'var(--gold)', color: 'var(--bg)',
   border: 'none', fontSize: '1rem', fontWeight: '700',
   cursor: 'pointer', letterSpacing: '0.02em',
-  boxShadow: '0 6px 24px rgba(201,168,76,0.38)',
+  boxShadow: '0 6px 24px rgba(var(--gold-rgb),0.38)',
   boxSizing: 'border-box',
 }
 
 const ikonKreisStyle = {
   width: '64px', height: '64px', borderRadius: '50%',
-  backgroundColor: 'rgba(201,168,76,0.1)',
-  border: '1.5px solid rgba(201,168,76,0.25)',
+  backgroundColor: 'rgba(var(--gold-rgb),0.1)',
+  border: '1.5px solid rgba(var(--gold-rgb),0.25)',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
   margin: '0 auto 24px',
 }

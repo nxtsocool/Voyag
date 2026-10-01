@@ -141,7 +141,7 @@ export default function JoinScreen() {
         {t('joinUngueltigText')}
       </p>
       <button onClick={() => navigate('/')} className="btn-press" style={{
-        backgroundColor: 'var(--gold)', color: '#0a0f1e', border: 'none',
+        backgroundColor: 'var(--gold)', color: '#1a1410', border: 'none',
         padding: '0 24px', minHeight: '48px', borderRadius: '14px', boxSizing: 'border-box',
         cursor: 'pointer', fontWeight: '700', fontSize: '0.95rem',
       }}>
@@ -181,7 +181,7 @@ export default function JoinScreen() {
             disabled={beitretenLaeuft}
             className="btn-press"
             style={{
-              flex: 1, backgroundColor: 'var(--gold)', color: '#0a0f1e', border: 'none',
+              flex: 1, backgroundColor: 'var(--gold)', color: '#1a1410', border: 'none',
               padding: '14px', minHeight: '48px', borderRadius: '14px', boxSizing: 'border-box',
               cursor: 'pointer', fontWeight: '700', fontSize: '0.95rem',
               opacity: beitretenLaeuft ? 0.6 : 1,
@@ -236,8 +236,8 @@ export default function JoinScreen() {
                     className="btn-press"
                     style={{
                       display: 'flex', alignItems: 'center', gap: '14px',
-                      backgroundColor: ausgewaehlt ? 'rgba(201,168,76,0.08)' : 'var(--sub)',
-                      border: ausgewaehlt ? '1.5px solid rgba(201,168,76,0.5)' : '1.5px solid var(--input-border)',
+                      backgroundColor: ausgewaehlt ? 'rgba(var(--gold-rgb),0.08)' : 'var(--sub)',
+                      border: ausgewaehlt ? '1.5px solid rgba(var(--gold-rgb),0.5)' : '1.5px solid var(--input-border)',
                       borderRadius: '16px', padding: '14px 16px',
                       cursor: 'pointer', textAlign: 'left', width: '100%', boxSizing: 'border-box',
                     }}
@@ -246,7 +246,7 @@ export default function JoinScreen() {
                       width: '42px', height: '42px', borderRadius: '50%',
                       backgroundColor: 'var(--gold)', flexShrink: 0,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: '1.1rem', fontWeight: '700', color: '#0a0f1e',
+                      fontSize: '1.1rem', fontWeight: '700', color: '#1a1410',
                     }}>
                       {initiale}
                     </div>
@@ -262,7 +262,7 @@ export default function JoinScreen() {
                 onClick={() => teilnehmerVerknuepfen(ausgewaehlteTeilnehmer)}
                 className="btn-press"
                 style={{
-                  backgroundColor: 'var(--gold)', color: '#0a0f1e', border: 'none',
+                  backgroundColor: 'var(--gold)', color: '#1a1410', border: 'none',
                   padding: '14px', minHeight: '48px', borderRadius: '14px', boxSizing: 'border-box',
                   cursor: 'pointer', fontWeight: '700', fontSize: '1rem', width: '100%', marginBottom: '10px',
                 }}

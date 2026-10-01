@@ -2,9 +2,9 @@ import { CheckCircle, XCircle, Info, X } from 'lucide-react'
 
 // Toast Typen mit Farben und Icons
 const toastConfig = {
-  success: { farbe: '#4caf50', hintergrund: 'rgba(76,175,80,0.1)', border: 'rgba(76,175,80,0.2)', Icon: CheckCircle },
-  error: { farbe: '#e94560', hintergrund: 'rgba(233,69,96,0.1)', border: 'rgba(233,69,96,0.2)', Icon: XCircle },
-  info: { farbe: 'var(--gold)', hintergrund: 'rgba(201,168,76,0.1)', border: 'rgba(201,168,76,0.2)', Icon: Info },
+  success: { farbe: 'var(--success)', hintergrund: 'rgba(76,175,80,0.1)', border: 'rgba(76,175,80,0.2)', Icon: CheckCircle },
+  error: { farbe: 'var(--error)', hintergrund: 'rgba(233,69,96,0.1)', border: 'rgba(233,69,96,0.2)', Icon: XCircle },
+  info: { farbe: 'var(--gold)', hintergrund: 'rgba(var(--gold-rgb),0.1)', border: 'rgba(var(--gold-rgb),0.2)', Icon: Info },
 }
 
 export default function Toast({ toasts, setToasts }) {

@@ -23,13 +23,13 @@ function BottomNav() {
       left: 0, right: 0, marginLeft: 'auto', marginRight: 'auto',
       width: 'calc(100% - 28px)',
       maxWidth: '560px',
-      backgroundColor: 'var(--card)',
+      backgroundColor: 'var(--nav-bg)',
       borderRadius: '26px',
       padding: '6px 8px',
       display: 'flex',
       zIndex: 100,
       boxSizing: 'border-box',
-      boxShadow: '0 8px 40px rgba(0,0,0,0.65), 0 0 0 1px rgba(201,168,76,0.1)',
+      boxShadow: '0 8px 40px rgba(0,0,0,0.65), 0 0 0 1px rgba(var(--gold-rgb),0.1)',
     }}>
       {tabs.map(tab => {
         const aktiv = location.pathname === tab.path
@@ -41,7 +41,7 @@ function BottomNav() {
             className="btn-press"
             style={{
               flex: 1,
-              backgroundColor: aktiv ? 'rgba(201,168,76,0.1)' : 'transparent',
+              backgroundColor: aktiv ? 'rgba(var(--gold-rgb),0.12)' : 'transparent',
               border: 'none',
               cursor: 'pointer',
               display: 'flex',

@@ -355,7 +355,7 @@ function MapScreen() {
             width: `${balkenBreite}%`,
             background: 'linear-gradient(90deg, var(--gold), #e8c97a)',
             transition: 'width 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
-            boxShadow: '0 0 12px rgba(201,168,76,0.4)',
+            boxShadow: '0 0 12px rgba(var(--gold-rgb),0.4)',
           }} />
         </div>
       </div>
@@ -395,7 +395,7 @@ function MapScreen() {
             backgroundColor: 'var(--card)',
             borderRadius: '16px',
             padding: '12px 14px',
-            boxShadow: 'var(--shadow), 0 0 0 1px rgba(201,168,76,0.2)',
+            boxShadow: 'var(--shadow), 0 0 0 1px rgba(var(--gold-rgb),0.2)',
             zIndex: 10,
             minWidth: '160px',
             maxWidth: '200px',
@@ -425,7 +425,7 @@ function MapScreen() {
                 <button onClick={() => landEntfernen(popup.code)} className="btn-press" style={{
                   width: '100%', padding: '8px 10px', minHeight: '44px', boxSizing: 'border-box', borderRadius: '10px',
                   border: 'none', backgroundColor: 'rgba(233,69,96,0.15)',
-                  color: '#e94560', cursor: 'pointer',
+                  color: 'var(--error)', cursor: 'pointer',
                   fontSize: '0.82rem', fontWeight: '600',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px',
                 }}>
@@ -435,7 +435,7 @@ function MapScreen() {
                 <div style={{
                   padding: '8px 10px', borderRadius: '10px',
                   backgroundColor: 'rgba(76,175,80,0.1)',
-                  color: '#4caf50', fontSize: '0.82rem', fontWeight: '600',
+                  color: 'var(--success)', fontSize: '0.82rem', fontWeight: '600',
                   textAlign: 'center',
                 }}>
                   {popup.trip ? t('kommtAusReise')(popup.trip.name) : `✓ ${t('viaTripBesucht')}`}
@@ -445,7 +445,7 @@ function MapScreen() {
               <>
                 <div style={{
                   padding: '8px 10px', borderRadius: '10px', marginBottom: '8px',
-                  backgroundColor: 'rgba(201,168,76,0.12)',
+                  backgroundColor: 'rgba(var(--gold-rgb),0.12)',
                   color: 'var(--gold)', fontSize: '0.82rem', fontWeight: '600',
                   textAlign: 'center',
                 }}>
@@ -497,8 +497,8 @@ function MapScreen() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
           <div style={{
             width: '34px', height: '34px', borderRadius: '10px',
-            backgroundColor: 'rgba(201,168,76,0.1)',
-            border: '1px solid rgba(201,168,76,0.18)',
+            backgroundColor: 'rgba(var(--gold-rgb),0.1)',
+            border: '1px solid rgba(var(--gold-rgb),0.18)',
             display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
           }}>
             <Search size={16} color="var(--gold)" />
@@ -529,8 +529,8 @@ function MapScreen() {
                 onClick={() => landHinzufuegen(land.code)}
                 className="btn-press"
                 style={{
-                  backgroundColor: 'rgba(201,168,76,0.1)',
-                  border: '1px solid rgba(201,168,76,0.2)',
+                  backgroundColor: 'rgba(var(--gold-rgb),0.1)',
+                  border: '1px solid rgba(var(--gold-rgb),0.2)',
                   borderRadius: '50px',
                   padding: '7px 12px 7px 8px',
                   color: 'var(--gold)',
@@ -599,7 +599,7 @@ function MapScreen() {
                   {/* Nur manuell hinzugefügte Länder können entfernt werden */}
                   {!eintrag.trip && (
                     <button onClick={() => landEntfernen(eintrag.country_code)} className="btn-press" style={{
-                      background: 'none', border: 'none', color: '#e94560',
+                      background: 'none', border: 'none', color: 'var(--error)',
                       cursor: 'pointer', width: '34px', height: '34px', margin: '-6px',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       flexShrink: 0, fontSize: '1rem', padding: 0,
@@ -624,7 +624,7 @@ function MapScreen() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
             <h3 style={{ margin: 0, fontWeight: '700', fontSize: '1rem' }}>{t('geplanteLaender')}</h3>
             <span style={{
-              backgroundColor: 'rgba(201,168,76,0.15)',
+              backgroundColor: 'rgba(var(--gold-rgb),0.15)',
               color: 'var(--gold)',
               fontSize: '0.75rem',
               fontWeight: '700',
@@ -639,7 +639,7 @@ function MapScreen() {
               const landAnzeigeName = laenderName(eintrag.country_code, sprache)
               return (
                 <div key={eintrag.country_code} className={`fade-in-${Math.min(index + 1, 5)}`} style={{
-                  backgroundColor: 'rgba(201,168,76,0.08)',
+                  backgroundColor: 'rgba(var(--gold-rgb),0.08)',
                   borderRadius: '50px',
                   padding: '7px 10px 7px 8px',
                   display: 'flex',

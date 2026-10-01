@@ -1,25 +1,26 @@
 /* ── CSS Design-Variablen ── */
+/* Dark Mode – neutrales warmes Grau statt Blaustich, Gold-Akzent wie im Light Mode */
 :root, [data-theme="dark"] {
-  --bg:           #080d1a;
-  --card:         #111827;
-  --sub:          #1a2235;
-  --text:         #ffffff;
-  --text-sub:     #8892a4;
-  --gold:         #c9a84c;
-  --gold-rgb:     201, 168, 76;
-  --border:       rgba(201,168,76,0.15);
-  --shadow:       0 4px 20px rgba(0,0,0,0.3);
-  --error:        #e94560;
-  --success:      #4caf50;
-  --card-hover:   #1a2235;
-  --input-bg:     #1a2235;
+  --bg:           #121110;
+  --card:         #1c1b19;
+  --sub:          #262422;
+  --text:         #f5f3f0;
+  --text-sub:     #a39e97;
+  --gold:         #d4af5f;
+  --gold-rgb:     212, 175, 95;
+  --border:       rgba(212,175,95,0.14);
+  --shadow:       0 4px 24px rgba(0,0,0,0.5);
+  --error:        #e5574f;
+  --success:      #4caf7d;
+  --card-hover:   #262422;
+  --input-bg:     #262422;
   --input-border: rgba(255,255,255,0.08);
-  --nav-bg:       #111827;
+  --nav-bg:       #1c1b19;
   /* Weltkarte (MapScreen) – eigene Tokens statt hart codierter Farben im D3-Code (O6) */
-  --map-ocean:      #080d1a;
-  --map-land:       #1a2235;
-  --map-land-hover: #2a3a55;
-  --map-stroke:     #0a0f1e;
+  --map-ocean:      #121110;
+  --map-land:       #262422;
+  --map-land-hover: #332f2b;
+  --map-stroke:     #0c0b0a;
 }
 
 /* Light Mode – warmes Creme mit gedämpftem Gold */
@@ -62,6 +63,11 @@ html, body {
      blockiert aber – anders als 'none' – nicht das normale vertikale Scrollen der Seite selbst */
   overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
+}
+
+/* Weicher Übergang beim Umschalten zwischen Hell/Dunkel statt hartem Sprung */
+body, #root {
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 html {
@@ -195,6 +201,13 @@ input:focus, select:focus, textarea:focus {
 [data-theme="light"] input::placeholder,
 [data-theme="light"] textarea::placeholder {
   color: #9e8e7a;
+}
+
+/* Optionsliste nativer Selects folgt dem Theme statt der Browser-Vorgabe,
+   sonst bleibt sie z.B. auf iOS im Dark Mode weiß mit schwarzem Text */
+select option {
+  background-color: var(--card);
+  color: var(--text);
 }
 
 /* Scrollbar */

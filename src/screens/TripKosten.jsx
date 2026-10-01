@@ -14,6 +14,7 @@ import useWechselkurse from '../hooks/useWechselkurse'
 import { WAEHRUNGEN, symbolOderIsoZuIso } from '../data/waehrungen'
 import { saldenBerechnen, schuldenBerechnen, anteilBerechnen } from '../utils/kosten'
 import { heuteISO, parseDatum, formatDatum } from '../utils/datum'
+import { selectStyle } from '../utils/selectStyle'
 
 function TripKosten() {
   const { id } = useParams()
@@ -306,11 +307,11 @@ function TripKosten() {
 
       <div style={{ padding: '0 clamp(14px, 4vw, 20px)', maxWidth: '600px', margin: '0 auto', boxSizing: 'border-box' }}>
 
-        {/* Kreditkarten-Style Gesamtanzeige – im Light Mode goldenes Gradient, sonst dunkel-navy */}
+        {/* Kreditkarten-Style Gesamtanzeige – im Light Mode goldenes Gradient, im Dark Mode neutral-warmes Dunkelgrau */}
         <div className="fade-in" style={{
           background: design === 'light'
             ? 'linear-gradient(135deg, #b8922a 0%, #8a6a1e 50%, #c9a84c 100%)'
-            : 'linear-gradient(135deg, #1a2235 0%, #0e1724 50%, #111827 100%)',
+            : 'linear-gradient(135deg, #2a2724 0%, #1c1b19 50%, #262422 100%)',
           borderRadius: '24px', padding: 'clamp(22px, 5vw, 32px)',
           marginBottom: '16px', position: 'relative', overflow: 'hidden',
           boxSizing: 'border-box',
@@ -318,8 +319,8 @@ function TripKosten() {
             ? '0 10px 40px rgba(184,146,42,0.35)'
             : '0 10px 40px rgba(0,0,0,0.5)',
         }}>
-          <div style={{ position: 'absolute', top: '-30px', right: '-30px', width: '140px', height: '140px', borderRadius: '50%', border: '1px solid rgba(201,168,76,0.12)', pointerEvents: 'none' }} />
-          <div style={{ position: 'absolute', top: '10px', right: '10px', width: '70px', height: '70px', borderRadius: '50%', border: '1px solid rgba(201,168,76,0.08)', pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', top: '-30px', right: '-30px', width: '140px', height: '140px', borderRadius: '50%', border: '1px solid rgba(var(--gold-rgb),0.12)', pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', top: '10px', right: '10px', width: '70px', height: '70px', borderRadius: '50%', border: '1px solid rgba(var(--gold-rgb),0.08)', pointerEvents: 'none' }} />
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '22px' }}>
             <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.7rem', fontWeight: '600', letterSpacing: '0.15em', textTransform: 'uppercase', margin: 0 }}>
@@ -333,7 +334,7 @@ function TripKosten() {
             color: design === 'light' ? 'rgba(255,255,255,0.95)' : 'var(--gold)',
             margin: '0 0 20px',
             fontWeight: '800', letterSpacing: '-1.5px', overflowWrap: 'break-word',
-            textShadow: design === 'light' ? '0 2px 12px rgba(0,0,0,0.2)' : '0 0 40px rgba(201,168,76,0.2)',
+            textShadow: design === 'light' ? '0 2px 12px rgba(0,0,0,0.2)' : '0 0 40px rgba(var(--gold-rgb),0.2)',
           }}>
             {gesamt.toFixed(2)}{tripSymbol}
           </h2>
@@ -342,26 +343,26 @@ function TripKosten() {
             <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
               <div>
                 <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.65rem', margin: '0 0 3px', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: '600' }}>{t('teilnehmerLabel')}</p>
-                <p style={{ color: '#ffffff', fontWeight: '700', margin: 0, fontSize: '0.95rem' }}>{teilnehmer.length}</p>
+                <p style={{ color: '#f5f3f0', fontWeight: '700', margin: 0, fontSize: '0.95rem' }}>{teilnehmer.length}</p>
               </div>
               <div style={{ width: '1px', backgroundColor: 'rgba(255,255,255,0.1)' }} />
               {eigenerTeilnehmer ? (
                 <div>
                   <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.65rem', margin: '0 0 3px', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: '600' }}>{t('deinAnteil')}</p>
-                  <p style={{ color: '#ffffff', fontWeight: '700', margin: 0, fontSize: '0.95rem' }}>
+                  <p style={{ color: '#f5f3f0', fontWeight: '700', margin: 0, fontSize: '0.95rem' }}>
                     {ausgaben.reduce((sum, a) => sum + anteilBerechnen(a, eigenerTeilnehmer.id, teilnehmer.map(p => p.id)), 0).toFixed(2)}{tripSymbol}
                   </p>
                 </div>
               ) : (
                 <div>
                   <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.65rem', margin: '0 0 3px', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: '600' }}>{t('proPerson')}</p>
-                  <p style={{ color: '#ffffff', fontWeight: '700', margin: 0, fontSize: '0.95rem' }}>{(gesamt / teilnehmer.length).toFixed(2)}{tripSymbol}</p>
+                  <p style={{ color: '#f5f3f0', fontWeight: '700', margin: 0, fontSize: '0.95rem' }}>{(gesamt / teilnehmer.length).toFixed(2)}{tripSymbol}</p>
                 </div>
               )}
               <div style={{ width: '1px', backgroundColor: 'rgba(255,255,255,0.1)' }} />
               <div>
                 <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.65rem', margin: '0 0 3px', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: '600' }}>{t('ausgabenLabel')}</p>
-                <p style={{ color: '#ffffff', fontWeight: '700', margin: 0, fontSize: '0.95rem' }}>{ausgaben.length}</p>
+                <p style={{ color: '#f5f3f0', fontWeight: '700', margin: 0, fontSize: '0.95rem' }}>{ausgaben.length}</p>
               </div>
             </div>
           )}
@@ -415,7 +416,7 @@ function TripKosten() {
                           marginBottom: index < ausgabenDesTages.length - 1 ? '16px' : '0',
                           borderBottom: index < ausgabenDesTages.length - 1 ? '1px solid var(--border)' : 'none',
                         }}>
-                          <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: 'var(--gold)', marginTop: '6px', flexShrink: 0, boxShadow: '0 0 8px rgba(201,168,76,0.4)' }} />
+                          <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: 'var(--gold)', marginTop: '6px', flexShrink: 0, boxShadow: '0 0 8px rgba(var(--gold-rgb),0.4)' }} />
 
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
@@ -454,7 +455,7 @@ function TripKosten() {
                               <SquarePen size={13} color="var(--gold)" />
                             </button>
                             <button onClick={() => ausgabeLoeschen(ausgabe.id)} className="btn-press" style={ikonButtonStyleRot}>
-                              <Trash2 size={13} color="#e94560" />
+                              <Trash2 size={13} color="var(--error)" />
                             </button>
                           </div>
                         </div>
@@ -488,14 +489,14 @@ function TripKosten() {
                     <p style={{ fontWeight: '600', margin: 0, fontSize: '0.92rem', overflowWrap: 'break-word', wordBreak: 'break-word', minWidth: 0, flex: 1 }}>
                       {person.name}
                     </p>
-                    <p style={{ fontWeight: '700', margin: 0, whiteSpace: 'nowrap', marginLeft: '8px', color: positiv ? '#4caf50' : '#e94560', fontSize: '0.95rem' }}>
+                    <p style={{ fontWeight: '700', margin: 0, whiteSpace: 'nowrap', marginLeft: '8px', color: positiv ? 'var(--success)' : 'var(--error)', fontSize: '0.95rem' }}>
                       {positiv ? '+' : ''}{saldo.toFixed(2)}{tripSymbol}
                     </p>
                   </div>
                   <div style={{ backgroundColor: 'var(--sub)', borderRadius: '6px', height: '5px', overflow: 'hidden' }}>
                     <div style={{
                       height: '5px', borderRadius: '6px', width: `${balkenBreite}%`,
-                      backgroundColor: positiv ? '#4caf50' : '#e94560',
+                      backgroundColor: positiv ? 'var(--success)' : 'var(--error)',
                       transition: 'width 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
                       boxShadow: positiv ? '0 0 8px rgba(76,175,80,0.4)' : '0 0 8px rgba(233,69,96,0.4)',
                     }} />
@@ -513,7 +514,7 @@ function TripKosten() {
               <h3 style={{ margin: 0, fontWeight: '700', fontSize: '1rem' }}>{t('abrechnungTitel')}</h3>
               {schulden.length > 0 && (
                 <button onClick={() => setAbrechnenOffen(!abrechnenOffen)} className="btn-press" style={{
-                  backgroundColor: 'transparent', border: '1px solid rgba(201,168,76,0.3)',
+                  backgroundColor: 'transparent', border: '1px solid rgba(var(--gold-rgb),0.3)',
                   color: 'var(--gold)', padding: '0 12px', minHeight: '44px', boxSizing: 'border-box',
                   borderRadius: '8px', display: 'flex', alignItems: 'center',
                   cursor: 'pointer', fontSize: '0.8rem', fontWeight: '600',
@@ -527,7 +528,7 @@ function TripKosten() {
                 <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'rgba(76,175,80,0.15)', border: '1px solid rgba(76,175,80,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <span style={{ fontSize: '15px' }}>✓</span>
                 </div>
-                <p style={{ color: '#4caf50', margin: 0, fontWeight: '600' }}>{t('alleQuitt')}</p>
+                <p style={{ color: 'var(--success)', margin: 0, fontWeight: '600' }}>{t('alleQuitt')}</p>
               </div>
             ) : (
               schulden.map((s, index) => (
@@ -543,7 +544,7 @@ function TripKosten() {
                   {abrechnenOffen && (
                     <button onClick={() => schuldAbrechnen(s)} disabled={abrechnenLaeuft.has(`${s.von}|${s.an}`)} className="btn-press" style={{
                       backgroundColor: 'rgba(76,175,80,0.15)', border: '1px solid rgba(76,175,80,0.3)',
-                      color: '#4caf50', padding: '0 10px', minHeight: '44px', boxSizing: 'border-box', borderRadius: '8px',
+                      color: 'var(--success)', padding: '0 10px', minHeight: '44px', boxSizing: 'border-box', borderRadius: '8px',
                       cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px',
                       fontSize: '0.78rem', fontWeight: '700', width: '100%', justifyContent: 'center', marginTop: '4px',
                       opacity: abrechnenLaeuft.has(`${s.von}|${s.an}`) ? 0.6 : 1,
@@ -568,11 +569,11 @@ function TripKosten() {
           width: '58px', height: '58px', borderRadius: '50%',
           backgroundColor: 'var(--gold)', border: 'none', cursor: 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 8px 24px rgba(201,168,76,0.5)',
+          boxShadow: '0 8px 24px rgba(var(--gold-rgb),0.5)',
           zIndex: 200,
         }}
       >
-        <Plus size={26} color="#0a0f1e" strokeWidth={2.5} />
+        <Plus size={26} color="#1a1410" strokeWidth={2.5} />
       </button>
 
       {/* Neue Ausgabe – Bottom Sheet Modal */}
@@ -618,28 +619,17 @@ function TripKosten() {
               style={inputStyle} />
 
             {/* Währungs-Auswahl für den eingegebenen Betrag */}
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
+            <select
+              value={formDaten.waehrung.iso}
+              onChange={(e) => setFormDaten({ ...formDaten, waehrung: WAEHRUNGEN.find(w => w.iso === e.target.value) })}
+              style={{ ...selectStyle, marginBottom: '10px' }}
+            >
               {WAEHRUNGEN.map(w => (
-                <button
-                  key={w.iso}
-                  onClick={() => setFormDaten({ ...formDaten, waehrung: w })}
-                  className="btn-press"
-                  style={{
-                    flex: 1,
-                    padding: '10px 8px',
-                    borderRadius: '12px',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontWeight: '700',
-                    fontSize: '0.9rem',
-                    backgroundColor: formDaten.waehrung.iso === w.iso ? 'var(--gold)' : 'var(--sub)',
-                    color: formDaten.waehrung.iso === w.iso ? '#0a0f1e' : 'var(--text-sub)',
-                  }}
-                >
-                  {w.symbol}
-                </button>
+                <option key={w.iso} value={w.iso}>
+                  {w.symbol} — {sprache === 'en' ? w.name_en : w.name_de}
+                </option>
               ))}
-            </div>
+            </select>
 
             {/* Live-Umrechnung anzeigen, wenn eine Fremdwährung gewählt wurde */}
             {formDaten.betrag && formDaten.waehrung.iso !== tripISO && (
@@ -657,7 +647,7 @@ function TripKosten() {
 
             <select value={formDaten.bezahlt_von}
               onChange={(e) => setFormDaten({ ...formDaten, bezahlt_von: e.target.value })}
-              style={{ ...inputStyle, appearance: 'none' }}>
+              style={{ ...selectStyle, marginBottom: '10px' }}>
               <option value="">{t('bezahltVonOption')}</option>
               {teilnehmer.map(person => <option key={person.id} value={person.id}>{person.name}</option>)}
             </select>
@@ -690,7 +680,7 @@ function TripKosten() {
                     border: istGewaehlt ? '2px solid var(--gold)' : '1px solid var(--gold)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                   }}>
-                    {istGewaehlt && <span style={{ fontSize: '11px', color: '#0a0f1e', fontWeight: '700' }}>✓</span>}
+                    {istGewaehlt && <span style={{ fontSize: '11px', color: '#1a1410', fontWeight: '700' }}>✓</span>}
                   </div>
                   <p style={{ margin: 0, color: 'var(--text)', minWidth: 0, overflowWrap: 'break-word', wordBreak: 'break-word', fontSize: '0.95rem' }}>
                     {person.name}
@@ -743,10 +733,10 @@ const dateInputStyle = {
 }
 
 const speichernButtonStyle = {
-  backgroundColor: 'var(--gold)', color: '#0a0f1e', border: 'none',
+  backgroundColor: 'var(--gold)', color: '#1a1410', border: 'none',
   padding: '14px', minHeight: '48px', borderRadius: '14px',
   cursor: 'pointer', fontWeight: '700', fontSize: '0.95rem',
-  boxSizing: 'border-box', boxShadow: '0 4px 16px rgba(201,168,76,0.3)',
+  boxSizing: 'border-box', boxShadow: '0 4px 16px rgba(var(--gold-rgb),0.3)',
 }
 
 const abbrechenButtonStyle = {
@@ -757,7 +747,7 @@ const abbrechenButtonStyle = {
 }
 
 const ikonButtonStyle = {
-  backgroundColor: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.2)',
+  backgroundColor: 'rgba(var(--gold-rgb),0.1)', border: '1px solid rgba(var(--gold-rgb),0.2)',
   cursor: 'pointer', borderRadius: '10px',
   minWidth: '44px', minHeight: '44px', boxSizing: 'border-box',
   display: 'flex', alignItems: 'center', justifyContent: 'center',

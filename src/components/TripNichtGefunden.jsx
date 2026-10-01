@@ -23,7 +23,7 @@ export default function TripNichtGefunden() {
         {t('tripNichtGefundenText')}
       </p>
       <button onClick={() => navigate('/')} className="btn-press" style={{
-        backgroundColor: 'var(--gold)', color: '#0a0f1e', border: 'none',
+        backgroundColor: 'var(--gold)', color: '#1a1410', border: 'none',
         padding: '0 24px', minHeight: '48px', borderRadius: '14px', boxSizing: 'border-box',
         cursor: 'pointer', fontWeight: '700', fontSize: '0.95rem',
       }}>

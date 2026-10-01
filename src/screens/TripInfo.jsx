@@ -423,7 +423,7 @@ function TripInfo() {
                           <SquarePen size={13} color="var(--gold)" />
                         </button>
                         <button onClick={() => flugLoeschen(flug.id)} className="btn-press" style={ikonButtonStyleRot}>
-                          <Trash2 size={13} color="#e94560" />
+                          <Trash2 size={13} color="var(--error)" />
                         </button>
                       </div>
                     </div>
@@ -443,9 +443,9 @@ function TripInfo() {
 
                         {/* Trennlinie mit Plane Icon */}
                         <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0, padding: '0 4px' }}>
-                          <div style={{ width: '28px', borderTop: '1.5px dashed rgba(201,168,76,0.35)' }} />
+                          <div style={{ width: '28px', borderTop: '1.5px dashed rgba(var(--gold-rgb),0.35)' }} />
                           <Plane size={15} color="var(--gold)" style={{ margin: '0 4px', flexShrink: 0 }} />
-                          <div style={{ width: '28px', borderTop: '1.5px dashed rgba(201,168,76,0.35)' }} />
+                          <div style={{ width: '28px', borderTop: '1.5px dashed rgba(var(--gold-rgb),0.35)' }} />
                         </div>
 
                         {/* Ankunft */}
@@ -600,7 +600,7 @@ function TripInfo() {
                           <SquarePen size={13} color="var(--gold)" />
                         </button>
                         <button onClick={() => unterkunftLoeschen(unterkunft.id)} className="btn-press" style={ikonButtonStyleRot}>
-                          <Trash2 size={13} color="#e94560" />
+                          <Trash2 size={13} color="var(--error)" />
                         </button>
                       </div>
                     </div>
@@ -766,8 +766,8 @@ const sectionHeaderStyle = {
 const sectionIconStyle = {
   width: '34px', height: '34px',
   borderRadius: '10px',
-  backgroundColor: 'rgba(201,168,76,0.1)',
-  border: '1px solid rgba(201,168,76,0.18)',
+  backgroundColor: 'rgba(var(--gold-rgb),0.1)',
+  border: '1px solid rgba(var(--gold-rgb),0.18)',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
   flexShrink: 0,
 }
@@ -847,7 +847,7 @@ const datumLabelStyle = {
 
 const addButtonStyle = {
   backgroundColor: 'transparent',
-  border: '1px solid rgba(201,168,76,0.3)',
+  border: '1px solid rgba(var(--gold-rgb),0.3)',
   color: 'var(--gold)', padding: '8px 14px',
   minHeight: '44px', borderRadius: '50px', boxSizing: 'border-box',
   cursor: 'pointer', fontSize: '0.8rem', fontWeight: '600',
@@ -856,11 +856,11 @@ const addButtonStyle = {
 }
 
 const speichernButtonStyle = {
-  backgroundColor: 'var(--gold)', color: '#0a0f1e', border: 'none',
+  backgroundColor: 'var(--gold)', color: '#1a1410', border: 'none',
   padding: '14px', minHeight: '48px', borderRadius: '14px',
   cursor: 'pointer', width: '100%', fontWeight: '700',
   fontSize: '0.95rem', boxSizing: 'border-box',
-  boxShadow: '0 4px 16px rgba(201,168,76,0.3)',
+  boxShadow: '0 4px 16px rgba(var(--gold-rgb),0.3)',
 }
 
 const abbrechenButtonStyle = {
@@ -871,8 +871,8 @@ const abbrechenButtonStyle = {
 }
 
 const ikonButtonStyle = {
-  backgroundColor: 'rgba(201,168,76,0.1)',
-  border: '1px solid rgba(201,168,76,0.2)',
+  backgroundColor: 'rgba(var(--gold-rgb),0.1)',
+  border: '1px solid rgba(var(--gold-rgb),0.2)',
   cursor: 'pointer', borderRadius: '10px',
   minWidth: '44px', minHeight: '44px', boxSizing: 'border-box',
   display: 'flex', alignItems: 'center', justifyContent: 'center',

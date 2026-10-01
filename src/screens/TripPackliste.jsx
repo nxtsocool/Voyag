@@ -59,7 +59,7 @@ function SwipeToDelete({ onDelete, children }) {
       {/* Roter Hintergrund mit Trash Icon */}
       <div style={{
         position: 'absolute', inset: 0,
-        backgroundColor: '#e94560',
+        backgroundColor: 'var(--error)',
         display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
         paddingRight: '18px', opacity: revealAnteil,
       }}>
@@ -231,7 +231,7 @@ export default function TripPackliste() {
                     {prozent}%
                   </span>
                   {prozent === 100 && (
-                    <PackageCheck size={22} color="#4caf50" />
+                    <PackageCheck size={22} color="var(--success)" />
                   )}
                 </div>
               </div>
@@ -250,12 +250,12 @@ export default function TripPackliste() {
                 borderRadius: '100px',
                 width: `${prozent}%`,
                 background: prozent === 100
-                  ? 'linear-gradient(90deg, #4caf50, #66bb6a)'
+                  ? 'linear-gradient(90deg, var(--success), #66bb6a)'
                   : 'linear-gradient(90deg, var(--gold), #e8c97a)',
                 transition: 'width 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
                 boxShadow: prozent === 100
                   ? '0 0 12px rgba(76,175,80,0.5)'
-                  : '0 0 12px rgba(201,168,76,0.4)',
+                  : '0 0 12px rgba(var(--gold-rgb),0.4)',
               }} />
             </div>
           </div>
@@ -292,10 +292,10 @@ export default function TripPackliste() {
                     />
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <button onClick={itemSpeichern} disabled={speichernLaeuft} className="btn-press" style={{
-                        backgroundColor: 'var(--gold)', color: '#0a0f1e', border: 'none',
+                        backgroundColor: 'var(--gold)', color: '#1a1410', border: 'none',
                         padding: '12px', minHeight: '44px', borderRadius: '12px',
                         cursor: 'pointer', flex: 1, fontWeight: '700', boxSizing: 'border-box',
-                        boxShadow: '0 4px 12px rgba(201,168,76,0.3)', opacity: speichernLaeuft ? 0.6 : 1,
+                        boxShadow: '0 4px 12px rgba(var(--gold-rgb),0.3)', opacity: speichernLaeuft ? 0.6 : 1,
                       }}>{speichernLaeuft ? t('wirdGespeichert') : t('speichern')}</button>
                       <button onClick={() => setBearbeiteItem(null)} className="btn-press" style={{
                         backgroundColor: 'transparent', color: 'var(--text-sub)',
@@ -330,10 +330,10 @@ export default function TripPackliste() {
                             : '2px solid var(--border)',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           transition: 'all 0.25s ease',
-                          boxShadow: item.erledigt ? '0 0 10px rgba(201,168,76,0.35)' : 'none',
+                          boxShadow: item.erledigt ? '0 0 10px rgba(var(--gold-rgb),0.35)' : 'none',
                         }}>
                           {item.erledigt && (
-                            <span style={{ fontSize: '13px', color: '#0a0f1e', fontWeight: '700', lineHeight: 1 }}>✓</span>
+                            <span style={{ fontSize: '13px', color: '#1a1410', fontWeight: '700', lineHeight: 1 }}>✓</span>
                           )}
                         </div>
                       </div>
@@ -357,7 +357,7 @@ export default function TripPackliste() {
                           <SquarePen size={13} color="var(--gold)" />
                         </button>
                         <button onClick={() => itemLoeschen(item.id)} className="btn-press" style={ikonButtonStyleRot}>
-                          <Trash2 size={13} color="#e94560" />
+                          <Trash2 size={13} color="var(--error)" />
                         </button>
                       </div>
                     </div>
@@ -377,11 +377,11 @@ export default function TripPackliste() {
               style={{ ...inputStyle, flex: 1, minWidth: 0, marginBottom: 0 }}
             />
             <button onClick={itemHinzufuegen} disabled={speichernLaeuft || !neuesItem.trim()} className="btn-press" style={{
-              backgroundColor: 'var(--gold)', color: '#0a0f1e', border: 'none',
+              backgroundColor: 'var(--gold)', color: '#1a1410', border: 'none',
               padding: '0 20px', minHeight: '48px', borderRadius: '14px',
               cursor: 'pointer', fontSize: '1.3rem', fontWeight: '600',
               flexShrink: 0, boxSizing: 'border-box',
-              boxShadow: '0 4px 14px rgba(201,168,76,0.3)',
+              boxShadow: '0 4px 14px rgba(var(--gold-rgb),0.3)',
               opacity: speichernLaeuft || !neuesItem.trim() ? 0.6 : 1,
             }}>+</button>
           </div>
@@ -405,8 +405,8 @@ const inputStyle = {
 }
 
 const ikonButtonStyle = {
-  backgroundColor: 'rgba(201,168,76,0.1)',
-  border: '1px solid rgba(201,168,76,0.2)',
+  backgroundColor: 'rgba(var(--gold-rgb),0.1)',
+  border: '1px solid rgba(var(--gold-rgb),0.2)',
   cursor: 'pointer', borderRadius: '10px',
   minWidth: '44px', minHeight: '44px', boxSizing: 'border-box',
   display: 'flex', alignItems: 'center', justifyContent: 'center',

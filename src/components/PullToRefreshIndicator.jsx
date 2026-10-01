@@ -20,7 +20,7 @@ function PullToRefreshIndicator({ ziehen, fortschritt, schwellenwert }) {
       <div style={{
         width: '44px', height: '44px', borderRadius: '50%',
         backgroundColor: 'var(--card)',
-        border: '1px solid rgba(201,168,76,0.25)',
+        border: '1px solid rgba(var(--gold-rgb),0.25)',
         boxShadow: 'var(--shadow)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
@@ -33,7 +33,7 @@ function PullToRefreshIndicator({ ziehen, fortschritt, schwellenwert }) {
         >
           <circle cx="30" cy="30" r="27" fill="none" stroke="var(--gold)" strokeWidth="4" />
           <polygon points="30,5 34,30 30,26 26,30" fill="var(--gold)" />
-          <polygon points="30,55 34,30 30,34 26,30" fill="#ffffff" opacity="0.15" />
+          <polygon points="30,55 34,30 30,34 26,30" fill="var(--text)" opacity="0.15" />
           <circle cx="30" cy="30" r="4" fill="var(--gold)" />
           <circle cx="30" cy="30" r="2" fill="var(--bg)" />
         </svg>

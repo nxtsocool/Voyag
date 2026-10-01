@@ -137,11 +137,11 @@ function TripHome() {
         overflow: 'hidden',
         marginBottom: '24px',
         background: flagUrl
-        ? `linear-gradient(to bottom, 
-            rgba(8,13,26,0.2) 0%, 
-            rgba(8,13,26,0.5) 40%, 
-            rgba(8,13,26,0.92) 75%, 
-            #080d1a 100%
+        ? `linear-gradient(to bottom,
+            rgba(18,17,16,0.2) 0%,
+            rgba(18,17,16,0.5) 40%,
+            rgba(18,17,16,0.92) 75%,
+            #121110 100%
           ), url(https://flagcdn.com/w640/${trip.land_code.toLowerCase()}.png) center top/cover no-repeat`
         : 'linear-gradient(135deg, var(--card) 0%, var(--sub) 100%)',
       }}>
@@ -152,7 +152,7 @@ function TripHome() {
           background: 'rgba(0,0,0,0.3)',
           backdropFilter: 'blur(12px)',
           border: '1px solid rgba(255,255,255,0.2)',
-          color: '#ffffff', cursor: 'pointer',
+          color: '#f5f3f0', cursor: 'pointer',
           width: '46px', height: '46px', borderRadius: '50%',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
@@ -193,7 +193,7 @@ function TripHome() {
             display: 'inline-flex', alignItems: 'center',
             background: 'rgba(0,0,0,0.5)',
             backdropFilter: 'blur(16px)',
-            border: '1px solid rgba(201,168,76,0.22)',
+            border: '1px solid rgba(var(--gold-rgb),0.22)',
             borderRadius: '22px',
             padding: '14px 24px',
           }}>
@@ -287,8 +287,8 @@ const kachelStyle = {
 const iconWrapStyle = {
   width: '46px', height: '46px',
   borderRadius: '14px',
-  backgroundColor: 'rgba(201,168,76,0.1)',
-  border: '1px solid rgba(201,168,76,0.18)',
+  backgroundColor: 'rgba(var(--gold-rgb),0.1)',
+  border: '1px solid rgba(var(--gold-rgb),0.18)',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
   marginBottom: '14px', flexShrink: 0,
 }

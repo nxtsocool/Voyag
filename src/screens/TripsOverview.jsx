@@ -14,30 +14,27 @@ import { reiseZeitraum, reiseStatus, tageBis } from '../utils/datum'
 import { WAEHRUNGEN, waehrungFuerLand } from '../data/waehrungen'
 import useWechselkurse from '../hooks/useWechselkurse'
 import { laenderName, laenderSortiert } from '../utils/laendernamen'
+import { selectStyle } from '../utils/selectStyle'
 
 
 // Farbe anhand Trip-ID auswählen
-// Farbe basierend auf Ländercode – nach Region/Kontinent
+// Farbe basierend auf Ländercode – nach Region/Kontinent. Nur im Dark Mode
+// genutzt, daher neutrale warme Grautöne statt der früheren Blaustiche (Dark-Mode-Neugestaltung)
 const getRegionFarbe = (code) => {
-  if (!code) return { bg: '#0f1f2a', accent: '#1a3040' }
+  if (!code) return { bg: '#1c1b19', accent: '#262422' }
 
-  // Europa – Dunkelblau
   const europa = ['DE','FR','IT','ES','PT','NL','BE','AT','CH','PL','CZ','SK','HU','RO','BG','HR','SI','RS','BA','ME','AL','MK','GR','CY','MT','LU','LI','MC','AD','SM','VA','IE','GB','DK','SE','NO','FI','IS','EE','LV','LT','BY','UA','MD','RU']
-  // Asien – Dunkelviolett
   const asien = ['CN','JP','KR','KP','MN','TW','HK','MO','TH','VN','LA','KH','MM','MY','SG','ID','PH','BN','TL','IN','PK','BD','LK','NP','BT','MV','AF','IR','IQ','SY','LB','JO','IL','PS','SA','YE','OM','AE','QA','BH','KW','TR','AM','AZ','GE','KZ','UZ','TM','TJ','KG']
-  // Afrika – Dunkelgrün
   const afrika = ['MA','DZ','TN','LY','EG','SD','SS','ET','ER','DJ','SO','KE','UG','TZ','RW','BI','MZ','ZW','ZM','MW','MG','MU','SC','KM','RE','YT','NG','GH','CI','SN','ML','BF','NE','TG','BJ','GN','SL','LR','GW','GM','CV','MR','EH','CM','CF','TD','CG','CD','GA','GQ','ST','AO','NA','BW','LS','SZ','ZA']
-  // Amerika – Dunkelrot
   const amerika = ['US','CA','MX','GT','BZ','HN','SV','NI','CR','PA','CU','JM','HT','DO','PR','TT','BB','LC','VC','GD','AG','DM','KN','BS','TC','KY','BM','VI','VG','AW','CW','BR','AR','CL','UY','PY','BO','PE','EC','CO','VE','GY','SR','GF']
-  // Ozeanien – Dunkelcyan
   const ozeanien = ['AU','NZ','PG','FJ','SB','VU','WS','TO','KI','TV','NR','PW','MH','FM']
-  
-  if (europa.includes(code)) return { bg: '#0a1628', accent: '#0f2040' }
-  if (asien.includes(code)) return { bg: '#150d28', accent: '#1f1240' }
-  if (afrika.includes(code)) return { bg: '#0a2010', accent: '#0f3018' }
-  if (amerika.includes(code)) return { bg: '#280a0a', accent: '#3d1010' }
-  if (ozeanien.includes(code)) return { bg: '#0a2028', accent: '#0f3038' }
-  return { bg: '#1a1a1a', accent: '#252525' }
+
+  if (europa.includes(code)) return { bg: '#1c1b19', accent: '#2a2724' }
+  if (asien.includes(code)) return { bg: '#1f1a1c', accent: '#2d2528' }
+  if (afrika.includes(code)) return { bg: '#1a1d19', accent: '#262b24' }
+  if (amerika.includes(code)) return { bg: '#1f1a1a', accent: '#2d2524' }
+  if (ozeanien.includes(code)) return { bg: '#191d1e', accent: '#242b2c' }
+  return { bg: '#1c1b19', accent: '#262422' }
 }
 // Countdown/Status-Text für die Trip-Karte
 const getCountdown = (trip, t) => {
@@ -439,7 +436,7 @@ function TripsOverview() {
             onClick={() => navigate(`/trip/${trip.id}`)}
             style={{
               background: design === 'light'
-                ? 'linear-gradient(135deg, #c9a84c 10%, #faf7f2 100%)'
+                ? 'linear-gradient(135deg, var(--gold) 10%, var(--card) 100%)'
                 : `linear-gradient(135deg, ${farbe.accent} 0%, ${farbe.bg} 100%)`,
               padding: '20px',
               borderRadius: '20px 20px 0 0',
@@ -497,7 +494,7 @@ function TripsOverview() {
                   <button onClick={(e) => { e.stopPropagation(); setLoescheTrip(trip) }}
                     className="btn-press" style={{
                       backgroundColor: 'rgba(233,69,96,0.15)', border: 'none',
-                      color: '#e94560', borderRadius: '10px',
+                      color: 'var(--error)', borderRadius: '10px',
                       width: '44px', height: '44px',
                       cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>
@@ -530,7 +527,7 @@ function TripsOverview() {
             {/* Einladungscode oder Badge */}
             {eigenTrip && trip.invite_code ? (
               <span style={{
-                backgroundColor: 'rgba(201,168,76,0.1)', color: 'var(--gold)',
+                backgroundColor: 'rgba(var(--gold-rgb),0.1)', color: 'var(--gold)',
                 padding: '4px 10px', borderRadius: '8px',
                 fontSize: '0.75rem', fontWeight: '700', letterSpacing: '0.08em',
               }}>
@@ -564,7 +561,7 @@ function TripsOverview() {
     minHeight: '100vh', display: 'flex',
     flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
     backgroundColor: 'var(--bg)',
-    backgroundImage: 'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(201,168,76,0.1) 0%, transparent 70%)',
+    backgroundImage: 'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(var(--gold-rgb),0.1) 0%, transparent 70%)',
   }}>
     {/* Logo Animation */}
     <div style={{ display: 'flex', alignItems: 'center', marginBottom: '40px' }}>
@@ -572,7 +569,7 @@ function TripsOverview() {
       <svg className="kompass-spin" width="32" height="32" viewBox="-1 0 60 60" style={{ marginTop: '8px' }}>
         <circle cx="30" cy="30" r="27" fill="none" stroke="var(--gold)" strokeWidth="4"/>
         <polygon points="30,5 34,30 30,26 26,30" fill="var(--gold)"/>
-        <polygon points="30,55 34,30 30,34 26,30" fill="#ffffff" opacity="0.15"/>
+        <polygon points="30,55 34,30 30,34 26,30" fill="var(--text)" opacity="0.15"/>
         <circle cx="30" cy="30" r="4" fill="var(--gold)"/>
         <circle cx="30" cy="30" r="2" fill="var(--bg)"/>
       </svg>
@@ -610,7 +607,7 @@ function TripsOverview() {
             <svg className="kompass-spin" width="26" height="26" viewBox="0 0 60 60" style={{ marginTop: '8px' }}>
               <circle cx="30" cy="30" r="27" fill="none" stroke="var(--gold)" strokeWidth="4"/>
               <polygon points="30,5 34,30 30,26 26,30" fill="var(--gold)"/>
-              <polygon points="30,55 34,30 30,34 26,30" fill="#ffffff" opacity="0.15"/>
+              <polygon points="30,55 34,30 30,34 26,30" fill="var(--text)" opacity="0.15"/>
               <circle cx="30" cy="30" r="4" fill="var(--gold)"/>
               <circle cx="30" cy="30" r="2" fill="var(--bg)"/>
             </svg>
@@ -625,12 +622,12 @@ function TripsOverview() {
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           <button onClick={() => setBeitretenOffen(!beitretenOffen)} className="btn-press" style={{
             backgroundColor: 'transparent', color: 'var(--gold)',
-            border: '1.5px solid rgba(201,168,76,0.4)', padding: '10px 16px',
+            border: '1.5px solid rgba(var(--gold-rgb),0.4)', padding: '10px 16px',
             minHeight: '44px', boxSizing: 'border-box',
             borderRadius: '14px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600',
           }}>{t('beitreten')}</button>
           <button onClick={() => setFormularOffen(!formularOffen)} className="btn-press" style={{
-            backgroundColor: 'var(--gold)', color: '#0a0f1e', border: 'none',
+            backgroundColor: 'var(--gold)', color: '#1a1410', border: 'none',
             padding: '10px 16px', minHeight: '44px', boxSizing: 'border-box',
             borderRadius: '14px', cursor: 'pointer',
             fontSize: '0.85rem', fontWeight: '700',
@@ -702,7 +699,7 @@ function TripsOverview() {
             <input placeholder={t('reiseNamePlatzhalter')} value={neueReise.name}
               onChange={(e) => setNeueReise({ ...neueReise, name: e.target.value })} style={inputStyle} />
             <select value={neueReise.land_code}
-              onChange={(e) => setNeueReise({ ...neueReise, land_code: e.target.value, waehrung: waehrungFuerLand(e.target.value) })} style={inputStyle}>
+              onChange={(e) => setNeueReise({ ...neueReise, land_code: e.target.value, waehrung: waehrungFuerLand(e.target.value) })} style={{ ...selectStyle, marginBottom: '10px' }}>
               <option value="">{t('landAuswaehlen')}</option>
               {laenderSortiert(sprache).map(land => <option key={land.code} value={land.code}>{land.anzeigeName}</option>)}
             </select>
@@ -714,7 +711,7 @@ function TripsOverview() {
                     padding: '0 10px', minHeight: '38px', borderRadius: '10px', border: 'none', cursor: 'pointer',
                     fontWeight: '600', fontSize: '0.78rem',
                     backgroundColor: neueReise.waehrung === w.iso ? 'var(--gold)' : 'var(--sub)',
-                    color: neueReise.waehrung === w.iso ? '#0a0f1e' : 'var(--text-sub)',
+                    color: neueReise.waehrung === w.iso ? '#1a1410' : 'var(--text-sub)',
                   }}>
                   {w.iso}
                 </button>
@@ -749,7 +746,7 @@ function TripsOverview() {
             <input placeholder={t('name')} value={bearbeiteDaten.name}
               onChange={(e) => setBearbeiteDaten({ ...bearbeiteDaten, name: e.target.value })} style={inputStyle} />
             <select value={bearbeiteDaten.land_code}
-              onChange={(e) => setBearbeiteDaten({ ...bearbeiteDaten, land_code: e.target.value })} style={inputStyle}>
+              onChange={(e) => setBearbeiteDaten({ ...bearbeiteDaten, land_code: e.target.value })} style={{ ...selectStyle, marginBottom: '10px' }}>
               <option value="">{t('landAuswaehlen')}</option>
               {laenderSortiert(sprache).map(land => <option key={land.code} value={land.code}>{land.anzeigeName}</option>)}
             </select>
@@ -761,7 +758,7 @@ function TripsOverview() {
                     padding: '0 10px', minHeight: '38px', borderRadius: '10px', border: 'none', cursor: 'pointer',
                     fontWeight: '600', fontSize: '0.78rem',
                     backgroundColor: bearbeiteDaten.waehrung === w.iso ? 'var(--gold)' : 'var(--sub)',
-                    color: bearbeiteDaten.waehrung === w.iso ? '#0a0f1e' : 'var(--text-sub)',
+                    color: bearbeiteDaten.waehrung === w.iso ? '#1a1410' : 'var(--text-sub)',
                   }}>
                   {w.iso}
                 </button>
@@ -807,7 +804,7 @@ function TripsOverview() {
               </p>
               <div style={{ display: 'flex', gap: '10px' }}>
                 <button onClick={reiseSpeichernMitUmrechnung} disabled={waehrungUmrechnenLaeuft} className="btn-press" style={{
-                  backgroundColor: 'var(--gold)', color: '#0a0f1e', border: 'none',
+                  backgroundColor: 'var(--gold)', color: '#1a1410', border: 'none',
                   padding: '14px', minHeight: '48px', boxSizing: 'border-box', borderRadius: '14px', cursor: 'pointer',
                   flex: 1, fontWeight: '700', fontSize: '0.95rem', opacity: waehrungUmrechnenLaeuft ? 0.6 : 1,
                 }}>{waehrungUmrechnenLaeuft ? t('wirdGespeichert') : t('waehrungUmrechnenBtn')}</button>
@@ -915,7 +912,7 @@ function TripsOverview() {
             </p>
             <div style={{ display: 'flex', gap: '10px' }}>
               <button onClick={() => reiseEntfernen(loescheTrip.id)} className="btn-press" style={{
-                backgroundColor: '#e94560', color: '#fff', border: 'none',
+                backgroundColor: 'var(--error)', color: '#fff', border: 'none',
                 padding: '14px', borderRadius: '14px', cursor: 'pointer',
                 flex: 1, fontWeight: '700', fontSize: '1rem',
               }}>
@@ -955,7 +952,7 @@ function TripsOverview() {
             </p>
             <div style={{ display: 'flex', gap: '10px' }}>
               <button onClick={() => reiseVerlassen(verlasseTrip.id)} className="btn-press" style={{
-                backgroundColor: '#e94560', color: '#fff', border: 'none',
+                backgroundColor: 'var(--error)', color: '#fff', border: 'none',
                 padding: '14px', borderRadius: '14px', cursor: 'pointer',
                 flex: 1, fontWeight: '700', fontSize: '1rem',
               }}>
@@ -1010,9 +1007,9 @@ function TripsOverview() {
                     className="btn-press"
                     style={{
                       display: 'flex', alignItems: 'center', gap: '14px',
-                      backgroundColor: ausgewaehlt ? 'rgba(201,168,76,0.08)' : 'var(--sub)',
+                      backgroundColor: ausgewaehlt ? 'rgba(var(--gold-rgb),0.08)' : 'var(--sub)',
                       border: ausgewaehlt
-                        ? '1.5px solid rgba(201,168,76,0.5)'
+                        ? '1.5px solid rgba(var(--gold-rgb),0.5)'
                         : '1.5px solid var(--input-border)',
                       borderRadius: '16px', padding: '14px 16px',
                       cursor: 'pointer', textAlign: 'left',
@@ -1024,7 +1021,7 @@ function TripsOverview() {
                       width: '42px', height: '42px', borderRadius: '50%',
                       backgroundColor: 'var(--gold)', flexShrink: 0,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: '1.1rem', fontWeight: '700', color: '#0a0f1e',
+                      fontSize: '1.1rem', fontWeight: '700', color: '#1a1410',
                     }}>
                       {initiale}
                     </div>
@@ -1101,7 +1098,7 @@ const datumFeldLabelStyle = {
 }
 
 const speichernButtonStyle = {
-  backgroundColor: 'var(--gold)', color: '#0a0f1e', border: 'none',
+  backgroundColor: 'var(--gold)', color: '#1a1410', border: 'none',
   padding: '13px', borderRadius: '14px', cursor: 'pointer',
   flex: 1, fontWeight: '700', fontSize: '1rem',
 }
