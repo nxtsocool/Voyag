@@ -1,13 +1,8 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '../supabase'
 import { translations } from '../data/translations'
 import { WAEHRUNGEN, symbolOderIsoZuIso } from '../data/waehrungen'
-
-const SettingsContext = createContext()
-
-export function useSettings() {
-  return useContext(SettingsContext)
-}
+import { SettingsContext } from './settingsContextObject'
 
 export function SettingsProvider({ children }) {
   // waehrungISO ist der kanonische, gespeicherte Wert (K1); waehrung bleibt das

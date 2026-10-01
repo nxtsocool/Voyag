@@ -1,5 +1,5 @@
 import useOnlineStatus from '../hooks/useOnlineStatus'
-import { useSettings } from '../context/SettingsContext'
+import { useSettings } from '../context/useSettings'
 
 // Dezenter, immer sichtbarer Hinweis solange das Gerät offline ist –
 // wird global in App.jsx gerendert, unabhängig von der aktuellen Route

@@ -6,7 +6,7 @@ import {
   Trash2, SquarePen, ExternalLink, MapPin, Check, ChevronDown,
   Utensils, Landmark, Palmtree, Zap, ShoppingBag, Hotel, Beer, Plus, X,
 } from 'lucide-react'
-import { useSettings } from '../context/SettingsContext'
+import { useSettings } from '../context/useSettings'
 import useBodyScrollLock from '../hooks/useBodyScrollLock'
 import TripNichtGefunden from '../components/TripNichtGefunden'
 import Toast from '../components/Toast'

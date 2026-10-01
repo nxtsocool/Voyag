@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabase'
 import { Globe, DollarSign } from 'lucide-react'
-import { useSettings } from '../context/SettingsContext'
+import { useSettings } from '../context/useSettings'
 import { WAEHRUNGEN } from '../data/waehrungen'
 
 export default function OnboardingScreen({ user, onComplete }) {

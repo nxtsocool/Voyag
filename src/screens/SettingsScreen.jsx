@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabase'
 import { User, Lock, Trash2, LogOut, Mail, ChevronRight, Globe, Palette, DollarSign, Info } from 'lucide-react'
-import { useSettings } from '../context/SettingsContext'
+import { useSettings } from '../context/useSettings'
 import useBodyScrollLock from '../hooks/useBodyScrollLock'
 import { WAEHRUNGEN } from '../data/waehrungen'
 import Toast from '../components/Toast'

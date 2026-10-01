@@ -7,7 +7,7 @@ import PullToRefreshIndicator from '../components/PullToRefreshIndicator'
 import TripNichtGefunden from '../components/TripNichtGefunden'
 import Toast from '../components/Toast'
 import useToast from '../hooks/useToast.jsx'
-import { useSettings } from '../context/SettingsContext'
+import { useSettings } from '../context/useSettings'
 import { reiseZeitraum, reiseStatus, tageBis } from '../utils/datum'
 import { WAEHRUNGEN } from '../data/waehrungen'
 import { laenderName } from '../utils/laendernamen'
@@ -25,11 +25,7 @@ function TripHome() {
   const [orteAnzahl, setOrteAnzahl] = useState(0)
   const [laden, setLaden] = useState(true)
 
-  useEffect(() => { datenLaden() }, [id])
-
-  const { ziehen, fortschritt, schwellenwert } = usePullToRefresh(datenLaden)
-
-  async function datenLaden() {
+  const datenLaden = async () => {
     // Alle Queries hängen nur von der Trip-ID ab, nicht voneinander – parallel laden
     const [tripRes, teilnehmerRes, ausgabenRes, packlisteRes, orteRes] = await Promise.all([
       supabase.from('trips').select('*').eq('id', id).single(),
@@ -56,6 +52,14 @@ function TripHome() {
 
     setLaden(false)
   }
+
+  // Lint-Regel react-hooks/set-state-in-effect schlägt hier fälschlich Alarm:
+  // datenLaden() wird bewusst auch von usePullToRefresh wiederverwendet (Pull-to-Refresh),
+  // daher kein rein effect-lokaler Daten-Fetch wie in TripOrte.jsx/TripPackliste.jsx
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { datenLaden() }, [id])
+
+  const { ziehen, fortschritt, schwellenwert } = usePullToRefresh(datenLaden)
 
   // Reise-Status und Tage bis zur Abreise zentral über utils/datum berechnen
   const tripStatus = trip ? reiseStatus(trip) : null

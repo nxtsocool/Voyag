@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabase'
 import { Mail, Lock, Eye, EyeOff, ChevronLeft, User } from 'lucide-react'
-import { useSettings } from '../context/SettingsContext'
+import { useSettings } from '../context/useSettings'
 import { einladungLesen } from '../utils/einladung'
 
 // Passwort-Stärke berechnen: schwach / mittel / stark
@@ -60,10 +60,10 @@ function LoginScreen({ emailNichtBestaetigt }) {
     ? (!email.trim() || !name.trim() || !passwort || !passwortBestaetigung)
     : (!email.trim() || !passwort)
 
-  // Fehlermeldung anzeigen wenn App.jsx meldet dass Email nicht bestätigt ist
-  useEffect(() => {
-    if (emailNichtBestaetigt) setFehler(t('emailNichtBestaetigt'))
-  }, [emailNichtBestaetigt])
+  // Fehlermeldung anzeigen wenn App.jsx meldet dass Email nicht bestätigt ist –
+  // als abgeleiteter Anzeigewert statt per Effect in State kopiert (vermeidet
+  // synchrones setState im Effect), eigene fehler-Meldungen haben Vorrang
+  const angezeigterFehler = fehler || (emailNichtBestaetigt ? t('emailNichtBestaetigt') : '')
 
   const handleSubmit = async () => {
     if (laden) return
@@ -455,13 +455,13 @@ function LoginScreen({ emailNichtBestaetigt }) {
           )}
 
           {/* Fehlermeldung */}
-          {fehler && (
+          {angezeigterFehler && (
             <div className="fade-in" style={{
               backgroundColor: 'rgba(233,69,96,0.12)',
               border: '1px solid rgba(233,69,96,0.3)',
               borderRadius: '12px', padding: '12px 16px', marginBottom: '20px',
             }}>
-              <p style={{ color: '#e94560', margin: 0, fontSize: '0.88rem' }}>{fehler}</p>
+              <p style={{ color: '#e94560', margin: 0, fontSize: '0.88rem' }}>{angezeigterFehler}</p>
             </div>
           )}
 

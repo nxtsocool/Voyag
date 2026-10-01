@@ -17,7 +17,7 @@ export default defineConfig(({ command }) => ({
         // geladenen Screen besteht, und wuerde sonst in den Haupt-Chunk
         // hineingezogen (siehe K14-Fix, der genau so einen Zirkelbezug entfernt hat)
         manualChunks: (id) => {
-          if (id.includes('/src/context/SettingsContext') || id.includes('/src/data/translations')) {
+          if (id.includes('/src/context/') || id.includes('/src/data/translations')) {
             return 'settings-context'
           }
         },

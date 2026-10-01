@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Plane, Map, Settings } from 'lucide-react'
-import { useSettings } from '../context/SettingsContext'
+import { useSettings } from '../context/useSettings'
 
 function BottomNav() {
   const navigate = useNavigate()

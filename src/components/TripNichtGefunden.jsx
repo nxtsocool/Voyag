@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { Compass } from 'lucide-react'
-import { useSettings } from '../context/SettingsContext'
+import { useSettings } from '../context/useSettings'
 
 // Wird angezeigt wenn eine Trip-ID ungültig ist, die Reise gelöscht wurde oder
 // RLS den Zugriff verweigert – verhindert einen weißen Bildschirm/Absturz beim

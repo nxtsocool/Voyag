@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { Info, Users, CheckSquare, Wallet, ChevronLeft, MapPin } from 'lucide-react'
-import { useSettings } from '../context/SettingsContext'
+import { useSettings } from '../context/useSettings'
 
 function TripNav({ tripName }) {
   const navigate = useNavigate()

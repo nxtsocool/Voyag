@@ -9,7 +9,7 @@ import usePullToRefresh from '../hooks/usePullToRefresh'
 import PullToRefreshIndicator from '../components/PullToRefreshIndicator'
 import useBodyScrollLock from '../hooks/useBodyScrollLock'
 import TripNichtGefunden from '../components/TripNichtGefunden'
-import { useSettings } from '../context/SettingsContext'
+import { useSettings } from '../context/useSettings'
 import useWechselkurse from '../hooks/useWechselkurse'
 import { WAEHRUNGEN, symbolOderIsoZuIso } from '../data/waehrungen'
 import { saldenBerechnen, schuldenBerechnen, anteilBerechnen } from '../utils/kosten'
@@ -46,23 +46,7 @@ function TripKosten() {
     waehrung: { symbol: '€', iso: 'EUR' },
   })
 
-  useEffect(() => { datenLaden() }, [id])
-  useBodyScrollLock(formularOffen)
-
-  // Alle Beträge sind ab jetzt immer in Trip-Währung (K1) – die Heimwährung
-  // des Betrachters (heimISO) dient nur noch für eine optionale Zusatzzeile
-  const tripISO = trip?.waehrung || 'EUR'
-  const tripWaehrungObj = WAEHRUNGEN.find(w => w.iso === tripISO) || WAEHRUNGEN[0]
-  const tripSymbol = tripWaehrungObj.symbol
-
-  // Warnung anzeigen, falls die API nicht erreichbar war und Näherungswerte verwendet werden
-  useEffect(() => {
-    if (veraltet) toast(t('wechselkurseNichtAktuell'), 'error')
-  }, [veraltet])
-
-  const { ziehen, fortschritt, schwellenwert } = usePullToRefresh(datenLaden)
-
-  async function datenLaden() {
+  const datenLaden = async () => {
     // Alle Queries hängen nur von der Trip-ID (bzw. dem eingeloggten User) ab,
     // nicht voneinander – parallel laden
     const [tripRes, ausgabenRes, teilnehmerRes, abrechnungenRes, authRes] = await Promise.all([
@@ -90,6 +74,26 @@ function TripKosten() {
 
     setLaden(false)
   }
+
+  // Lint-Regel react-hooks/set-state-in-effect schlägt hier fälschlich Alarm:
+  // datenLaden() wird bewusst auch von usePullToRefresh wiederverwendet (Pull-to-Refresh),
+  // daher kein rein effect-lokaler Daten-Fetch wie in TripOrte.jsx/TripPackliste.jsx
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { datenLaden() }, [id])
+  useBodyScrollLock(formularOffen)
+
+  // Alle Beträge sind ab jetzt immer in Trip-Währung (K1) – die Heimwährung
+  // des Betrachters (heimISO) dient nur noch für eine optionale Zusatzzeile
+  const tripISO = trip?.waehrung || 'EUR'
+  const tripWaehrungObj = WAEHRUNGEN.find(w => w.iso === tripISO) || WAEHRUNGEN[0]
+  const tripSymbol = tripWaehrungObj.symbol
+
+  // Warnung anzeigen, falls die API nicht erreichbar war und Näherungswerte verwendet werden
+  useEffect(() => {
+    if (veraltet) toast(t('wechselkurseNichtAktuell'), 'error')
+  }, [veraltet])
+
+  const { ziehen, fortschritt, schwellenwert } = usePullToRefresh(datenLaden)
 
   const gesamt = ausgaben.reduce((sum, a) => sum + a.betrag, 0)
 

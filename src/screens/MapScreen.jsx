@@ -6,7 +6,7 @@ import * as topojson from 'topojson-client'
 import { Search, X, Plus } from 'lucide-react'
 import usePullToRefresh from '../hooks/usePullToRefresh'
 import PullToRefreshIndicator from '../components/PullToRefreshIndicator'
-import { useSettings } from '../context/SettingsContext'
+import { useSettings } from '../context/useSettings'
 import { reiseStatus } from '../utils/datum'
 import { laenderName, laenderSortiert } from '../utils/laendernamen'
 import Toast from '../components/Toast'
@@ -69,11 +69,7 @@ function MapScreen() {
   // Zoom-Zustand zwischen Neu-Zeichnungen erhalten
   const zoomTransformRef = useRef(d3.zoomIdentity)
 
-  useEffect(() => { laden() }, [])
-
-  const { ziehen, fortschritt, schwellenwert } = usePullToRefresh(laden)
-
-  async function laden() {
+  const laden = async () => {
     const { data: { user } } = await supabase.auth.getUser()
     setUserId(user.id)
 
@@ -117,6 +113,14 @@ function MapScreen() {
     setBesucht(Object.entries(bereisteMap).map(([country_code, trip]) => ({ country_code, trip })))
     setGeplant(Object.keys(geplanteMap).filter(code => !bereisteMap[code]).map(code => ({ country_code: code, trip: geplanteMap[code] })))
   }
+
+  // Lint-Regel react-hooks/set-state-in-effect schlägt hier fälschlich Alarm:
+  // laden() wird bewusst auch von usePullToRefresh wiederverwendet (Pull-to-Refresh),
+  // daher kein rein effect-lokaler Daten-Fetch wie in TripOrte.jsx/TripPackliste.jsx
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { laden() }, [])
+
+  const { ziehen, fortschritt, schwellenwert } = usePullToRefresh(laden)
 
   // Fortschrittsbalken animiert einblenden
   useEffect(() => {
