@@ -15,6 +15,7 @@ export default function TripPersonen() {
   const { t } = useSettings()
   const { toasts, setToasts, toast } = useToast()
   const [trip, setTrip] = useState(null)
+  const [currentUser, setCurrentUser] = useState(null)
   const [teilnehmer, setTeilnehmer] = useState([])
   const [ausgaben, setAusgaben] = useState([])
   const [abrechnungen, setAbrechnungen] = useState([])
@@ -51,7 +52,8 @@ export default function TripPersonen() {
       // Trip, Teilnehmer und Ausgaben hängen nur von der Trip-ID ab, nicht
       // voneinander – parallel laden. Profile hängen von den Teilnehmern ab
       // und werden erst danach geladen.
-      const [tripRes, teilnehmerRes, ausgabenRes, abrechnungenRes] = await Promise.all([
+      const [authRes, tripRes, teilnehmerRes, ausgabenRes, abrechnungenRes] = await Promise.all([
+        supabase.auth.getUser(),
         supabase.from('trips').select('*').eq('id', id).single(),
         supabase.from('teilnehmer').select('*').eq('trip_id', id),
         // Ausgaben/Abrechnungen werden geladen um vor dem Entfernen eines
@@ -59,6 +61,8 @@ export default function TripPersonen() {
         supabase.from('ausgaben').select('*').eq('trip_id', id),
         supabase.from('abrechnungen').select('*').eq('trip_id', id),
       ])
+
+      setCurrentUser(authRes.data.user)
 
       if (tripRes.error) console.error('Fehler beim Laden des Trips:', tripRes.error)
       setTrip(tripRes.data)
@@ -301,6 +305,10 @@ export default function TripPersonen() {
 
   if (!trip) return <TripNichtGefunden />
 
+  // Teilnehmer löschen ist per RLS nur dem Reise-Ersteller erlaubt (W19/Phase 0) –
+  // der Button wird für alle anderen ausgeblendet statt einen Fehler zu zeigen
+  const istErsteller = trip.user_id === currentUser?.id
+
   return (
     <div style={{ paddingBottom: 'calc(120px + env(safe-area-inset-bottom))' }}>
       <TripNav tripName={trip.name} />
@@ -441,15 +449,17 @@ export default function TripPersonen() {
                         <Link2Off size={15} />
                       </button>
                     )}
-                    {/* Löschen – min. 44x44px Touch-Target (Apple HIG) */}
-                    <button onClick={() => teilnehmerEntfernenAnfragen(person)} className="btn-press" style={{
-                      backgroundColor: 'rgba(233,69,96,0.08)',
-                      border: '1px solid rgba(233,69,96,0.2)',
-                      color: '#e94560', cursor: 'pointer',
-                      width: '44px', height: '44px', borderRadius: '50%',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: '1.1rem', fontWeight: '300', flexShrink: 0,
-                    }}>×</button>
+                    {/* Löschen – nur für den Reise-Ersteller, min. 44x44px Touch-Target (Apple HIG) */}
+                    {istErsteller && (
+                      <button onClick={() => teilnehmerEntfernenAnfragen(person)} className="btn-press" style={{
+                        backgroundColor: 'rgba(233,69,96,0.08)',
+                        border: '1px solid rgba(233,69,96,0.2)',
+                        color: '#e94560', cursor: 'pointer',
+                        width: '44px', height: '44px', borderRadius: '50%',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: '1.1rem', fontWeight: '300', flexShrink: 0,
+                      }}>×</button>
+                    )}
                   </div>
                 </div>
 
