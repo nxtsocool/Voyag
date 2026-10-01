@@ -382,7 +382,7 @@ export default function TripOrte() {
         onClick={() => modalOeffnen()}
         className="btn-press"
         style={{
-          position: 'fixed', bottom: 'calc(90px + env(safe-area-inset-bottom))', right: '20px',
+          position: 'fixed', bottom: 'calc(20px + env(safe-area-inset-bottom))', right: '20px',
           width: '58px', height: '58px', borderRadius: '50%',
           backgroundColor: 'var(--gold)', border: 'none', cursor: 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
